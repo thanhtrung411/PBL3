@@ -1,4 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using PBL3.Models;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// 1. Lấy chuỗi kết nối từ file appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// 2. Đăng ký DbContext vào hệ thống (Dependency Injection)
+builder.Services.AddDbContext<PBL3Context>(options =>
+    options.UseSqlServer(connectionString));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -9,7 +19,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -24,6 +33,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();
