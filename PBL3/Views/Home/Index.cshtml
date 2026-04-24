@@ -1,8 +1,82 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Tổng quan";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold">Tổng quan</h3>
+        <p class="text-muted">Chào mừng bạn quay trở lại với hệ thống quản lý khách sạn</p>
+    </div>
 </div>
+
+<div class="stats-grid">
+    <div class="card-stat">
+        <span class="label">Tổng phòng <i class="fa fa-bed ms-2"></i></span>
+        <span class="value">120</span>
+        <small class="text-success"><i class="fa fa-arrow-up"></i> +2 từ tháng trước</small>
+    </div>
+    <div class="card-stat">
+        <span class="label">Khách đang ở <i class="fa fa-users ms-2"></i></span>
+        <span class="value">89</span>
+        <small class="text-success"><i class="fa fa-arrow-up"></i> +2% so với tuần trước</small>
+    </div>
+    <div class="card-stat">
+        <span class="label">Doanh thu hôm nay <i class="fa fa-money-bill-wave ms-2"></i></span>
+        <span class="value">24,500,000đ</span>
+        <small class="text-success"><i class="fa fa-arrow-up"></i> +8% so với hôm qua</small>
+    </div>
+    <div class="card-stat">
+        <span class="label">Tỷ lệ lấp đầy <i class="fa fa-chart-line ms-2"></i></span>
+        <span class="value">87%</span>
+        <small class="text-success"><i class="fa fa-arrow-up"></i> +3% so với tháng trước</small>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card-stat h-100">
+            <h5 class="fw-bold mb-3">Doanh thu 6 tháng gần nhất</h5>
+            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-stat h-100">
+            <h5 class="fw-bold mb-3">Tình trạng phòng</h5>
+            <canvas id="roomStatusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Biểu đồ cột Doanh thu
+        const ctxRev = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctxRev, {
+        type: 'bar',
+        data: {
+        labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+        datasets: [{
+        label: 'Doanh thu',
+        data: [4.5, 5.2, 6.0, 4.8, 5.8, 6.0],
+        backgroundColor: '#3b82f6',
+        borderRadius: 5
+        }]
+        }
+        });
+
+        // Biểu đồ tròn Tình trạng phòng
+        const ctxStatus = document.getElementById('roomStatusChart').getContext('2d');
+        new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+        labels: ['Đã đặt', 'Bảo trì', 'Trống'],
+        datasets: [{
+        data: [70, 10, 20],
+        backgroundColor: ['#3b82f6', '#fbbf24', '#10b981']
+        }]
+        },
+        options: { cutout: '70%' }
+        });
+    </script>
+}

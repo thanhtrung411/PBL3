@@ -1,0 +1,279 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ - Venus Hotel";
+    // Nếu bạn không dùng Layout chung, hãy bỏ comment dòng dưới đây:
+    // Layout = null; 
+}
+
+@* LƯU Ý: Trong dự án thực tế, 2 link CDN của Font và Icon dưới đây 
+    nên được di chuyển vào thẻ <head> của file Views/Shared/_Layout.cshtml 
+*@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+@* CSS CỤ THỂ CHO TRANG NÀY (Có thể tách ra file wwwroot/css/home.css) *@
+<style>
+    :root {
+        --bg-main: #FFFFFF;
+        --text-main: #111827;
+        --text-muted: #6B7280;
+        --btn-dark: #111827;
+        --border-color: #E5E7EB;
+        --input-bg: #F9FAFB;
+        --hover-color: #374151;
+    }
+
+    /* Bỏ thẻ body margin/padding ở đây vì _Layout thường đã xử lý hoặc có Bootstrap */
+    .venus-container {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        line-height: 1.5;
+    }
+
+    .venus-container a { text-decoration: none; color: var(--text-main); }
+
+    /* === HEADER === */
+    /* Header thường nằm trong _Layout, nhưng nếu bạn muốn giữ riêng ở trang này thì dùng code dưới */
+    .venus-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 40px;
+        background-color: var(--bg-main);
+        border-bottom: 1px solid var(--border-color);
+    }
+    .logo { font-size: 20px; font-weight: 700; }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text-main); }
+    .auth-buttons { display: flex; gap: 12px; }
+    
+    .btn-custom {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--border-color);
+        background-color: transparent;
+        transition: all 0.3s ease;
+    }
+    .btn-dark { background-color: var(--btn-dark); color: white; border: none; }
+
+    /* === HERO SECTION === */
+    .hero {
+        height: 400px;
+        background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+        padding-bottom: 60px;
+    }
+    .hero h1 { font-size: 40px; font-weight: 700; margin-bottom: 12px; }
+    .hero p { font-size: 16px; font-weight: 400; opacity: 0.9; }
+
+    /* === SEARCH BOX === */
+    .search-container {
+        max-width: 1100px;
+        margin: -60px auto 60px;
+        padding: 0 20px;
+        position: relative;
+        z-index: 10;
+    }
+    .search-box {
+        background-color: var(--bg-main);
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.5fr auto;
+        gap: 16px;
+        align-items: end;
+    }
+    .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+    .input-wrapper { display: flex; align-items: center; background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 16px; gap: 12px; }
+    .input-wrapper i { color: var(--text-muted); }
+    .input-wrapper input { border: none; background: transparent; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text-main); width: 100%; outline: none; }
+    .btn-search { padding: 14px 24px; display: flex; align-items: center; gap: 8px; }
+
+    /* === FEATURES SECTION === */
+    .features { max-width: 1100px; margin: 0 auto 80px; padding: 0 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feature-card { border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; display: flex; align-items: center; gap: 16px; }
+    .feature-icon { width: 48px; height: 48px; background-color: var(--input-bg); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 20px; color: var(--text-main); }
+    .feature-content h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .feature-content p { font-size: 13px; color: var(--text-muted); }
+
+    /* === DESTINATIONS SECTION === */
+    .destinations { max-width: 1100px; margin: 0 auto 80px; padding: 0 20px; }
+    .section-header { margin-bottom: 24px; }
+    .section-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .section-header p { font-size: 14px; color: var(--text-muted); }
+    .dest-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    .dest-card { position: relative; border-radius: 12px; overflow: hidden; height: 240px; cursor: pointer; }
+    .dest-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+    .dest-card:hover img { transform: scale(1.05); }
+    .dest-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px 16px 16px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; }
+    .dest-overlay h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .dest-overlay p { font-size: 12px; opacity: 0.9; }
+
+    /* === RESPONSIVE === */
+    @@media (max-width: 992px) {
+        .search-box { grid-template-columns: 1fr 1fr; }
+        .search-box .input-group:nth-child(3) { grid-column: span 2; }
+        .btn-search { grid-column: span 2; justify-content: center; }
+        .features { grid-template-columns: 1fr; }
+        .dest-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @@media (max-width: 768px) {
+        .venus-header { flex-direction: column; gap: 16px; padding: 16px; }
+        .nav-links { display: none; }
+        .hero h1 { font-size: 28px; }
+        .search-box { grid-template-columns: 1fr; }
+        .search-box .input-group:nth-child(3), .btn-search { grid-column: span 1; }
+        .dest-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @@media (max-width: 480px) {
+        .dest-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="venus-container">
+    <header class="venus-header">
+        <div class="logo">Venus Hotel</div>
+        <nav class="nav-links">
+            <a href='@Url.Action("Index", "Home")'>Lưu trú</a>
+            <a href="#">Hoạt động</a>
+            <a href="#">Đăng chỗ nghỉ</a>
+        </nav>
+        <div class="auth-buttons">
+            <button class="btn-custom">Đăng nhập</button>
+            <button class="btn-custom btn-dark" id="btnRegister">Đăng ký</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Tìm chỗ nghỉ hoàn hảo</h1>
+            <p>Hàng nghìn khách sạn, resort và căn hộ với giá tốt nhất</p>
+        </section>
+
+        <div class="search-container">
+            <form asp-controller="Search" asp-action="Index" method="get" class="search-box">
+                <div class="input-group">
+                    <label>Nhận phòng</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input type="text" name="checkin" value="01/03/2026" readonly>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Trả phòng</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input type="text" name="checkout" value="07/03/2026" readonly>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Khách & Phòng</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-user"></i>
+                        <input type="text" name="guests" value="2 người lớn · 1 phòng" readonly>
+                        <i class="fa-solid fa-chevron-down" style="margin-left: auto; font-size: 12px;"></i>
+                    </div>
+                </div>
+                <button type="submit" class="btn-custom btn-dark btn-search" id="btnSearch">
+                    <i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm
+                </button>
+            </form>
+        </div>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="feature-content">
+                    <h3>Đặt phòng an toàn</h3>
+                    <p>Thanh toán bảo mật với nhiều phương thức</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-regular fa-star"></i></div>
+                <div class="feature-content">
+                    <h3>Giá tốt nhất</h3>
+                    <p>Cam kết giá tốt nhất cho từng đêm lưu trú</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-headset"></i></div>
+                <div class="feature-content">
+                    <h3>Hỗ trợ 24/7</h3>
+                    <p>Đội ngũ hỗ trợ khách hàng luôn sẵn sàng</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="destinations">
+            <div class="section-header">
+                <h2>Điểm đến nổi bật</h2>
+                <p>Khám phá các thành phố phổ biến tại Việt Nam</p>
+            </div>
+            
+            @* Trong thực tế, bạn sẽ dùng vòng lặp @foreach để render dữ liệu từ Model *@
+            <div class="dest-grid">
+                <div class="dest-card">
+                    <img src="https://images.unsplash.com/photo-1555921015-5532091f6026?auto=format&fit=crop&w=400&q=80" alt="Hà Nội">
+                    <div class="dest-overlay">
+                        <h3>Hà Nội</h3>
+                        <p>284 khách sạn</p>
+                    </div>
+                </div>
+                <div class="dest-card">
+                    <img src="https://images.unsplash.com/photo-1583417311718-c0b8222687c4?auto=format&fit=crop&w=400&q=80" alt="Hồ Chí Minh">
+                    <div class="dest-overlay">
+                        <h3>Hồ Chí Minh</h3>
+                        <p>521 khách sạn</p>
+                    </div>
+                </div>
+                <div class="dest-card">
+                    <img src="https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=400&q=80" alt="Đà Nẵng">
+                    <div class="dest-overlay">
+                        <h3>Đà Nẵng</h3>
+                        <p>189 khách sạn</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+@* Block Scripts sẽ được render vào cuối thẻ <body> trong _Layout.cshtml *@
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const btnRegister = document.getElementById('btnRegister');
+        const btnSearch = document.getElementById('btnSearch');
+
+        const originalColor = "var(--btn-dark)"; 
+        const hoverColor = "var(--hover-color)"; 
+
+        const applyHoverEffect = (element) => {
+            if(!element) return; // Kiểm tra null
+            
+            element.addEventListener('mouseenter', () => {
+                element.style.backgroundColor = hoverColor;
+                element.style.transform = "translateY(-2px)";
+            });
+
+            element.addEventListener('mouseleave', () => {
+                element.style.backgroundColor = originalColor;
+                element.style.transform = "translateY(0)";
+            });
+        };
+
+        applyHoverEffect(btnRegister);
+        applyHoverEffect(btnSearch);
+    });
+</script>

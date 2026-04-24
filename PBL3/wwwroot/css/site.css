@@ -1,31 +1,185 @@
-html {
-  font-size: 14px;
+:root {
+    --primary: #3b82f6; /* Xanh dương chính */
+    --bg-light: #f8fafc; /* Màu nền xám nhạt */
+    --sidebar-w: 260px; /* Độ rộng menu trái */
+    --border: #e2e8f0;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+/* Cấu trúc nền tảng */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background-color: var(--bg-light);
+    overflow-x: hidden;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+/* --- SIDEBAR --- */
+.sidebar {
+    width: var(--sidebar-w);
+    background: white;
+    border-right: 1px solid var(--border);
+    position: fixed;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-body {
-  margin-bottom: 60px;
+.sidebar-brand {
+    padding: 24px;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+    .sidebar-brand h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-main);
+    }
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.nav-link-custom {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    color: var(--text-muted);
+    text-decoration: none !important;
+    font-weight: 500;
+    transition: 0.2s;
 }
+
+    .nav-link-custom i {
+        width: 25px;
+        font-size: 1.1rem;
+        margin-right: 10px;
+    }
+
+    .nav-link-custom:hover {
+        background: #f1f5f9;
+        color: var(--primary);
+    }
+
+    .nav-link-custom.active {
+        background: #eff6ff;
+        color: var(--primary);
+        border-right: 4px solid var(--primary);
+    }
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-w); /* Đẩy nội dung sang phải để không bị sidebar che */
+    padding: 2rem;
+}
+
+/* --- CÁC CARD THỐNG KÊ (4 ô ở trên) --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card-stat {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+    .card-stat .label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .card-stat .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        display: block;
+        margin: 5px 0;
+    }
+
+/* --- BẢNG DỮ LIỆU (DATAGRIDVIEW) --- */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.table-custom {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .table-custom th {
+        background: #f8fafc;
+        padding: 12px 20px;
+        text-align: left;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .table-custom td {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+/* Màu sắc trạng thái Badge */
+.badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.bg-confirmed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+/* Đã xác nhận */
+.bg-checkin {
+    background: #dcfce7;
+    color: #166534;
+}
+/* Đã nhận phòng */
+.bg-waiting {
+    background: #fef3c7;
+    color: #92400e;
+}
+/* Chờ xác nhận */
+
+.room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+.room-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid var(--border);
+    position: relative;
+}
+.room-status-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.status-available { background: #dcfce7; color: #166534; } /* Trống */
+.status-occupied { background: #fee2e2; color: #991b1b; }  /* Có khách */
+.status-cleaning { background: #fef3c7; color: #92400e; }  /* Dọn dẹp */
