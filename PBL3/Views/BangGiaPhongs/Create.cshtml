@@ -1,0 +1,96 @@
+@model PBL3.Models.BangGiaPhong
+
+@{
+    ViewData["Title"] = "Thêm Bảng giá phòng";
+}
+
+<h1>Thêm Bảng giá phòng mới</h1>
+
+<h4>Bảng giá phòng</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="form-group">
+                <label asp-for="MaBangGia" class="control-label">Mã bảng giá</label>
+                <input asp-for="MaBangGia" class="form-control" />
+                <span asp-validation-for="MaBangGia" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="MaLoaiPhong" class="control-label">Loại phòng</label>
+                <select asp-for="MaLoaiPhong" class ="form-control" asp-items="ViewBag.MaLoaiPhong"></select>
+                <span asp-validation-for="MaLoaiPhong" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="GiaApDung" class="control-label">Giá áp dụng</label>
+                <input asp-for="GiaApDung" type="number" step="0.01" class="form-control" />
+                <span asp-validation-for="GiaApDung" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="LoaiGia" class="control-label">Loại giá</label>
+                <select asp-for="LoaiGia" class="form-control">
+                    <option value="MACDINH">Mặc định</option>
+                    <option value="DACBIET">Đặc biệt</option>
+                </select>
+                <span asp-validation-for="LoaiGia" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TuNgay" class="control-label">Từ ngày</label>
+                <input asp-for="TuNgay" type="date" class="form-control" />
+                <span asp-validation-for="TuNgay" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="DenNgay" class="control-label">Đến ngày</label>
+                <input asp-for="DenNgay" type="date" class="form-control" />
+                <span asp-validation-for="DenNgay" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="ThuApDung" class="control-label">Thứ áp dụng (1-8, trống nếu áp dụng mọi ngày)</label>
+                <input asp-for="ThuApDung" type="number" min="1" max="8" class="form-control" />
+                <span asp-validation-for="ThuApDung" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="UuTien" class="control-label">Độ Ưu Tiên (Số càng cao độ ưu tiên càng lớn)</label>
+                <input asp-for="UuTien" type="number" class="form-control" value="1" />
+                <span asp-validation-for="UuTien" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="TrangThai" class="control-label">Trạng thái</label>
+                <select asp-for="TrangThai" class="form-control">
+                    <option value="Hoạt động">Hoạt động</option>
+                    <option value="Tạm ngưng">Tạm ngưng</option>
+                    <option value="Ngừng áp dụng">Ngừng áp dụng</option>
+                </select>
+                <span asp-validation-for="TrangThai" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="GhiChu" class="control-label">Ghi chú</label>
+                <input asp-for="GhiChu" class="form-control" />
+                <span asp-validation-for="GhiChu" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mt-3">
+                <input type="submit" value="Tạo mới" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Quay lại danh sách</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

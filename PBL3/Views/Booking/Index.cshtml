@@ -1,0 +1,76 @@
+@{
+    ViewData["Title"] = "Đặt Phòng Online";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0 fw-bold">🏨 Đặt Phòng Khách Sạn</h3>
+                    <p class="mb-0 text-white-50">Nhanh chóng, tiện lợi, bảo mật thông tin</p>
+                </div>
+                <div class="card-body p-5">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Lỗi!</strong> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="SubmitBooking" method="post">
+                        
+                        <h5 class="text-secondary mb-3 border-bottom pb-2">1. Thông tin liên hệ</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Căn cước công dân (CCCD) <span class="text-danger">*</span></label>
+                                <input type="text" name="cccd" class="form-control form-control-lg" required placeholder="Nhập số CCCD" pattern="\d{9,12}" title="CCCD phải từ 9-12 số">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" name="soDienThoai" class="form-control form-control-lg" required placeholder="09xxxxxxx">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Họ và Tên <span class="text-danger">*</span></label>
+                            <input type="text" name="hoTen" class="form-control form-control-lg" required placeholder="NGUYEN VAN A">
+                        </div>
+
+                        <h5 class="text-secondary mb-3 border-bottom pb-2">2. Chi tiết đặt phòng</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loại phòng muốn đặt <span class="text-danger">*</span></label>
+                            <select name="maLoaiPhong" class="form-select form-select-lg" asp-items="ViewBag.LoaiPhongs" required>
+                                <option value="">-- Vui lòng chọn loại phòng --</option>
+                            </select>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Ngày nhận phòng (Check-in) <span class="text-danger">*</span></label>
+                                <input type="date" name="ngayNhan" class="form-control form-control-lg" required min="@DateTime.Now.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Ngày trả phòng (Check-out) <span class="text-danger">*</span></label>
+                                <input type="date" name="ngayTra" class="form-control form-control-lg" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle-fill me-2"></i> <strong>Lưu ý:</strong> Để đảm bảo giữ chỗ, bạn sẽ được yêu cầu thanh toán đặt cọc 100% tiền phòng cho kỳ lưu trú này. Phòng cụ thể sẽ được Lễ tân xếp khi bạn tới Check-in.
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                                Xác nhận Đặt Phòng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

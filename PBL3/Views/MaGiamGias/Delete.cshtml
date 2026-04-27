@@ -1,0 +1,32 @@
+@model PBL3.Models.MaGiamGium
+
+@{
+    ViewData["Title"] = "Xóa mã giảm giá";
+}
+
+<h1>Xóa mã giảm giá</h1>
+
+<h3>Bạn có chắc chắn muốn xóa mã giảm giá này?</h3>
+<div>
+    <h4>Mã Giảm Giá</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">Mã Hệ Thống</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.MaGiamGia)</dd>
+        
+        <dt class = "col-sm-2">Code</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.CodeGiamGia)</dd>
+        
+        <dt class = "col-sm-2">Tên</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.TenMaGiamGia)</dd>
+        
+        <dt class = "col-sm-2">Trạng thái</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.TrangThai)</dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="MaGiamGia" />
+        <input type="submit" value="Xóa" class="btn btn-danger" /> |
+        <a asp-action="Index">Quay lại danh sách</a>
+    </form>
+</div>

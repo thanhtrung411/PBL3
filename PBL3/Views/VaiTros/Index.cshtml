@@ -1,0 +1,47 @@
+@model IEnumerable<PBL3.Models.VaiTro>
+
+@{
+    ViewData["Title"] = "Danh sách Vai trò";
+}
+
+<h1>Danh sách Vai trò</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Thêm vai trò mới</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.MaVaiTro)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TenVaiTro)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MoTa)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.MaVaiTro)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TenVaiTro)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MoTa)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.MaVaiTro">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.MaVaiTro">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.MaVaiTro">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

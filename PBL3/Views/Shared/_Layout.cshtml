@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -21,10 +21,45 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link fw-bold text-primary" asp-area="" asp-controller="Booking" asp-action="Index">🏨 Đặt phòng Online</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Quản lý phòng
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="LoaiPhongs" asp-action="Index">Loại phòng</a></li>
+                                <li><a class="dropdown-item" asp-controller="Phongs" asp-action="Index">Phòng</a></li>
+                                <li><a class="dropdown-item" asp-controller="BangGiaPhongs" asp-action="Index">Bảng giá phòng</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Khách & Dịch vụ
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="KhachHangs" asp-action="Index">Khách hàng</a></li>
+                                <li><a class="dropdown-item" asp-controller="DichVus" asp-action="Index">Dịch vụ</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="DatPhongs" asp-action="Index">Lịch đặt phòng (Booking)</a></li>
+                                <li><a class="dropdown-item" asp-controller="HoaDons" asp-action="Index">Hóa đơn thanh toán</a></li>
+                                <li><a class="dropdown-item" asp-controller="ChiTietHoaDons" asp-action="Index">Chi tiết hóa đơn</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Hệ thống
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="VaiTros" asp-action="Index">Vai trò</a></li>
+                                <li><a class="dropdown-item" asp-controller="NhanViens" asp-action="Index">Nhân viên</a></li>
+                                <li><a class="dropdown-item" asp-controller="TaiKhoans" asp-action="Index">Tài khoản</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" asp-controller="MaGiamGias" asp-action="Index">Mã giảm giá</a></li>
+                            </ul>
                         </li>
                     </ul>
                 </div>

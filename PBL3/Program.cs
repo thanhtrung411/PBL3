@@ -1,7 +1,37 @@
+using Microsoft.EntityFrameworkCore;
+using PBL3.Services;
+using PBL3.Services.Interfaces;
+using PBL3.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// 1. Lấy chuỗi kết nối từ file appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// 2. Đăng ký DbContext vào hệ thống (Dependency Injection)
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+//Add services for DI
+builder.Services.AddScoped<ILoaiPhongService, LoaiPhongService>();
+
+builder.Services.AddScoped<IPhongService, PhongService>();
+
+builder.Services.AddScoped<IVaiTroService, VaiTroService>();
+
+builder.Services.AddScoped<INhanVienService, NhanVienService>();
+
+builder.Services.AddScoped<IKhachHangService, KhachHangService>();
+builder.Services.AddScoped<IDichVuService, DichVuService>();
+builder.Services.AddScoped<IMaGiamGiaService, MaGiamGiaService>();
+builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
+builder.Services.AddScoped<IBangGiaPhongService, BangGiaPhongService>();
+builder.Services.AddScoped<IDatPhongService, DatPhongService>();
+builder.Services.AddScoped<IHoaDonService, HoaDonService>();
+builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
 
 var app = builder.Build();
 
@@ -9,7 +39,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -24,6 +53,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

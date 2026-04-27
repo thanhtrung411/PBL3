@@ -1,0 +1,47 @@
+@model PBL3.Models.BangGiaPhong
+
+@{
+    ViewData["Title"] = "Chi tiết Bảng giá phòng";
+}
+
+<h1>Chi tiết Bảng giá phòng</h1>
+
+<div>
+    <h4>Bảng giá phòng</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">Mã Bảng Giá</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.MaBangGia)</dd>
+        
+        <dt class = "col-sm-2">Loại phòng</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.MaLoaiPhongNavigation.TenLoaiPhong)</dd>
+
+        <dt class = "col-sm-2">Giá áp dụng</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.GiaApDung)</dd>
+
+        <dt class = "col-sm-2">Loại giá</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.LoaiGia)</dd>
+        
+        <dt class = "col-sm-2">Từ ngày</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.TuNgay)</dd>
+        
+        <dt class = "col-sm-2">Đến ngày</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.DenNgay)</dd>
+        
+        <dt class = "col-sm-2">Thứ áp dụng</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.ThuApDung)</dd>
+        
+        <dt class = "col-sm-2">Độ Ưu Tiên</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.UuTien)</dd>
+        
+        <dt class = "col-sm-2">Trạng thái</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.TrangThai)</dd>
+        
+        <dt class = "col-sm-2">Ghi chú</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.GhiChu)</dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.MaBangGia">Sửa</a> |
+    <a asp-action="Index">Quay lại danh sách</a>
+</div>

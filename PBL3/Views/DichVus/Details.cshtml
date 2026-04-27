@@ -1,0 +1,35 @@
+@model PBL3.Models.DichVu
+
+@{
+    ViewData["Title"] = "Chi tiết dịch vụ";
+}
+
+<h1>Chi tiết dịch vụ</h1>
+
+<div>
+    <h4>DichVu</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">Mã DV</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.MaDv)</dd>
+        
+        <dt class = "col-sm-2">Tên DV</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.TenDv)</dd>
+        
+        <dt class = "col-sm-2">Đơn giá</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.DonGia)</dd>
+        
+        <dt class = "col-sm-2">Đơn vị tính</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.DonViTinh)</dd>
+        
+        <dt class = "col-sm-2">Trạng thái</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.TrangThai)</dd>
+        
+        <dt class = "col-sm-2">Ghi chú</dt>
+        <dd class = "col-sm-10">@Html.DisplayFor(model => model.GhiChu)</dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.MaDv">Edit</a> |
+    <a asp-action="Index">Quay lại danh sách</a>
+</div>
