@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,78 +8,33 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PBL3.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">PBL3</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold text-primary" asp-area="" asp-controller="Booking" asp-action="Index">🏨 Đặt phòng Online</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Quản lý phòng
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="LoaiPhongs" asp-action="Index">Loại phòng</a></li>
-                                <li><a class="dropdown-item" asp-controller="Phongs" asp-action="Index">Phòng</a></li>
-                                <li><a class="dropdown-item" asp-controller="BangGiaPhongs" asp-action="Index">Bảng giá phòng</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Khách & Dịch vụ
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="KhachHangs" asp-action="Index">Khách hàng</a></li>
-                                <li><a class="dropdown-item" asp-controller="DichVus" asp-action="Index">Dịch vụ</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" asp-controller="DatPhongs" asp-action="Index">Lịch đặt phòng (Booking)</a></li>
-                                <li><a class="dropdown-item" asp-controller="HoaDons" asp-action="Index">Hóa đơn thanh toán</a></li>
-                                <li><a class="dropdown-item" asp-controller="ChiTietHoaDons" asp-action="Index">Chi tiết hóa đơn</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Hệ thống
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="VaiTros" asp-action="Index">Vai trò</a></li>
-                                <li><a class="dropdown-item" asp-controller="NhanViens" asp-action="Index">Nhân viên</a></li>
-                                <li><a class="dropdown-item" asp-controller="TaiKhoans" asp-action="Index">Tài khoản</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" asp-controller="MaGiamGias" asp-action="Index">Mã giảm giá</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <body>
+        <div class="app-wrapper">
+            <aside class="sidebar">
+                <div class="sidebar-brand">
+                    <h2>Hotel Manager</h2>
+                    <span>Khách sạn Venus</span>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+                <div class="sidebar-nav">
+                    <a class="nav-link-custom active" asp-controller="Home" asp-action="Index">
+                        <i class="fa fa-th-large"></i> Tổng quan
+                    </a>
+                    <a class="nav-link-custom" asp-controller="Room" asp-action="Index">
+                        <i class="fa fa-bed"></i> Quản lý phòng
+                    </a>
+                </div>
+            </aside>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - PBL3 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <main class="main-content">
+                @RenderBody()
+            </main>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    
+        @await RenderSectionAsync("Scripts", required: false)
+    </body>
+</head>
 </html>
