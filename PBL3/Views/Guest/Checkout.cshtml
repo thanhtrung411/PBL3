@@ -1,0 +1,139 @@
+﻿@{
+    // Bỏ qua Layout dùng chung
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hoàn tất đặt phòng - PBL3</title>
+    
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/PBL3.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+    <div class="app-wrapper">
+        <main class="main-content">
+            <div class="container py-5">
+                <div class="mb-4">
+                    <h2 class="fw-bold">Hoàn tất đặt phòng</h2>
+                    <p class="text-muted">Vui lòng điền thông tin liên lạc và kiểm tra lại hóa đơn</p>
+                </div>
+
+                <form action="/Guest/ProcessPayment" method="POST">
+                    <div class="row g-5">
+                        <div class="col-lg-8">
+                            <div class="card shadow-sm border-0 mb-4">
+                                <div class="card-header bg-white py-3">
+                                    <h5 class="fw-bold mb-0">1. Thông tin liên lạc</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small">HỌ VÀ TÊN <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="CustomerName" placeholder="VD: Nguyễn Văn A" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small">SỐ ĐIỆN THOẠI <span class="text-danger">*</span></label>
+                                            <input type="tel" class="form-control" name="PhoneNumber" placeholder="VD: 0912xxx..." required>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label fw-bold small">EMAIL <span class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" name="Email" placeholder="Để nhận mã xác nhận đặt phòng" required>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label fw-bold small">YÊU CẦU ĐẶC BIỆT</label>
+                                            <textarea class="form-control" name="Note" rows="3" placeholder="Ghi chú về thời gian đến, yêu cầu dị ứng..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white py-3">
+                                    <h5 class="fw-bold mb-0">2. Phương thức thanh toán</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="form-check mb-3 p-3 border rounded">
+                                        <input class="form-check-input ms-1" type="radio" name="PaymentMethod" id="payMomo" value="Momo" checked>
+                                        <label class="form-check-label ms-3 fw-bold d-flex align-items-center" for="payMomo">
+                                            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="Momo" width="24" class="me-2">
+                                            Thanh toán qua ví MoMo
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-3 border rounded">
+                                        <input class="form-check-input ms-1" type="radio" name="PaymentMethod" id="payBank" value="VNPay">
+                                        <label class="form-check-label ms-3 fw-bold d-flex align-items-center" for="payBank">
+                                            <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/6/0oxhzjmxbksr1686814746087.png" alt="VNPay" width="60" class="me-2">
+                                            Thanh toán qua VNPay (Thẻ ATM/Visa)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                                <div class="card-header bg-primary text-white py-3">
+                                    <h5 class="fw-bold mb-0">Chi tiết đặt phòng</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
+                                        <div>
+                                            <h6 class="fw-bold">Deluxe Hướng Biển</h6>
+                                            <small class="text-muted">1 Phòng x 2 Đêm</small>
+                                        </div>
+                                        <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=100&q=80" alt="Room Image" class="rounded" width="60" height="60" style="object-fit: cover;">
+                                    </div>
+
+                                    <div class="row mb-3 border-bottom pb-3">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Nhận phòng</small>
+                                            <span class="fw-bold">15-05-2026</span><br>
+                                            <small class="text-muted">Từ 14:00</small>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <small class="text-muted d-block">Trả phòng</small>
+                                            <span class="fw-bold">17-05-2026</span><br>
+                                            <small class="text-muted">Trước 12:00</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Giá phòng (2 đêm)</span>
+                                        <span>2,400,000đ</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Phí dịch vụ (5%)</span>
+                                        <span>120,000đ</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
+                                        <span class="text-muted">Thuế VAT (8%)</span>
+                                        <span>201,600đ</span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <span class="fw-bold fs-5">TỔNG CỘNG</span>
+                                        <span class="fw-bold fs-4 text-danger">2,721,600đ</span>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-danger w-100 py-3 fw-bold fs-6">Thanh toán & Đặt phòng</button>
+                                    <p class="text-center text-muted small mt-3 mb-0"><i class="fa fa-lock me-1"></i> Thông tin được bảo mật mã hóa</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js" asp-append-version="true"></script>
+</body>
+</html>

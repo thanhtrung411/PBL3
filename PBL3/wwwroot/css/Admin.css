@@ -1,0 +1,12 @@
+﻿.hero {
+    /* Thay đổi đường dẫn trong url() thành file ảnh của bạn */
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("E:\PBL3\quay-le-tan-5-sao-1.jpg") center/cover;
+    /* Các thuộc tính bên dưới giữ nguyên */
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+}

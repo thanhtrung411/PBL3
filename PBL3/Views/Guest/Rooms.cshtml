@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "Chọn phòng";
+    // Đảm bảo bạn dùng Layout của Guest chứ không phải Admin
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Khám phá các hạng phòng</h2>
+        <p class="text-muted">Lựa chọn không gian nghỉ dưỡng hoàn hảo cho bạn</p>
+    </div>
+
+    <div class="card shadow-sm mb-5 border-0">
+        <div class="card-body">
+            <form action="/Guest/Rooms" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-muted">NHẬN PHÒNG</label>
+                    <input type="date" id="checkInDate" name="checkIn" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-muted">TRẢ PHÒNG</label>
+                    <input type="date" id="checkOutDate" name="checkOut" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small text-muted">SỐ NGƯỜI</label>
+                    <select class="form-select" name="guests">
+                        <option value="1">1 Người lớn</option>
+                        <option value="2" selected>2 Người lớn</option>
+                        <option value="3">3 Người lớn</option>
+                        <option value="4">Gia đình (4 người)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100 py-2">Tìm phòng trống</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm border-0">
+                <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80" class="card-img-top" alt="Deluxe Room" style="height: 250px; object-fit: cover;">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title fw-bold mb-0">Deluxe Hướng Biển</h5>
+                    </div>
+                    <p class="text-muted small mb-3"><i class="fa fa-bed me-2"></i>1 Giường đôi lớn &bull; <i class="fa fa-user me-2"></i>2 Người</p>
+                    <ul class="list-unstyled small text-muted mb-4">
+                        <li><i class="fa fa-wifi me-2 text-primary"></i>Wifi tốc độ cao miễn phí</li>
+                        <li><i class="fa fa-coffee me-2 text-primary"></i>Bữa sáng tự chọn</li>
+                        <li><i class="fa fa-tv me-2 text-primary"></i>Smart TV 55 inch</li>
+                    </ul>
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fs-4 fw-bold text-danger">1,200,000đ</span><br>
+                            <span class="small text-muted">/ đêm (Đã gồm thuế)</span>
+                        </div>
+                        <a href="/Guest/Checkout?roomId=1" class="btn btn-outline-primary px-4">Chọn phòng</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm border-0">
+                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" class="card-img-top" alt="Suite Room" style="height: 250px; object-fit: cover;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold mb-2">Suite Cao Cấp</h5>
+                    <p class="text-muted small mb-3"><i class="fa fa-bed me-2"></i>1 Giường King &bull; <i class="fa fa-user me-2"></i>2 Người</p>
+                    <ul class="list-unstyled small text-muted mb-4">
+                        <li><i class="fa fa-bath me-2 text-primary"></i>Bồn tắm ban công</li>
+                        <li><i class="fa fa-glass-martini me-2 text-primary"></i>Mini bar miễn phí</li>
+                        <li><i class="fa fa-concierge-bell me-2 text-primary"></i>Dịch vụ phòng 24/7</li>
+                    </ul>
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fs-4 fw-bold text-danger">2,500,000đ</span><br>
+                            <span class="small text-muted">/ đêm (Đã gồm thuế)</span>
+                        </div>
+                        <a href="/Guest/Checkout?roomId=2" class="btn btn-outline-primary px-4">Chọn phòng</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

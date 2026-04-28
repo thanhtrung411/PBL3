@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PBL3.Models;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
     public class LoaiPhongsController : Controller
     {
