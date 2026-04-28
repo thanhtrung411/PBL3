@@ -1,0 +1,47 @@
+@model IEnumerable<PBL3.Models.BangGiaPhong>
+
+@{
+    ViewData["Title"] = "Danh sách Bảng giá phòng";
+}
+
+<h1>Danh sách Bảng giá phòng</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Thêm Bảng giá mới</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Mã Bảng Giá</th>
+            <th>Loại phòng</th>
+            <th>Từ ngày</th>
+            <th>Đến ngày</th>
+            <th>Giá áp dụng</th>
+            <th>Loại giá</th>
+            <th>Thứ áp dụng</th>
+            <th>Ưu tiên</th>
+            <th>Trạng thái</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>@Html.DisplayFor(modelItem => item.MaBangGia)</td>
+            <td>@Html.DisplayFor(modelItem => item.MaLoaiPhongNavigation.TenLoaiPhong)</td>
+            <td>@Html.DisplayFor(modelItem => item.TuNgay)</td>
+            <td>@Html.DisplayFor(modelItem => item.DenNgay)</td>
+            <td>@Html.DisplayFor(modelItem => item.GiaApDung)</td>
+            <td>@Html.DisplayFor(modelItem => item.LoaiGia)</td>
+            <td>@Html.DisplayFor(modelItem => item.ThuApDung)</td>
+            <td>@Html.DisplayFor(modelItem => item.UuTien)</td>
+            <td>@Html.DisplayFor(modelItem => item.TrangThai)</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.MaBangGia">Sửa</a> |
+                <a asp-action="Details" asp-route-id="@item.MaBangGia">Chi tiết</a> |
+                <a asp-action="Delete" asp-route-id="@item.MaBangGia">Xóa</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -1,27 +1,27 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using PBL3.Models;
+using PBL3.Services.Interfaces;
 
 namespace PBL3.Areas.Admin.Controllers
 {
     public class LoaiPhongsController : Controller
     {
-        private readonly PBL3Context _context;
+        private readonly ILoaiPhongService _loaiPhongService;
 
-        public LoaiPhongsController(PBL3Context context)
+        public LoaiPhongsController(ILoaiPhongService loaiPhongService)
         {
-            _context = context;
+            _loaiPhongService = loaiPhongService;
         }
 
         // GET: LoaiPhongs
         public async Task<IActionResult> Index()
         {
-            return View(await _context.LoaiPhongs.ToListAsync());
+            var dsLoaiPhong = await _loaiPhongService.GetAllLoaiPhongsAsync();
+            return View(dsLoaiPhong);
         }
 
         // GET: LoaiPhongs/Details/5
@@ -32,8 +32,7 @@ namespace PBL3.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var loaiPhong = await _context.LoaiPhongs
-                .FirstOrDefaultAsync(m => m.MaLoaiPhong == id);
+            var loaiPhong = await _loaiPhongService.GetLoaiPhongByIdAsync(id);
             if (loaiPhong == null)
             {
                 return NotFound();
@@ -53,15 +52,27 @@ namespace PBL3.Areas.Admin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaLoaiPhong,TenLoaiPhong,GiaNiemYet,SoNguoiToiDa,MoTa")] LoaiPhong loaiPhong)
+        public async Task<IActionResult> Create([Bind("MaLoaiPhong,TenLoaiPhong,SoNguoiToiDa,MoTa")] LoaiPhong loaiPhong)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                _context.Add(loaiPhong);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return View(loaiPhong);
             }
-            return View(loaiPhong);
+
+            if (await _loaiPhongService.KiemTraTrungMaAsync(loaiPhong.MaLoaiPhong))
+            {
+                ModelState.AddModelError("MaLoaiPhong", "Mã loại phòng đã tồn tại.");
+                return View(loaiPhong);
+            }
+
+            if (await _loaiPhongService.KiemTraTrungTenAsync(loaiPhong.TenLoaiPhong))
+            {
+                ModelState.AddModelError("TenLoaiPhong", "Tên loại phòng đã tồn tại.");
+                return View(loaiPhong);
+            }
+
+            await _loaiPhongService.CreateLoaiPhongAsync(loaiPhong);
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: LoaiPhongs/Edit/5
@@ -72,7 +83,7 @@ namespace PBL3.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var loaiPhong = await _context.LoaiPhongs.FindAsync(id);
+            var loaiPhong = await _loaiPhongService.GetLoaiPhongByIdAsync(id);
             if (loaiPhong == null)
             {
                 return NotFound();
@@ -81,38 +92,28 @@ namespace PBL3.Areas.Admin.Controllers
         }
 
         // POST: LoaiPhongs/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("MaLoaiPhong,TenLoaiPhong,GiaNiemYet,SoNguoiToiDa,MoTa")] LoaiPhong loaiPhong)
+        public async Task<IActionResult> Edit(string id, [Bind("MaLoaiPhong,TenLoaiPhong,SoNguoiToiDa,MoTa")] LoaiPhong loaiPhong)
         {
             if (id != loaiPhong.MaLoaiPhong)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(loaiPhong);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!LoaiPhongExists(loaiPhong.MaLoaiPhong))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return View(loaiPhong);
             }
-            return View(loaiPhong);
+
+            if (await _loaiPhongService.KiemTraTrungTenAsync(loaiPhong.TenLoaiPhong, loaiPhong.MaLoaiPhong))
+            {
+                ModelState.AddModelError("TenLoaiPhong", "Tên loại phòng đã tồn tại.");
+                return View(loaiPhong);
+            }
+
+            await _loaiPhongService.UpdateLoaiPhongAsync(loaiPhong);
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: LoaiPhongs/Delete/5
@@ -123,8 +124,7 @@ namespace PBL3.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var loaiPhong = await _context.LoaiPhongs
-                .FirstOrDefaultAsync(m => m.MaLoaiPhong == id);
+            var loaiPhong = await _loaiPhongService.GetLoaiPhongByIdAsync(id);
             if (loaiPhong == null)
             {
                 return NotFound();
@@ -138,19 +138,8 @@ namespace PBL3.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var loaiPhong = await _context.LoaiPhongs.FindAsync(id);
-            if (loaiPhong != null)
-            {
-                _context.LoaiPhongs.Remove(loaiPhong);
-            }
-
-            await _context.SaveChangesAsync();
+            await _loaiPhongService.DeleteLoaiPhongAsync(id);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool LoaiPhongExists(string id)
-        {
-            return _context.LoaiPhongs.Any(e => e.MaLoaiPhong == id);
         }
     }
 }

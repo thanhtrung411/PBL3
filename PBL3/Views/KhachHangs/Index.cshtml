@@ -1,0 +1,65 @@
+@model IEnumerable<PBL3.Models.KhachHang>
+
+@{
+    ViewData["Title"] = "Danh sách Khách hàng";
+}
+
+<h1>Danh sách Khách hàng</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Thêm khách hàng mới</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.MaKh)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.HoTen)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.GioiTinh)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Cccd)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SoDienThoai)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.QuocTich)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.MaKh)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.HoTen)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GioiTinh)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Cccd)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SoDienThoai)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.QuocTich)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.MaKh">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.MaKh">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.MaKh">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

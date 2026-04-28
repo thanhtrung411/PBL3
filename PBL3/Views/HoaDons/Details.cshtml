@@ -1,0 +1,48 @@
+@model PBL3.Models.HoaDon
+
+@{
+    ViewData["Title"] = "Chi tiết Hóa đơn";
+}
+
+<h1>Chi tiết Hóa đơn</h1>
+
+<div>
+    <h4>Hóa đơn</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-3">Mã Hóa Đơn</dt>
+        <dd class = "col-sm-9">@Html.DisplayFor(model => model.MaHoaDon)</dd>
+        
+        <dt class = "col-sm-3">Mã Đặt Phòng</dt>
+        <dd class = "col-sm-9">@Html.DisplayFor(model => model.MaDatPhong)</dd>
+
+        <dt class = "col-sm-3">Tổng phòng</dt>
+        <dd class = "col-sm-9">@Html.DisplayFor(model => model.TongTienPhong)</dd>
+        
+        <dt class = "col-sm-3">Tổng dịch vụ</dt>
+        <dd class = "col-sm-9">@Html.DisplayFor(model => model.TongTienDichVu)</dd>
+        
+        <dt class = "col-sm-3">Tiền đặt cọc</dt>
+        <dd class = "col-sm-9">@Html.DisplayFor(model => model.TienDatCoc)</dd>
+
+        <dt class = "col-sm-3">Giảm giá</dt>
+        <dd class = "col-sm-9 text-danger">-@Html.DisplayFor(model => model.TienGiamGiaPhong)</dd>
+
+        <hr />
+        <dt class = "col-sm-3 font-weight-bold">TỔNG THANH TOÁN</dt>
+        <dd class = "col-sm-9 font-weight-bold text-danger">@Html.DisplayFor(model => model.TongThanhToan)</dd>
+        
+        <dt class = "col-sm-3">Khách đã trả</dt>
+        <dd class = "col-sm-9 text-success">@Html.DisplayFor(model => model.SoTienDaThanhToan)</dd>
+        
+        <dt class = "col-sm-3">PPTT</dt>
+        <dd class = "col-sm-9">@Html.DisplayFor(model => model.PhuongThucThanhToan)</dd>
+        
+        <dt class = "col-sm-3">Trạng thái</dt>
+        <dd class = "col-sm-9">@Html.DisplayFor(model => model.TrangThai)</dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.MaHoaDon">Sửa</a> |
+    <a asp-action="Index">Quay lại danh sách</a>
+</div>
