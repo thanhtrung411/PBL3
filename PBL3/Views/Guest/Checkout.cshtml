@@ -1,8 +1,8 @@
-﻿@{
+﻿@model PBL3.Models.CheckoutViewModel
+@{
     // Bỏ qua Layout dùng chung
     Layout = null;
 }
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -25,6 +25,12 @@
                 </div>
 
                 <form action="/Guest/ProcessPayment" method="POST">
+                    
+                    <input type="hidden" name="RoomId" value="@Model.RoomId" />
+                    <input type="hidden" name="CheckIn" value="@Model.CheckIn" />
+                    <input type="hidden" name="CheckOut" value="@Model.CheckOut" />
+                    <input type="hidden" name="TotalAmount" value="@Model.GrandTotal" />
+
                     <div class="row g-5">
                         <div class="col-lg-8">
                             <div class="card shadow-sm border-0 mb-4">
@@ -84,41 +90,41 @@
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
                                         <div>
-                                            <h6 class="fw-bold">Deluxe Hướng Biển</h6>
-                                            <small class="text-muted">1 Phòng x 2 Đêm</small>
+                                            <h6 class="fw-bold">@Model.RoomName</h6>
+                                            <small class="text-muted">1 Phòng x @Model.NumberOfNights Đêm</small>
                                         </div>
-                                        <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=100&q=80" alt="Room Image" class="rounded" width="60" height="60" style="object-fit: cover;">
+                                        <img src="@Model.ImageUrl" alt="Room Image" class="rounded" width="60" height="60" style="object-fit: cover;">
                                     </div>
 
                                     <div class="row mb-3 border-bottom pb-3">
                                         <div class="col-6">
                                             <small class="text-muted d-block">Nhận phòng</small>
-                                            <span class="fw-bold">15-05-2026</span><br>
+                                            <span class="fw-bold">@Model.CheckIn.ToString("dd/MM/yyyy")</span><br>
                                             <small class="text-muted">Từ 14:00</small>
                                         </div>
                                         <div class="col-6 text-end">
                                             <small class="text-muted d-block">Trả phòng</small>
-                                            <span class="fw-bold">17-05-2026</span><br>
+                                            <span class="fw-bold">@Model.CheckOut.ToString("dd/MM/yyyy")</span><br>
                                             <small class="text-muted">Trước 12:00</small>
                                         </div>
                                     </div>
 
                                     <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Giá phòng (2 đêm)</span>
-                                        <span>2,400,000đ</span>
+                                        <span class="text-muted">Giá phòng (@Model.NumberOfNights đêm)</span>
+                                        <span>@Model.RoomTotal.ToString("N0")đ</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Phí dịch vụ (5%)</span>
-                                        <span>120,000đ</span>
+                                        <span>@Model.ServiceFee.ToString("N0")đ</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
                                         <span class="text-muted">Thuế VAT (8%)</span>
-                                        <span>201,600đ</span>
+                                        <span>@Model.VatFee.ToString("N0")đ</span>
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center mb-4">
                                         <span class="fw-bold fs-5">TỔNG CỘNG</span>
-                                        <span class="fw-bold fs-4 text-danger">2,721,600đ</span>
+                                        <span class="fw-bold fs-4 text-danger">@Model.GrandTotal.ToString("N0")đ</span>
                                     </div>
 
                                     <button type="submit" class="btn btn-danger w-100 py-3 fw-bold fs-6">Thanh toán & Đặt phòng</button>

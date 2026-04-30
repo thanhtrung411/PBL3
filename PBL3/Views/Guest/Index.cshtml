@@ -1,196 +1,653 @@
-﻿<!DOCTYPE html>
+@* 
+    ========================================
+    FILE: Views/Guest/Index.cshtml
+    PURPOSE: Hiển thị trang chủ khách sạn với danh sách các loại phòng
+    MODEL: IEnumerable<LoaiPhong>
+    ========================================
+
+    Tệp này chịu trách nhiệm hiển thị:
+    1. Banner chính (Hero section)
+    2. Thanh tìm kiếm nhanh
+    3. Danh sách các loại phòng từ database
+    4. Nút đặt phòng cho mỗi loại phòng
+
+    Dữ liệu được truyền từ GuestController.Index()
+*@
+
+@model IEnumerable<PBL3.Models.LoaiPhong>
+
+@{
+    ViewData["Title"] = "Venus Hotel - Trang Chủ & Đặt Phòng";
+    Layout = null; // Không dùng layout chung, trang này có design riêng
+}
+
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Venus Hotel - Trang chủ & Đặt phòng</title>
+    <title>@ViewData["Title"]</title>
+
+    <!-- Bootstrap CSS - Tập hợp style chung cho web responsive -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Font Awesome Icons - Thư viện icon đẹp -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Custom CSS - Style riêng cho trang này -->
     <style>
-        /* === CÀI ĐẶT CƠ BẢN === */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f8f9fa; color: #333; }
-        a { text-decoration: none; color: inherit; }
-        
-        /* === HEADER & NAVBAR === */
-        header { background-color: white; padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 24px; font-weight: bold; color: #111; }
-        .nav-links { display: flex; gap: 30px; }
-        .nav-links a:hover { color: #d4af37; }
-        .btn-login { background-color: #111; color: white; padding: 10px 20px; border-radius: 6px; font-weight: 500; transition: 0.3s; }
-        .btn-login:hover { background-color: #333; }
-
-        /* === HERO SECTION (TÌM PHÒNG) === */
-        .hero { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://noithatduckhang.com/img/uploads/images/review/T6-2019/quay-le-tan-5-sao-2.jpg') center/cover; height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; }
-        .hero h1 { font-size: 48px; margin-bottom: 10px; }
-        .hero p { font-size: 18px; margin-bottom: 40px; }
-        
-        /* THANH ĐẶT PHÒNG NHANH */
-        .booking-bar { background: white; padding: 20px 30px; border-radius: 12px; display: flex; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 80%; max-width: 1000px; }
-        .input-group { display: flex; flex-direction: column; text-align: left; flex: 1; }
-        .input-group label { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; text-transform: uppercase; }
-        .input-group input, .input-group select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
-        .btn-search { background-color: #111; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; padding: 0 30px; transition: 0.3s; }
-        .btn-search:hover { background-color: #d4af37; color: white; }
-
-        /* === LOẠI PHÒNG (ROOM SUITES) - ĐÃ CẬP NHẬT 4 PHÒNG === */
-        .section-title { text-align: center; margin: 60px 0 30px; font-size: 28px; text-transform: uppercase; letter-spacing: 2px; }
-        .rooms-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1300px; margin: 0 auto; padding: 0 20px; }
-        .room-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .room-card img { width: 100%; height: 220px; object-fit: cover; }
-        .room-info { padding: 20px; text-align: center; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
-        .room-info h3 { font-size: 18px; margin-bottom: 10px; }
-        .room-info p { color: #666; font-size: 13px; margin-bottom: 15px; line-height: 1.5; }
-        .btn-book-room { display: inline-block; padding: 10px 15px; border: 1px solid #111; color: #111; font-weight: 600; text-transform: uppercase; font-size: 13px; transition: 0.3s; margin-top: auto; }
-        .btn-book-room:hover { background: #111; color: white; }
-
-        /* Responsive cho 4 phòng */
-        @@media (max-width: 1100px) {
-            .rooms-container { grid-template-columns: repeat(2, 1fr); gap: 30px; }
+        /* ========================================
+           PHẦN 1: RESET & CÀI ĐẶT CƠ BẢN
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        /* ========================================
+           PHẦN 2: HEADER & NAVIGATION
+           ========================================
+
+           Header là phần thanh điều hướng ở trên cùng
+           - Logo khách sạn
+           - Menu điều hướng
+           - Nút đăng nhập
+        */
+        header {
+            background-color: white;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #111;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .nav-links a:hover {
+            color: #d4af37;
+        }
+
+        .btn-login {
+            background-color: #111;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .btn-login:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        /* ========================================
+           PHẦN 3: HERO SECTION (BANNER CHÍNH)
+           ========================================
+
+           Hero là phần hình nền lớn ở đầu trang
+           với tiêu đề "Chào mừng" và thanh tìm kiếm
+        */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                        url('https://noithatduckhang.com/img/uploads/images/review/T6-2019/quay-le-tan-5-sao-2.jpg') 
+                        center/cover no-repeat;
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .hero p {
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+
+        /* ========================================
+           PHẦN 4: THANH ĐẶT PHÒNG NHANH
+           ========================================
+
+           Thanh này cho phép khách:
+           - Chọn ngày nhận & trả phòng
+           - Chọn loại phòng
+           - Tìm kiếm phòng trống
+        */
+        .booking-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            display: flex;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 1000px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: #111;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-search {
+            background-color: #111;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px 30px;
+            transition: all 0.3s;
+            align-self: flex-end;
+            margin-top: auto;
+        }
+
+        .btn-search:hover {
+            background-color: #d4af37;
+            color: #111;
+        }
+
+        /* ========================================
+           PHẦN 5: TIÊU ĐỀ DANH SÁCH PHÒNG
+           ======================================== */
+        .section-title {
+            text-align: center;
+            margin: 60px 0 40px;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            color: #111;
+        }
+
+        /* ========================================
+           PHẦN 6: LƯỚI HIỂN THỊ CÁC PHÒNG
+           ========================================
+
+           Sử dụng CSS Grid để responsive:
+           - Trên màn hình lớn: 4 phòng / hàng
+           - Trên màn hình vừa: 2 phòng / hàng
+           - Trên màn hình nhỏ: 1 phòng / hàng
+        */
+        .rooms-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 20px 40px;
+        }
+
+        /* ========================================
+           PHẦN 7: THẺ PHÒNG (ROOM CARD)
+           ======================================== */
+        .room-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        /* Hiệu ứng hover: thẻ nổi lên khi di chuột */
+        .room-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+
+        /* Ảnh phòng */
+        .room-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Phần thông tin bên dưới ảnh */
+        .room-info {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: space-between;
+        }
+
+        .room-info h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #111;
+        }
+
+        .room-info .max-guests {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .room-info .description {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        /* ========================================
+           PHẦN 8: NÚT ĐẶT PHÒNG
+           ======================================== */
+        .btn-book-room {
+            display: inline-block;
+            padding: 10px 15px;
+            border: 2px solid #111;
+            color: #111;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+            text-align: center;
+            margin-top: auto;
+            border-radius: 4px;
+        }
+
+        .btn-book-room:hover {
+            background: #111;
+            color: white;
+        }
+
+        /* ========================================
+           PHẦN 9: FOOTER
+           ======================================== */
+        footer {
+            background-color: #111;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 60px;
+        }
+
+        /* ========================================
+           PHẦN 10: RESPONSIVE DESIGN
+           ========================================
+
+           Media query giúp trang hoạt động tốt
+           trên các thiết bị khác nhau:
+           - Desktop
+           - Tablet
+           - Mobile
+        */
+        @@media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+                flex-wrap: wrap;
+            }
+
+            .logo {
+                font-size: 20px;
+                flex: 1;
+            }
+
+            .nav-links {
+                gap: 15px;
+                font-size: 14px;
+            }
+
+            .btn-login {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+
+            .hero {
+                height: 40vh;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .booking-bar {
+                flex-direction: column;
+                width: 95%;
+            }
+
+            .btn-search {
+                width: 100%;
+                align-self: stretch;
+            }
+        }
+
         @@media (max-width: 600px) {
-            .rooms-container { grid-template-columns: 1fr; }
+            header {
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+                text-align: center;
+            }
+
+            .logo {
+                width: 100%;
+                text-align: center;
+            }
+
+            .btn-login {
+                width: 100%;
+            }
+
+            .section-title {
+                font-size: 20px;
+                margin: 40px 0 20px;
+            }
         }
-
-        /* === FORM ĐẶT PHÒNG CHO KHÁCH (GUEST BOOKING) === */
-        .booking-form-section { background: white; max-width: 800px; margin: 60px auto; padding: 40px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        .booking-form-section h2 { margin-bottom: 20px; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .form-row { display: flex; gap: 20px; margin-bottom: 20px; }
-        .form-row .input-group { flex: 1; }
-        textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; resize: vertical; min-height: 100px; font-family: inherit; }
-        .btn-submit { width: 100%; background: #111; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 20px; }
-        .btn-submit:hover { background: #d4af37; }
-
     </style>
 </head>
 <body>
-
+    <!-- ========================================
+         PHẦN 1: HEADER - THANH ĐIỀU HƯỚNG
+         ======================================== -->
     <header>
-        <div class="logo">Venus Hotel</div>
+        <div class="logo">🏨 Venus Hotel</div>
         <nav class="nav-links">
-            <a href="#">Trang chủ</a>
-            <a href="#rooms">Loại phòng</a>
-            <a href="#">Dịch vụ</a>
-            <a href="#">Liên hệ</a>
+            <a href="@Url.Action("Index", "Guest")" title="Trang chủ">Trang chủ</a>
+            <a href="#rooms" title="Xem các loại phòng">Loại phòng</a>
+            <a href="#services" title="Xem các dịch vụ">Dịch vụ</a>
+            <a href="#contact" title="Liên hệ chúng tôi">Liên hệ</a>
         </nav>
-        <a href="login.html" class="btn-login">Đăng nhập</a>
+        <a href="#" class="btn-login" title="Đăng nhập tài khoản">🔐 Đăng nhập</a>
     </header>
 
+    <!-- ========================================
+         PHẦN 2: HERO SECTION - BANNER CHÍNH
+         ======================================== -->
     <section class="hero">
-        <h1>Chào mừng đến với Venus Hotel</h1>
+        <h1>✨ Chào mừng đến với Venus Hotel ✨</h1>
         <p>Tận hưởng không gian nghỉ dưỡng tuyệt vời với giá tốt nhất</p>
-        
+
+        <!-- Thanh tìm kiếm phòng nhanh -->
         <div class="booking-bar">
             <div class="input-group">
-                <label>Nhận phòng</label>
-                <input type="date">
+                <label for="checkInDate">📅 Nhận phòng</label>
+                <input type="date" id="checkInDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" required>
             </div>
+
             <div class="input-group">
-                <label>Trả phòng</label>
-                <input type="date">
+                <label for="checkOutDate">📅 Trả phòng</label>
+                <input type="date" id="checkOutDate" value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required>
             </div>
+
             <div class="input-group">
-                <label>Khách & Phòng</label>
-                <select>
-                    <option>1 người lớn - 1 phòng</option>
-                    <option selected>2 người lớn - 1 phòng</option>
-                    <option>Gia đình (4 người) - 2 phòng</option>
+                <label for="roomTypeSelect">🏠 Loại phòng</label>
+                <select id="roomTypeSelect" required>
+                    <option value="">-- Chọn loại phòng --</option>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var room in Model)
+                        {
+                            <option value="@room.MaLoaiPhong">@room.TenLoaiPhong</option>
+                        }
+                    }
                 </select>
             </div>
-            <button class="btn-search">TÌM PHÒNG</button>
+
+            <button class="btn-search" onclick="searchRooms()" type="button">
+                🔍 TÌM PHÒNG
+            </button>
         </div>
     </section>
 
-    <h2 class="section-title" id="rooms">Các loại phòng</h2>
-    <section class="rooms-container">
-        
-        <div class="room-card">
-            <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop" alt="Standard Room">
-            <div class="room-info">
-                <div>
-                    <h3>Phòng Standard</h3>
-                    <p>Không gian ấm cúng, đầy đủ tiện nghi cơ bản. Phù hợp cho chuyến đi ngắn ngày.</p>
+    <!-- ========================================
+         PHẦN 3: NỘI DUNG CHÍNH
+         ======================================== -->
+    <main>
+        <!-- Tiêu đề danh sách phòng -->
+        <h2 class="section-title" id="rooms">
+            🌟 Các Loại Phòng Tại Venus Hotel 🌟
+        </h2>
+
+        <!-- Lưới hiển thị các loại phòng từ database -->
+        <section class="rooms-container">
+            @if (Model != null && Model.Any())
+            {
+                @* Vòng lặp: Duyệt qua từng loại phòng từ model *@
+                @foreach (var loaiPhong in Model)
+                {
+                    <!-- THẺ PHÒNG BẮT ĐẦU -->
+                    <div class="room-card">
+                        <!-- Ảnh phòng - tự động chọn ảnh theo tên loại phòng -->
+                        <img src="@GetRoomImage(loaiPhong.TenLoaiPhong)" 
+                             alt="Ảnh @loaiPhong.TenLoaiPhong"
+                             onerror="this.src='https://via.placeholder.com/400x220?text=Phòng';">
+
+                        <!-- Thông tin và nút đặt phòng -->
+                        <div class="room-info">
+                            <div>
+                                <!-- Tên loại phòng -->
+                                <h3>@loaiPhong.TenLoaiPhong</h3>
+
+                                <!-- Số người tối đa -->
+                                <div class="max-guests">
+                                    <i class="fa fa-users"></i>
+                                    Tối đa @loaiPhong.SoNguoiToiDa người
+                                </div>
+
+                                <!-- Mô tả phòng -->
+                                <p class="description">
+                                    @if (!string.IsNullOrWhiteSpace(loaiPhong.MoTa))
+                                    {
+                                        @loaiPhong.MoTa
+                                    }
+                                    else
+                                    {
+                                        <text>Phòng chất lượng cao với đầy đủ tiện nghi.</text>
+                                    }
+                                </p>
+                            </div>
+
+                            <!-- NÚT ĐẶT PHÒNG - Điều hướng đến Checkout -->
+                            <a href="@Url.Action("Checkout", "Guest", new { 
+                                roomId = loaiPhong.MaLoaiPhong, 
+                                checkIn = DateTime.Today.ToString("yyyy-MM-dd"), 
+                                checkOut = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd") 
+                            })" 
+                               class="btn-book-room"
+                               title="Đặt phòng @loaiPhong.TenLoaiPhong">
+                                <i class="fa fa-arrow-right"></i> CHỌN PHÒNG
+                            </a>
+                        </div>
+                    </div>
+                    <!-- THẺ PHÒNG KẾT THÚC -->
+                }
+            }
+            else
+            {
+                <!-- Thông báo khi không có loại phòng nào -->
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <p style="color: #999; font-size: 16px;">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        Hiện tại không có loại phòng nào có sẵn.
+                    </p>
                 </div>
-                <a href="/Guest/Checkout" class="btn-book-room">Chọn phòng</a>
-            </div>
-        </div>
+            }
+        </section>
+    </main>
 
-        <div class="room-card">
-            <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800&auto=format&fit=crop" alt="Deluxe Ocean View">
-            <div class="room-info">
-                <div>
-                    <h3>Deluxe Hướng Biển</h3>
-                    <p>Phòng rộng rãi với ban công ngắm biển tuyệt đẹp. Tận hưởng trọn vẹn bình minh.</p>
-                </div>
-                <a href="/Guest/Checkout" class="btn-book-room">Chọn phòng</a>
-            </div>
-        </div>
+    <!-- ========================================
+         PHẦN 4: FOOTER - CHÂN TRANG
+         ======================================== -->
+    <footer>
+        <p>&copy; 2026 Venus Hotel. Tất cả các quyền được bảo lưu.</p>
+        <p>📞 Liên hệ: 1900-8888 | 📧 Email: info@venushotel.vn</p>
+    </footer>
 
-        <div class="room-card">
-            <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop" alt="Venus Suite">
-            <div class="room-info">
-                <div>
-                    <h3>Venus Suite Cao Cấp</h3>
-                    <p>Trải nghiệm đẳng cấp với không gian phòng khách riêng biệt và bồn tắm sục.</p>
-                </div>
-                <a href="/Guest/Checkout" class="btn-book-room">Chọn phòng</a>
-            </div>
-        </div>
+    <!-- ========================================
+         PHẦN 5: JAVASCRIPT - XỬ LÝ SỰ KIỆN
+         ======================================== -->
+    <script>
+        /**
+         * Hàm tìm kiếm phòng
+         * 
+         * Công việc:
+         * 1. Lấy dữ liệu từ các input (ngày, loại phòng)
+         * 2. Kiểm tra tính hợp lệ
+         * 3. Điều hướng đến trang Checkout với các tham số
+         */
+        function searchRooms() {
+            const checkIn = document.getElementById('checkInDate').value;
+            const checkOut = document.getElementById('checkOutDate').value;
+            const roomType = document.getElementById('roomTypeSelect').value;
 
-        <div class="room-card">
-            <img src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800&auto=format&fit=crop" alt="Presidential Suite">
-            <div class="room-info">
-                <div>
-                    <h3>Presidential Tổng Thống</h3>
-                    <p>Đẳng cấp hoàng gia với diện tích siêu lớn, nội thất xa hoa và dịch vụ đặc quyền 24/7.</p>
-                </div>
-                <a href="/Guest/Checkout" class="btn-book-room">Chọn phòng</a>
-            </div>
-        </div>
+            // Kiểm tra xem các trường có được điền không
+            if (!checkIn || !checkOut) {
+                alert('❌ Vui lòng chọn ngày nhận và trả phòng');
+                return;
+            }
 
-    </section>
+            if (!roomType) {
+                alert('❌ Vui lòng chọn loại phòng');
+                return;
+            }
 
-    <section class="booking-form-section" id="booking-form">
-        <h2>Thông tin khách đặt phòng</h2>
-        <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Quý khách không cần đăng nhập. Vui lòng điền thông tin bên dưới để hoàn tất đặt phòng.</p>
-        
-        <form action="#" method="POST">
-            <div class="form-row">
-                <div class="input-group">
-                    <label>Họ và Tên *</label>
-                    <input type="text" placeholder="Nhập họ và tên (VD: Nguyễn Văn A)" required>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="input-group">
-                    <label>Email *</label>
-                    <input type="email" placeholder="email@example.com" required>
-                </div>
-                <div class="input-group">
-                    <label>Số điện thoại *</label>
-                    <input type="tel" placeholder="Nhập số điện thoại liên hệ" required>
-                </div>
-            </div>
+            // Kiểm tra ngày trả phòng phải sau ngày nhận phòng
+            if (new Date(checkOut) <= new Date(checkIn)) {
+                alert('❌ Ngày trả phòng phải sau ngày nhận phòng');
+                return;
+            }
 
-            <div class="form-row">
-                <div class="input-group">
-                    <label>Loại phòng đã chọn</label>
-                    <select>
-                        <option>Phòng Standard</option>
-                        <option>Deluxe Hướng Biển</option>
-                        <option>Venus Suite Cao Cấp</option>
-                        <option>Presidential Tổng Thống</option>
-                    </select>
-                </div>
-            </div>
+            // Nếu tất cả hợp lệ, điều hướng đến Checkout
+            window.location.href = `/Guest/Checkout?roomId=${roomType}&checkIn=${checkIn}&checkOut=${checkOut}`;
+        }
 
-            <div class="input-group">
-                <label>Yêu cầu đặc biệt (Không bắt buộc)</label>
-                <textarea placeholder="Ghi chú thêm (ví dụ: phòng tầng cao, giường phụ...)"></textarea>
-            </div>
+        /**
+         * Cho phép nhấn Enter để tìm kiếm
+         * (Thay vì phải click nút tìm)
+         */
+        document.getElementById('checkOutDate')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') searchRooms();
+        });
 
-            <button type="submit" class="btn-submit">XÁC NHẬN ĐẶT PHÒNG</button>
-        </form>
-    </section>
-
+        document.getElementById('roomTypeSelect')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') searchRooms();
+        });
+    </script>
 </body>
 </html>
+
+@{
+    /**
+     * Helper Method: GetRoomImage
+     * 
+     * Mục đích: Trả về ảnh phòng phù hợp dựa vào tên loại phòng
+     * 
+     * Tham số:
+     *   - roomName: Tên loại phòng từ database
+     * 
+     * Trả về: URL của ảnh phòng
+     * 
+     * Cách hoạt động:
+     * 1. Kiểm tra nếu tên phòng chứa từ khóa nào
+     * 2. Trả về ảnh tương ứng
+     * 3. Nếu không khớp, trả về ảnh placeholder
+     */
+    string GetRoomImage(string roomName)
+    {
+        if (string.IsNullOrWhiteSpace(roomName))
+            return "https://via.placeholder.com/400x220?text=Phòng";
+
+        if (roomName.Contains("Standard"))
+            return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop";
+
+        if (roomName.Contains("Deluxe"))
+            return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800&auto=format&fit=crop";
+
+        if (roomName.Contains("Suite") && !roomName.Contains("Presidential"))
+            return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop";
+
+        if (roomName.Contains("Presidential") || roomName.Contains("Tổng Thống"))
+            return "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800&auto=format&fit=crop";
+
+        // Ảnh mặc định cho các loại phòng không được nhận dạng
+        return "https://via.placeholder.com/400x220?text=" + Uri.EscapeDataString(roomName);
+    }
+}
