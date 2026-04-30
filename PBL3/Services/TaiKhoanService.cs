@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<TaiKhoan>> GetAllAsync()
         {
             return await _context.TaiKhoans
+                .AsNoTracking()
                 .Include(t => t.MaNvNavigation)
                 .Include(t => t.MaVaiTroNavigation)
                 .OrderBy(t => t.MaTk)
@@ -26,6 +27,7 @@ namespace PBL3.Services
         public async Task<TaiKhoan?> GetByIdAsync(string maTk)
         {
             return await _context.TaiKhoans
+                .AsNoTracking()
                 .Include(t => t.MaNvNavigation)
                 .Include(t => t.MaVaiTroNavigation)
                 .FirstOrDefaultAsync(m => m.MaTk == maTk);
@@ -80,9 +82,17 @@ namespace PBL3.Services
             var taiKhoan = await _context.TaiKhoans.FindAsync(maTk);
             if (taiKhoan == null) return false;
 
-            _context.TaiKhoans.Remove(taiKhoan);
-            await _context.SaveChangesAsync();
-            return true;
+            try
+            {
+                _context.TaiKhoans.Remove(taiKhoan);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                _context.ChangeTracker.Clear();
+                return false;
+            }
         }
     }
 }

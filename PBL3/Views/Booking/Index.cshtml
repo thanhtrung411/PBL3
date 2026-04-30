@@ -11,14 +11,6 @@
                     <p class="mb-0 text-white-50">Nhanh chóng, tiện lợi, bảo mật thông tin</p>
                 </div>
                 <div class="card-body p-5">
-                    @if (TempData["Error"] != null)
-                    {
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>Lỗi!</strong> @TempData["Error"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    }
-
                     <form asp-action="SubmitBooking" method="post">
                         
                         <h5 class="text-secondary mb-3 border-bottom pb-2">1. Thông tin liên hệ</h5>
@@ -60,7 +52,7 @@
                         </div>
 
                         <div class="alert alert-info">
-                            <i class="bi bi-info-circle-fill me-2"></i> <strong>Lưu ý:</strong> Để đảm bảo giữ chỗ, bạn sẽ được yêu cầu thanh toán đặt cọc 100% tiền phòng cho kỳ lưu trú này. Phòng cụ thể sẽ được Lễ tân xếp khi bạn tới Check-in.
+                            <i class="fa-solid fa-circle-info me-2"></i> <strong>Lưu ý:</strong> Để đảm bảo giữ chỗ, bạn sẽ được yêu cầu thanh toán đặt cọc 100% tiền phòng cho kỳ lưu trú này. Phòng cụ thể sẽ được Lễ tân xếp khi bạn tới Check-in.
                         </div>
 
                         <div class="d-grid gap-2 mt-4">

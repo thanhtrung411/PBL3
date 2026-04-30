@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<MaGiamGium>> GetAllAsync()
         {
             return await _context.MaGiamGia
+                .AsNoTracking()
                 .OrderBy(x => x.MaGiamGia)
                 .ToListAsync();
         }
@@ -24,6 +25,7 @@ namespace PBL3.Services
         public async Task<MaGiamGium?> GetByIdAsync(string maGiamGia)
         {
             return await _context.MaGiamGia
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaGiamGia == maGiamGia);
         }
 
@@ -100,8 +102,9 @@ namespace PBL3.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (DbUpdateException)
             {
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }

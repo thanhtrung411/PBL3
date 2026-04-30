@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class PhongsController : Controller
     {
         private readonly IPhongService _phongService;
@@ -78,8 +79,16 @@ namespace PBL3.Controllers
                 return View(phong);
             }
 
-            await _phongService.CreateAsync(phong);
-            return RedirectToAction(nameof(Index));
+            var createResult = await _phongService.CreateAsync(phong);
+            if (createResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể tạo phòng. Vui lòng kiểm tra dữ liệu liên quan.");
+            var createLoaiPhongList = await _loaiPhongService.GetAllLoaiPhongsAsync();
+            ViewBag.MaLoaiPhong = new SelectList(createLoaiPhongList, "MaLoaiPhong", "TenLoaiPhong", phong.MaLoaiPhong);
+            return View(phong);
         }
 
         // GET: Phongs/Edit/5
@@ -128,8 +137,16 @@ namespace PBL3.Controllers
                 return View(phong);
             }
 
-            await _phongService.UpdateAsync(phong);
-            return RedirectToAction(nameof(Index));
+            var updateResult = await _phongService.UpdateAsync(phong);
+            if (updateResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể cập nhật phòng. Vui lòng kiểm tra dữ liệu liên quan.");
+            var updateLoaiPhongList = await _loaiPhongService.GetAllLoaiPhongsAsync();
+            ViewBag.MaLoaiPhong = new SelectList(updateLoaiPhongList, "MaLoaiPhong", "TenLoaiPhong", phong.MaLoaiPhong);
+            return View(phong);
         }
 
         // GET: Phongs/Delete/5
@@ -154,7 +171,11 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _phongService.DeleteAsync(id);
+            var deleteResult = await _phongService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa phòng vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }

@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class NhanViensController : Controller
     {
         private readonly INhanVienService _nhanVienService;
@@ -83,8 +84,16 @@ namespace PBL3.Controllers
                 return View(nhanVien);
             }
 
-            await _nhanVienService.CreateAsync(nhanVien);
-            return RedirectToAction(nameof(Index));
+            var createResult = await _nhanVienService.CreateAsync(nhanVien);
+            if (createResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể tạo nhân viên. Vui lòng kiểm tra dữ liệu liên quan.");
+            var createVaiTroList = await _vaiTroService.GetAllAsync();
+            ViewBag.ChucVuList = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(createVaiTroList, "TenVaiTro", "TenVaiTro", nhanVien.ChucVu);
+            return View(nhanVien);
         }
 
         // GET: NhanViens/Edit/5
@@ -139,8 +148,16 @@ namespace PBL3.Controllers
                 return View(nhanVien);
             }
 
-            await _nhanVienService.UpdateAsync(nhanVien);
-            return RedirectToAction(nameof(Index));
+            var updateResult = await _nhanVienService.UpdateAsync(nhanVien);
+            if (updateResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể cập nhật nhân viên. Vui lòng kiểm tra dữ liệu liên quan.");
+            var updateVaiTroList = await _vaiTroService.GetAllAsync();
+            ViewBag.ChucVuList = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(updateVaiTroList, "TenVaiTro", "TenVaiTro", nhanVien.ChucVu);
+            return View(nhanVien);
         }
 
         // GET: NhanViens/Delete/5
@@ -165,8 +182,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _nhanVienService.DeleteAsync(id);
+            var deleteResult = await _nhanVienService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa nhân viên vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

@@ -1,18 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using PBL3.Data;
 using PBL3.Models;
+using PBL3.Services;
 using PBL3.Services.Interfaces;
 
 namespace PBL3.Controllers
 {
     public class BookingController : Controller
     {
+        private const string OnlineEmployeeId = "NV_ONLINE";
+
         private readonly ILoaiPhongService _loaiPhongService;
         private readonly IDatPhongService _datPhongService;
         private readonly IKhachHangService _khachHangService;
         private readonly IBangGiaPhongService _bangGiaPhongService;
         private readonly IChiTietHoaDonService _chiTietHoaDonService;
         private readonly IHoaDonService _hoaDonService;
+        private readonly ApplicationDbContext _context;
 
         public BookingController(
             ILoaiPhongService loaiPhongService, 
@@ -20,7 +26,8 @@ namespace PBL3.Controllers
             IKhachHangService khachHangService,
             IBangGiaPhongService bangGiaPhongService,
             IChiTietHoaDonService chiTietHoaDonService,
-            IHoaDonService hoaDonService)
+            IHoaDonService hoaDonService,
+            ApplicationDbContext context)
         {
             _loaiPhongService = loaiPhongService;
             _datPhongService = datPhongService;
@@ -28,6 +35,7 @@ namespace PBL3.Controllers
             _bangGiaPhongService = bangGiaPhongService;
             _chiTietHoaDonService = chiTietHoaDonService;
             _hoaDonService = hoaDonService;
+            _context = context;
         }
 
         public async Task<IActionResult> Index()
@@ -46,13 +54,40 @@ namespace PBL3.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            decimal giaPhong = await _bangGiaPhongService.LayGiaPhongHienTaiAsync(maLoaiPhong);
+            if (giaPhong <= 0)
+            {
+                TempData["Error"] = "Chưa cấu hình giá phòng cho loại phòng này. Vui lòng chọn loại phòng khác hoặc liên hệ lễ tân.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await using var bookingTransaction = await _context.Database.BeginTransactionAsync();
+
+            var ensureOnlineEmployeeResult = await EnsureOnlineEmployeeAsync();
+            if (!ensureOnlineEmployeeResult)
+            {
+                TempData["Error"] = "Không thể chuẩn bị nhân viên xử lý đặt phòng online. Vui lòng thử lại.";
+                return RedirectToAction(nameof(Index));
+            }
+
             // 1. Xử lý Khách Hàng (Tạo mới hoặc cập nhật)
             var khachHang = await _khachHangService.GetByCccdAsync(cccd);
             string maKh;
 
             if (khachHang == null)
             {
-                maKh = "KH" + new Random().Next(100000, 999999).ToString();
+                var newMaKh = await CodeGenerator.GenerateFromSequenceAsync(
+                    _context,
+                    "dbo.Seq_KhachHang",
+                    "KH",
+                    8);
+                if (newMaKh == null)
+                {
+                    TempData["Error"] = "Không thể tạo mã khách hàng. Vui lòng thử lại.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                maKh = newMaKh;
                 var newKh = new KhachHang
                 {
                     MaKh = maKh,
@@ -60,7 +95,12 @@ namespace PBL3.Controllers
                     HoTen = hoTen,
                     SoDienThoai = soDienThoai
                 };
-                await _khachHangService.CreateAsync(newKh);
+                var createKhResult = await _khachHangService.CreateAsync(newKh);
+                if (!createKhResult)
+                {
+                    TempData["Error"] = "Không thể tạo thông tin khách hàng. Vui lòng thử lại.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
             else
             {
@@ -69,25 +109,41 @@ namespace PBL3.Controllers
                 {
                     khachHang.HoTen = hoTen;
                     khachHang.SoDienThoai = soDienThoai;
-                    await _khachHangService.UpdateAsync(khachHang);
+                    var updateKhResult = await _khachHangService.UpdateAsync(khachHang);
+                    if (!updateKhResult)
+                    {
+                        TempData["Error"] = "Không thể cập nhật thông tin khách hàng. Vui lòng thử lại.";
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
             }
 
             // 2. Tạo Đặt Phòng
-            string maDatPhong = "DP" + new Random().Next(100000, 999999).ToString();
-            
+            string? maDatPhong = null;
+
+            maDatPhong = await CodeGenerator.GenerateFromSequenceAsync(
+                _context,
+                "dbo.Seq_DatPhong",
+                "DP",
+                8);
+            if (maDatPhong == null)
+            {
+                TempData["Error"] = "Không thể tạo mã đặt phòng. Vui lòng thử lại.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var datPhong = new DatPhong
             {
                 MaDatPhong = maDatPhong,
                 MaKh = maKh,
-                MaNv = "NV_ONLINE", // Mã nhân viên ảo dành cho Đặt online
+                MaNv = OnlineEmployeeId, // Mã nhân viên ảo dành cho Đặt online
                 TenKhSnapshot = hoTen,
                 CccdSnapshot = cccd,
                 SdtSnapshot = soDienThoai,
                 NgayDat = DateTime.Now,
                 NgayNhanPhong = ngayNhan,
                 NgayTraPhong = ngayTra,
-                TrangThai = "Chờ thanh toán"
+                TrangThai = DomainValues.DatPhongTrangThai.GiuCho
             };
 
             // DatPhongService.CreateAsync sẽ tự động tạo một HoaDon rỗng đi kèm
@@ -99,7 +155,6 @@ namespace PBL3.Controllers
             }
 
             // 3. Xử lý giá cả và Chi Tiết Hóa Đơn
-            decimal giaPhong = await _bangGiaPhongService.LayGiaPhongHienTaiAsync(maLoaiPhong);
             int soNgayO = ngayTra.DayNumber - ngayNhan.DayNumber;
             decimal tongTienPhong = giaPhong * soNgayO;
 
@@ -112,28 +167,60 @@ namespace PBL3.Controllers
             {
                 // Ép thanh toán 100% tiền phòng làm cọc cho Đặt online
                 hoaDonHienTai.TienDatCoc = tongTienPhong;
-                await _hoaDonService.UpdateAsync(hoaDonHienTai);
+                var updateHoaDonResult = await _hoaDonService.UpdateAsync(hoaDonHienTai);
+                if (!updateHoaDonResult)
+                {
+                    TempData["Error"] = "Không thể cập nhật hóa đơn. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var maCthd = await CodeGenerator.GenerateFromSequenceAsync(
+                    _context,
+                    "dbo.Seq_ChiTietHoaDon",
+                    "CT",
+                    8);
+                if (maCthd == null)
+                {
+                    TempData["Error"] = "Không thể tạo mã chi tiết hóa đơn. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
+                    return RedirectToAction(nameof(Index));
+                }
 
                 // Tạo Chi Tiết Hóa Đơn (Lưu ý: Không gán MaPhong cụ thể, chỉ ghi nhận loại)
                 var chiTiet = new ChiTietHoaDon
                 {
-                    MaCthd = "CT" + new Random().Next(100000, 999999).ToString(),
+                    MaCthd = maCthd,
                     MaHoaDon = hoaDonHienTai.MaHoaDon,
-                    LoaiMuc = "Phong",
+                    LoaiMuc = DomainValues.ChiTietHoaDonLoaiMuc.Phong,
                     // MaPhong để rỗng (null), chờ lễ tân xếp phòng thật sau
                     NoiDung = "Thuê phòng loại " + maLoaiPhong,
                     SoNguoi = 2, // Mặc định
                     SoLuong = 1, // 1 phòng
                     DonGia = giaPhong,
                     ThanhTien = tongTienPhong,
-                    TrangThai = "Bình thường"
+                    TrangThai = DomainValues.ChiTietHoaDonTrangThai.HieuLuc
                 };
-                await _chiTietHoaDonService.CreateAsync(chiTiet);
+                var createChiTietResult = await _chiTietHoaDonService.CreateAsync(chiTiet);
+                if (!createChiTietResult)
+                {
+                    TempData["Error"] = "Không thể tạo chi tiết hóa đơn. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
+                    return RedirectToAction(nameof(Index));
+                }
 
                 // Tính toán lại tổng tiền hóa đơn tự động
-                await _hoaDonService.TinhToanTongTienAsync(hoaDonHienTai.MaHoaDon);
+                var tinhTienResult = await _hoaDonService.TinhToanTongTienAsync(hoaDonHienTai.MaHoaDon);
+                if (!tinhTienResult)
+                {
+                    TempData["Error"] = "Không thể tính tổng tiền hóa đơn. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            else
+            {
+                TempData["Error"] = "Không tìm thấy hóa đơn vừa tạo. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
+                return RedirectToAction(nameof(Index));
             }
             
+            await bookingTransaction.CommitAsync();
             return RedirectToAction("Success", new { id = maDatPhong });
         }
 
@@ -142,5 +229,35 @@ namespace PBL3.Controllers
             ViewBag.MaDatPhong = id;
             return View();
         }
+
+        private async Task<bool> EnsureOnlineEmployeeAsync()
+        {
+            if (await _context.NhanViens.AnyAsync(nv => nv.MaNv == OnlineEmployeeId))
+            {
+                return true;
+            }
+
+            _context.NhanViens.Add(new NhanVien
+            {
+                MaNv = OnlineEmployeeId,
+                HoTen = "Đặt phòng online",
+                SoDienThoai = "0000000000",
+                Email = "online@pbl3.local",
+                ChucVu = "Hệ thống",
+                TrangThai = DomainValues.NhanVienTrangThai.DangLam
+            });
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                _context.ChangeTracker.Clear();
+                return await _context.NhanViens.AnyAsync(nv => nv.MaNv == OnlineEmployeeId);
+            }
+        }
+
     }
 }

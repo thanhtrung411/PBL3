@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<NhanVien>> GetAllAsync()
         {
             return await _context.NhanViens
+                .AsNoTracking()
                 .OrderBy(x => x.MaNv)
                 .ToListAsync();
         }
@@ -24,6 +25,7 @@ namespace PBL3.Services
         public async Task<NhanVien?> GetByIdAsync(string maNv)
         {
             return await _context.NhanViens
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaNv == maNv);
         }
 
@@ -130,8 +132,9 @@ namespace PBL3.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (DbUpdateException)
             {
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }
