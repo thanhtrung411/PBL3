@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<Phong>> GetAllAsync()
         {
             return await _context.Phongs
+                .AsNoTracking()
                 .Include(x => x.MaLoaiPhongNavigation)
                 .OrderBy(x => x.SoPhong)
                 .ToListAsync();
@@ -25,6 +26,7 @@ namespace PBL3.Services
         public async Task<Phong?> GetByIdAsync(string maPhong)
         {
             return await _context.Phongs
+                .AsNoTracking()
                 .Include(x => x.MaLoaiPhongNavigation)
                 .FirstOrDefaultAsync(x => x.MaPhong == maPhong);
         }
@@ -115,8 +117,9 @@ namespace PBL3.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (DbUpdateException)
             {
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }

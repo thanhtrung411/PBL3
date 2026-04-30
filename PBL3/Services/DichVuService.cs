@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<DichVu>> GetAllAsync()
         {
             return await _context.DichVus
+                .AsNoTracking()
                 .OrderBy(x => x.MaDv)
                 .ToListAsync();
         }
@@ -24,6 +25,7 @@ namespace PBL3.Services
         public async Task<DichVu?> GetByIdAsync(string maDv)
         {
             return await _context.DichVus
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaDv == maDv);
         }
 
@@ -99,8 +101,9 @@ namespace PBL3.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (DbUpdateException)
             {
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }

@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<BangGiaPhong>> GetAllAsync()
         {
             return await _context.BangGiaPhongs
+                .AsNoTracking()
                 .Include(b => b.MaLoaiPhongNavigation)
                 .OrderBy(b => b.MaBangGia)
                 .ToListAsync();
@@ -25,6 +26,7 @@ namespace PBL3.Services
         public async Task<BangGiaPhong?> GetByIdAsync(string maBangGia)
         {
             return await _context.BangGiaPhongs
+                .AsNoTracking()
                 .Include(b => b.MaLoaiPhongNavigation)
                 .FirstOrDefaultAsync(m => m.MaBangGia == maBangGia);
         }
@@ -55,15 +57,24 @@ namespace PBL3.Services
             var bangGiaPhong = await _context.BangGiaPhongs.FindAsync(maBangGia);
             if (bangGiaPhong == null) return false;
 
-            _context.BangGiaPhongs.Remove(bangGiaPhong);
-            await _context.SaveChangesAsync();
-            return true;
+            try
+            {
+                _context.BangGiaPhongs.Remove(bangGiaPhong);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                _context.ChangeTracker.Clear();
+                return false;
+            }
         }
 
         public async Task<decimal> LayGiaPhongHienTaiAsync(string maLoaiPhong)
         {
             var today = DateOnly.FromDateTime(DateTime.Now);
             var bangGia = await _context.BangGiaPhongs
+                .AsNoTracking()
                 .Where(b => b.MaLoaiPhong == maLoaiPhong && 
                             b.TrangThai == "Hoạt động" && 
                             b.TuNgay <= today && 

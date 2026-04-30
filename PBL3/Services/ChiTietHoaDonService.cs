@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<ChiTietHoaDon>> GetAllAsync()
         {
             return await _context.ChiTietHoaDons
+                .AsNoTracking()
                 .Include(c => c.MaHoaDonNavigation)
                 .Include(c => c.MaPhongNavigation)
                 .Include(c => c.MaDvNavigation)
@@ -28,6 +29,7 @@ namespace PBL3.Services
         public async Task<ChiTietHoaDon?> GetByIdAsync(string maCthd)
         {
             return await _context.ChiTietHoaDons
+                .AsNoTracking()
                 .Include(c => c.MaHoaDonNavigation)
                 .Include(c => c.MaPhongNavigation)
                 .Include(c => c.MaDvNavigation)
@@ -61,9 +63,17 @@ namespace PBL3.Services
             var cthd = await _context.ChiTietHoaDons.FindAsync(maCthd);
             if (cthd == null) return false;
 
-            _context.ChiTietHoaDons.Remove(cthd);
-            await _context.SaveChangesAsync();
-            return true;
+            try
+            {
+                _context.ChiTietHoaDons.Remove(cthd);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                _context.ChangeTracker.Clear();
+                return false;
+            }
         }
     }
 }

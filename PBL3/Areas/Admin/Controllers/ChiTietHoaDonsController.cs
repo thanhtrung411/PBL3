@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class ChiTietHoaDonsController : Controller
     {
         private readonly IChiTietHoaDonService _chiTietHoaDonService;
@@ -42,7 +43,7 @@ namespace PBL3.Controllers
             return View(chiTietHoaDon);
         }
 
-        private async Task PrepareViewBags(ChiTietHoaDon chiTietHoaDon = null)
+        private async Task PrepareViewBags(ChiTietHoaDon? chiTietHoaDon = null)
         {
             ViewData["MaHoaDon"] = new SelectList(await _hoaDonService.GetAllAsync(), "MaHoaDon", "MaHoaDon", chiTietHoaDon?.MaHoaDon);
             ViewData["MaPhong"] = new SelectList(await _phongService.GetAllAsync(), "MaPhong", "SoPhong", chiTietHoaDon?.MaPhong);
@@ -77,8 +78,13 @@ namespace PBL3.Controllers
                 }
                 else
                 {
-                    await _chiTietHoaDonService.CreateAsync(chiTietHoaDon);
-                    return RedirectToAction(nameof(Index));
+                    var createResult = await _chiTietHoaDonService.CreateAsync(chiTietHoaDon);
+                    if (createResult)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    ModelState.AddModelError(string.Empty, "Không thể tạo chi tiết hóa đơn. Vui lòng kiểm tra dữ liệu liên quan.");
                 }
             }
 
@@ -114,8 +120,13 @@ namespace PBL3.Controllers
 
             if (ModelState.IsValid)
             {
-                await _chiTietHoaDonService.UpdateAsync(chiTietHoaDon);
-                return RedirectToAction(nameof(Index));
+                var updateResult = await _chiTietHoaDonService.UpdateAsync(chiTietHoaDon);
+                if (updateResult)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                ModelState.AddModelError(string.Empty, "Không thể cập nhật chi tiết hóa đơn. Vui lòng kiểm tra dữ liệu liên quan.");
             }
 
             await PrepareViewBags(chiTietHoaDon);
@@ -136,8 +147,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _chiTietHoaDonService.DeleteAsync(id);
+            var deleteResult = await _chiTietHoaDonService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa chi tiết hóa đơn vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quản trị PBL3</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/PBL3.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+    <div class="app-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>Hotel Manager</h2>
+                <span>PBL3 Admin</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="Admin" asp-action="Index">
+                    <i class="fa fa-chart-line"></i> Tổng quan
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="Phongs" asp-action="Index">
+                    <i class="fa fa-bed"></i> Phòng
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="LoaiPhongs" asp-action="Index">
+                    <i class="fa fa-layer-group"></i> Loại phòng
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="BangGiaPhongs" asp-action="Index">
+                    <i class="fa fa-tags"></i> Bảng giá
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="KhachHangs" asp-action="Index">
+                    <i class="fa fa-users"></i> Khách hàng
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="DatPhongs" asp-action="Index">
+                    <i class="fa fa-calendar-check"></i> Đặt phòng
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="HoaDons" asp-action="Index">
+                    <i class="fa fa-file-invoice-dollar"></i> Hóa đơn
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="ChiTietHoaDons" asp-action="Index">
+                    <i class="fa fa-list-check"></i> Chi tiết HĐ
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="DichVus" asp-action="Index">
+                    <i class="fa fa-concierge-bell"></i> Dịch vụ
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="NhanViens" asp-action="Index">
+                    <i class="fa fa-id-badge"></i> Nhân viên
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="TaiKhoans" asp-action="Index">
+                    <i class="fa fa-user-lock"></i> Tài khoản
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="VaiTros" asp-action="Index">
+                    <i class="fa fa-shield-halved"></i> Vai trò
+                </a>
+                <a class="nav-link-custom" asp-area="Admin" asp-controller="MaGiamGias" asp-action="Index">
+                    <i class="fa fa-ticket"></i> Mã giảm giá
+                </a>
+                <a class="nav-link-custom" asp-area="" asp-controller="Guest" asp-action="Index">
+                    <i class="fa fa-arrow-left"></i> Về trang khách
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

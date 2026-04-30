@@ -5,11 +5,15 @@ using PBL3.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Lấy chuỗi kết nối từ file appsettings.json
+// Read from User Secrets, environment variables, or appsettings fallback.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Missing database connection string. Configure ConnectionStrings:DefaultConnection with User Secrets or the ConnectionStrings__DefaultConnection environment variable.");
+}
 
-// 2. Đăng ký DbContext vào hệ thống (Dependency Injection)
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Add services to the container.
@@ -35,6 +39,8 @@ builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
 
 var app = builder.Build();
 
+await WarmUpDatabaseAsync(app.Services);
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -50,8 +56,31 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Admin}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Guest}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 app.Run();
+
+static async Task WarmUpDatabaseAsync(IServiceProvider services)
+{
+    using var scope = services.CreateScope();
+    var logger = scope.ServiceProvider
+        .GetRequiredService<ILoggerFactory>()
+        .CreateLogger("DatabaseWarmUp");
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    try
+    {
+        await context.Database.CanConnectAsync();
+        await context.LoaiPhongs.AsNoTracking().AnyAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "Database warm-up failed. The first database request may be slower.");
+    }
+}

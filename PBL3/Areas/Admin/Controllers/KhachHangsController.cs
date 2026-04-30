@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class KhachHangsController : Controller
     {
         private readonly IKhachHangService _khachHangService;
@@ -66,8 +67,15 @@ namespace PBL3.Controllers
                 return View(khachHang);
             }
 
-            await _khachHangService.CreateAsync(khachHang);
-            return RedirectToAction(nameof(Index));
+            var createResult = await _khachHangService.CreateAsync(khachHang);
+            if (createResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể tạo khách hàng. Vui lòng kiểm tra dữ liệu liên quan.");
+            ViewBag.QuocTichList = GetQuocTichSelectList(khachHang.QuocTich);
+            return View(khachHang);
         }
 
         public async Task<IActionResult> Edit(string id)
@@ -98,8 +106,15 @@ namespace PBL3.Controllers
                 return View(khachHang);
             }
 
-            await _khachHangService.UpdateAsync(khachHang);
-            return RedirectToAction(nameof(Index));
+            var updateResult = await _khachHangService.UpdateAsync(khachHang);
+            if (updateResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể cập nhật khách hàng. Vui lòng kiểm tra dữ liệu liên quan.");
+            ViewBag.QuocTichList = GetQuocTichSelectList(khachHang.QuocTich);
+            return View(khachHang);
         }
 
         public async Task<IActionResult> Delete(string id)
@@ -114,7 +129,11 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _khachHangService.DeleteAsync(id);
+            var deleteResult = await _khachHangService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa khách hàng vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -137,3 +156,4 @@ namespace PBL3.Controllers
         }
     }
 }
+

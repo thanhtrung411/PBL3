@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class LoaiPhongsController : Controller
     {
         private readonly ILoaiPhongService _loaiPhongService;
@@ -71,8 +72,14 @@ namespace PBL3.Controllers
                 return View(loaiPhong);
             }
 
-            await _loaiPhongService.CreateLoaiPhongAsync(loaiPhong);
-            return RedirectToAction(nameof(Index));
+            var createResult = await _loaiPhongService.CreateLoaiPhongAsync(loaiPhong);
+            if (createResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể tạo loại phòng. Vui lòng kiểm tra dữ liệu liên quan.");
+            return View(loaiPhong);
         }
 
         // GET: LoaiPhongs/Edit/5
@@ -112,8 +119,14 @@ namespace PBL3.Controllers
                 return View(loaiPhong);
             }
 
-            await _loaiPhongService.UpdateLoaiPhongAsync(loaiPhong);
-            return RedirectToAction(nameof(Index));
+            var updateResult = await _loaiPhongService.UpdateLoaiPhongAsync(loaiPhong);
+            if (updateResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể cập nhật loại phòng. Vui lòng kiểm tra dữ liệu liên quan.");
+            return View(loaiPhong);
         }
 
         // GET: LoaiPhongs/Delete/5
@@ -138,8 +151,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _loaiPhongService.DeleteLoaiPhongAsync(id);
+            var deleteResult = await _loaiPhongService.DeleteLoaiPhongAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa loại phòng vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

@@ -1,16 +1,14 @@
 ﻿@{
     ViewData["Title"] = "Trang chủ - Venus Hotel";
     // Nếu bạn không dùng Layout chung, hãy bỏ comment dòng dưới đây:
-    // Layout = null; 
+    // Layout = null;
 }
 
-@* LƯU Ý: Trong dự án thực tế, 2 link CDN của Font và Icon dưới đây 
-    nên được di chuyển vào thẻ <head> của file Views/Shared/_Layout.cshtml 
+@* LƯU Ý: Trong dự án thực tế, link font dưới đây nên được di chuyển vào thẻ <head> của file Views/Shared/_Layout.cshtml
 *@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 @* CSS CỤ THỂ CHO TRANG NÀY (Có thể tách ra file wwwroot/css/home.css) *@
 <style>
@@ -34,22 +32,6 @@
 
     .venus-container a { text-decoration: none; color: var(--text-main); }
 
-    /* === HEADER === */
-    /* Header thường nằm trong _Layout, nhưng nếu bạn muốn giữ riêng ở trang này thì dùng code dưới */
-    .venus-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 40px;
-        background-color: var(--bg-main);
-        border-bottom: 1px solid var(--border-color);
-    }
-    .logo { font-size: 20px; font-weight: 700; }
-    .nav-links { display: flex; gap: 32px; }
-    .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); transition: color 0.2s; }
-    .nav-links a:hover { color: var(--text-main); }
-    .auth-buttons { display: flex; gap: 12px; }
-    
     .btn-custom {
         padding: 10px 20px;
         border-radius: 8px;
@@ -130,8 +112,6 @@
         .dest-grid { grid-template-columns: repeat(3, 1fr); }
     }
     @@media (max-width: 768px) {
-        .venus-header { flex-direction: column; gap: 16px; padding: 16px; }
-        .nav-links { display: none; }
         .hero h1 { font-size: 28px; }
         .search-box { grid-template-columns: 1fr; }
         .search-box .input-group:nth-child(3), .btn-search { grid-column: span 1; }
@@ -143,19 +123,6 @@
 </style>
 
 <div class="venus-container">
-    <header class="venus-header">
-        <div class="logo">Venus Hotel</div>
-        <nav class="nav-links">
-            <a href='@Url.Action("Index", "Home")'>Lưu trú</a>
-            <a href="#">Hoạt động</a>
-            <a href="#">Đăng chỗ nghỉ</a>
-        </nav>
-        <div class="auth-buttons">
-            <button class="btn-custom">Đăng nhập</button>
-            <button class="btn-custom btn-dark" id="btnRegister">Đăng ký</button>
-        </div>
-    </header>
-
     <main>
         <section class="hero">
             <h1>Tìm chỗ nghỉ hoàn hảo</h1>
@@ -163,7 +130,7 @@
         </section>
 
         <div class="search-container">
-            <form asp-controller="Search" asp-action="Index" method="get" class="search-box">
+            <form asp-controller="Booking" asp-action="Index" method="get" class="search-box">
                 <div class="input-group">
                     <label>Nhận phòng</label>
                     <div class="input-wrapper">
@@ -253,7 +220,6 @@
 @* Block Scripts sẽ được render vào cuối thẻ <body> trong _Layout.cshtml *@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-        const btnRegister = document.getElementById('btnRegister');
         const btnSearch = document.getElementById('btnSearch');
 
         const originalColor = "var(--btn-dark)"; 
@@ -273,7 +239,6 @@
             });
         };
 
-        applyHoverEffect(btnRegister);
         applyHoverEffect(btnSearch);
     });
 </script>
