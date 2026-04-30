@@ -20,10 +20,10 @@
         <dd class = "col-sm-9">@Html.DisplayFor(model => model.LoaiMuc)</dd>
         
         <dt class = "col-sm-3">Phòng</dt>
-        <dd class = "col-sm-9">@Html.DisplayFor(model => model.MaPhongNavigation.SoPhong)</dd>
+        <dd class = "col-sm-9">@(Model.MaPhongNavigation?.SoPhong ?? "-")</dd>
         
         <dt class = "col-sm-3">Dịch vụ</dt>
-        <dd class = "col-sm-9">@Html.DisplayFor(model => model.MaDvNavigation.TenDv)</dd>
+        <dd class = "col-sm-9">@(Model.MaDvNavigation?.TenDv ?? "-")</dd>
         
         <dt class = "col-sm-3">Nội dung</dt>
         <dd class = "col-sm-9">@Html.DisplayFor(model => model.NoiDung)</dd>

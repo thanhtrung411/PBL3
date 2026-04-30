@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<HoaDon>> GetAllAsync()
         {
             return await _context.HoaDons
+                .AsNoTracking()
                 .Include(h => h.MaDatPhongNavigation)
                 .Include(h => h.MaGiamGiaPhongNavigation)
                 .OrderBy(h => h.MaHoaDon)
@@ -26,6 +27,7 @@ namespace PBL3.Services
         public async Task<HoaDon?> GetByIdAsync(string maHoaDon)
         {
             return await _context.HoaDons
+                .AsNoTracking()
                 .Include(h => h.MaDatPhongNavigation)
                 .Include(h => h.MaGiamGiaPhongNavigation)
                 .FirstOrDefaultAsync(m => m.MaHoaDon == maHoaDon);
@@ -57,9 +59,17 @@ namespace PBL3.Services
             var hoaDon = await _context.HoaDons.FindAsync(maHoaDon);
             if (hoaDon == null) return false;
 
-            _context.HoaDons.Remove(hoaDon);
-            await _context.SaveChangesAsync();
-            return true;
+            try
+            {
+                _context.HoaDons.Remove(hoaDon);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                _context.ChangeTracker.Clear();
+                return false;
+            }
         }
 
         public async Task<bool> TinhToanTongTienAsync(string maHoaDon)
@@ -72,11 +82,11 @@ namespace PBL3.Services
             if (hoaDon == null) return false;
 
             hoaDon.TongTienPhong = hoaDon.ChiTietHoaDons
-                .Where(c => c.LoaiMuc == "Phong")
+                .Where(c => c.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong)
                 .Sum(c => c.ThanhTien);
 
             hoaDon.TongTienDichVu = hoaDon.ChiTietHoaDons
-                .Where(c => c.LoaiMuc == "DichVu")
+                .Where(c => c.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.DichVu)
                 .Sum(c => c.ThanhTien);
 
             hoaDon.TienGiamGiaPhong = 0;
@@ -90,7 +100,7 @@ namespace PBL3.Services
                     discount.DenNgay >= today &&
                     (hoaDon.TongTienPhong + hoaDon.TongTienDichVu) >= discount.HoaDonToiThieu)
                 {
-                    if (discount.LoaiGiamGia == "Phần Trăm" || discount.LoaiGiamGia == "PhanTram")
+                    if (discount.LoaiGiamGia == DomainValues.MaGiamGiaLoai.PhanTram)
                     {
                         hoaDon.TienGiamGiaPhong = (hoaDon.TongTienPhong + hoaDon.TongTienDichVu) * (discount.GiaTriGiam / 100m);
                         if (discount.GiamToiDa.HasValue && hoaDon.TienGiamGiaPhong > discount.GiamToiDa.Value)

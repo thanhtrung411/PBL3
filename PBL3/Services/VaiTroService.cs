@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<VaiTro>> GetAllAsync()
         {
             return await _context.VaiTros
+                .AsNoTracking()
                 .OrderBy(x => x.MaVaiTro)
                 .ToListAsync();
         }
@@ -24,6 +25,7 @@ namespace PBL3.Services
         public async Task<VaiTro?> GetByIdAsync(string maVaiTro)
         {
             return await _context.VaiTros
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaVaiTro == maVaiTro);
         }
 
@@ -95,8 +97,9 @@ namespace PBL3.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (DbUpdateException)
             {
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }

@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class HoaDonsController : Controller
     {
         private readonly IHoaDonService _hoaDonService;
@@ -60,11 +62,19 @@ namespace PBL3.Controllers
                 }
                 else
                 {
-                    try {
-                        await _hoaDonService.CreateAsync(hoaDon);
-                        return RedirectToAction(nameof(Index));
-                    } catch(Exception) {
-                        ModelState.AddModelError("MaDatPhong", "Lỗi liên kết. Mỗi Đặt phòng chỉ có 1 hóa đơn duy nhất.");
+                    try
+                    {
+                        var createResult = await _hoaDonService.CreateAsync(hoaDon);
+                        if (createResult)
+                        {
+                            return RedirectToAction(nameof(Index));
+                        }
+
+                        ModelState.AddModelError(string.Empty, "Không thể tạo hóa đơn. Vui lòng kiểm tra dữ liệu liên quan.");
+                    }
+                    catch (DbUpdateException)
+                    {
+                        ModelState.AddModelError("MaDatPhong", "Không thể tạo hóa đơn. Đặt phòng không tồn tại hoặc đã có hóa đơn.");
                     }
                 }
             }
@@ -102,8 +112,13 @@ namespace PBL3.Controllers
 
             if (ModelState.IsValid)
             {
-                await _hoaDonService.UpdateAsync(hoaDon);
-                return RedirectToAction(nameof(Index));
+                var updateResult = await _hoaDonService.UpdateAsync(hoaDon);
+                if (updateResult)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                ModelState.AddModelError(string.Empty, "Không thể cập nhật hóa đơn. Vui lòng kiểm tra dữ liệu liên quan.");
             }
 
             ViewData["MaDatPhong"] = new SelectList(await _datPhongService.GetAllAsync(), "MaDatPhong", "MaDatPhong", hoaDon.MaDatPhong);
@@ -125,8 +140,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _hoaDonService.DeleteAsync(id);
+            var deleteResult = await _hoaDonService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa hóa đơn vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

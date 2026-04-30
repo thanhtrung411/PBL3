@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<KhachHang>> GetAllAsync()
         {
             return await _context.KhachHangs
+                .AsNoTracking()
                 .OrderBy(x => x.MaKh)
                 .ToListAsync();
         }
@@ -24,6 +25,7 @@ namespace PBL3.Services
         public async Task<KhachHang?> GetByIdAsync(string maKh)
         {
             return await _context.KhachHangs
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaKh == maKh);
         }
 
@@ -88,7 +90,21 @@ namespace PBL3.Services
                 return false;
             }
 
-            _context.KhachHangs.Update(khachHang);
+            var existingKhachHang = await _context.KhachHangs.FindAsync(khachHang.MaKh);
+            if (existingKhachHang == null)
+            {
+                return false;
+            }
+
+            existingKhachHang.HoTen = khachHang.HoTen;
+            existingKhachHang.GioiTinh = khachHang.GioiTinh;
+            existingKhachHang.NgaySinh = khachHang.NgaySinh;
+            existingKhachHang.Cccd = khachHang.Cccd;
+            existingKhachHang.SoDienThoai = khachHang.SoDienThoai;
+            existingKhachHang.Email = khachHang.Email;
+            existingKhachHang.DiaChi = khachHang.DiaChi;
+            existingKhachHang.QuocTich = khachHang.QuocTich;
+
             await _context.SaveChangesAsync();
             return true;
         }
@@ -107,8 +123,9 @@ namespace PBL3.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (DbUpdateException)
             {
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }

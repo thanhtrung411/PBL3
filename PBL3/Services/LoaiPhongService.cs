@@ -17,6 +17,7 @@ namespace PBL3.Services
         public async Task<List<LoaiPhong>> GetAllLoaiPhongsAsync()
         {
             return await _context.LoaiPhongs
+                .AsNoTracking()
                 .OrderBy(x => x.MaLoaiPhong)
                 .ToListAsync();
         }
@@ -24,6 +25,7 @@ namespace PBL3.Services
         public async Task<LoaiPhong?> GetLoaiPhongByIdAsync(string maLoaiPhong)
         {
             return await _context.LoaiPhongs
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.MaLoaiPhong == maLoaiPhong);
         }
 
@@ -96,8 +98,9 @@ namespace PBL3.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch
+            catch (DbUpdateException)
             {
+                _context.ChangeTracker.Clear();
                 return false;
             }
         }

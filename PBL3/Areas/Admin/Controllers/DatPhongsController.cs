@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class DatPhongsController : Controller
     {
         private readonly IDatPhongService _datPhongService;
@@ -60,8 +61,13 @@ namespace PBL3.Controllers
                 }
                 else
                 {
-                    await _datPhongService.CreateAsync(datPhong);
-                    return RedirectToAction(nameof(Index));
+                    var createResult = await _datPhongService.CreateAsync(datPhong);
+                    if (createResult)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    ModelState.AddModelError(string.Empty, "Không thể tạo đặt phòng. Vui lòng kiểm tra khách hàng, nhân viên, trạng thái hoặc dữ liệu liên quan.");
                 }
             }
 
@@ -98,8 +104,13 @@ namespace PBL3.Controllers
 
             if (ModelState.IsValid)
             {
-                await _datPhongService.UpdateAsync(datPhong);
-                return RedirectToAction(nameof(Index));
+                var updateResult = await _datPhongService.UpdateAsync(datPhong);
+                if (updateResult)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                ModelState.AddModelError(string.Empty, "Không thể cập nhật đặt phòng. Vui lòng kiểm tra dữ liệu liên quan.");
             }
 
             ViewData["MaKh"] = new SelectList(await _khachHangService.GetAllAsync(), "MaKh", "HoTen", datPhong.MaKh);
@@ -121,8 +132,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _datPhongService.DeleteAsync(id);
+            var deleteResult = await _datPhongService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa đặt phòng vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

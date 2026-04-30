@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class DichVusController : Controller
     {
         private readonly IDichVuService _dichVuService;
@@ -49,8 +50,14 @@ namespace PBL3.Controllers
                 return View(dichVu);
             }
 
-            await _dichVuService.CreateAsync(dichVu);
-            return RedirectToAction(nameof(Index));
+            var createResult = await _dichVuService.CreateAsync(dichVu);
+            if (createResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể tạo dịch vụ. Vui lòng kiểm tra dữ liệu liên quan.");
+            return View(dichVu);
         }
 
         public async Task<IActionResult> Edit(string id)
@@ -75,8 +82,14 @@ namespace PBL3.Controllers
                 return View(dichVu);
             }
 
-            await _dichVuService.UpdateAsync(dichVu);
-            return RedirectToAction(nameof(Index));
+            var updateResult = await _dichVuService.UpdateAsync(dichVu);
+            if (updateResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể cập nhật dịch vụ. Vui lòng kiểm tra dữ liệu liên quan.");
+            return View(dichVu);
         }
 
         public async Task<IActionResult> Delete(string id)
@@ -91,8 +104,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _dichVuService.DeleteAsync(id);
+            var deleteResult = await _dichVuService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa dịch vụ vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

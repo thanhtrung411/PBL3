@@ -415,7 +415,7 @@
             .btn-login {
                 width: 100%;
             }
-
+        .btn-submit { width: 100%; background: #111; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 20px; }
             .section-title {
                 font-size: 20px;
                 margin: 40px 0 20px;
@@ -476,7 +476,7 @@
             </button>
         </div>
     </section>
-
+        </div>
     <!-- ========================================
          PHẦN 3: NỘI DUNG CHÍNH
          ======================================== -->
@@ -594,11 +594,11 @@
                 alert('❌ Ngày trả phòng phải sau ngày nhận phòng');
                 return;
             }
-
+                    </select>
             // Nếu tất cả hợp lệ, điều hướng đến Checkout
             window.location.href = `/Guest/Checkout?roomId=${roomType}&checkIn=${checkIn}&checkOut=${checkOut}`;
         }
-
+                <label>Yêu cầu đặc biệt (Không bắt buộc)</label>
         /**
          * Cho phép nhấn Enter để tìm kiếm
          * (Thay vì phải click nút tìm)
@@ -606,7 +606,7 @@
         document.getElementById('checkOutDate')?.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') searchRooms();
         });
-
+            <button type="submit" class="btn-submit">XÁC NHẬN ĐẶT PHÒNG</button>
         document.getElementById('roomTypeSelect')?.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') searchRooms();
         });
@@ -651,3 +651,6 @@
         return "https://via.placeholder.com/400x220?text=" + Uri.EscapeDataString(roomName);
     }
 }
+
+</body>
+</html>

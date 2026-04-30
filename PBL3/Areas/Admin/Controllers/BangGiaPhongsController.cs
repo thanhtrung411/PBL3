@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class BangGiaPhongsController : Controller
     {
         private readonly IBangGiaPhongService _bangGiaPhongService;
@@ -57,8 +58,13 @@ namespace PBL3.Controllers
                 }
                 else
                 {
-                    await _bangGiaPhongService.CreateAsync(bangGiaPhong);
-                    return RedirectToAction(nameof(Index));
+                    var createResult = await _bangGiaPhongService.CreateAsync(bangGiaPhong);
+                    if (createResult)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    ModelState.AddModelError(string.Empty, "Không thể tạo bảng giá phòng. Vui lòng kiểm tra dữ liệu liên quan.");
                 }
             }
             ViewData["MaLoaiPhong"] = new SelectList(await _loaiPhongService.GetAllLoaiPhongsAsync(), "MaLoaiPhong", "TenLoaiPhong", bangGiaPhong.MaLoaiPhong);
@@ -91,8 +97,13 @@ namespace PBL3.Controllers
 
             if (ModelState.IsValid)
             {
-                await _bangGiaPhongService.UpdateAsync(bangGiaPhong);
-                return RedirectToAction(nameof(Index));
+                var updateResult = await _bangGiaPhongService.UpdateAsync(bangGiaPhong);
+                if (updateResult)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+
+                ModelState.AddModelError(string.Empty, "Không thể cập nhật bảng giá phòng. Vui lòng kiểm tra dữ liệu liên quan.");
             }
             ViewData["MaLoaiPhong"] = new SelectList(await _loaiPhongService.GetAllLoaiPhongsAsync(), "MaLoaiPhong", "TenLoaiPhong", bangGiaPhong.MaLoaiPhong);
             return View(bangGiaPhong);
@@ -112,8 +123,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _bangGiaPhongService.DeleteAsync(id);
+            var deleteResult = await _bangGiaPhongService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa bảng giá phòng vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

@@ -19,6 +19,39 @@ IF OBJECT_ID(N'dbo.NhanVien', N'U') IS NOT NULL DROP TABLE dbo.NhanVien;
 IF OBJECT_ID(N'dbo.VaiTro', N'U') IS NOT NULL DROP TABLE dbo.VaiTro;
 GO
 
+IF OBJECT_ID(N'dbo.Seq_HoaDon', N'SO') IS NOT NULL DROP SEQUENCE dbo.Seq_HoaDon;
+IF OBJECT_ID(N'dbo.Seq_ChiTietHoaDon', N'SO') IS NOT NULL DROP SEQUENCE dbo.Seq_ChiTietHoaDon;
+IF OBJECT_ID(N'dbo.Seq_DatPhong', N'SO') IS NOT NULL DROP SEQUENCE dbo.Seq_DatPhong;
+IF OBJECT_ID(N'dbo.Seq_KhachHang', N'SO') IS NOT NULL DROP SEQUENCE dbo.Seq_KhachHang;
+GO
+
+-- =============================================
+-- SEQUENCES (safe code generation)
+-- =============================================
+CREATE SEQUENCE dbo.Seq_KhachHang
+    AS BIGINT
+    START WITH 1
+    INCREMENT BY 1;
+GO
+
+CREATE SEQUENCE dbo.Seq_DatPhong
+    AS BIGINT
+    START WITH 1
+    INCREMENT BY 1;
+GO
+
+CREATE SEQUENCE dbo.Seq_ChiTietHoaDon
+    AS BIGINT
+    START WITH 1
+    INCREMENT BY 1;
+GO
+
+CREATE SEQUENCE dbo.Seq_HoaDon
+    AS BIGINT
+    START WITH 1
+    INCREMENT BY 1;
+GO
+
 -- =============================================
 -- 1. Vai trò
 -- =============================================

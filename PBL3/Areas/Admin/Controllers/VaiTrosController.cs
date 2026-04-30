@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class VaiTrosController : Controller
     {
         private readonly IVaiTroService _vaiTroService;
@@ -65,8 +66,14 @@ namespace PBL3.Controllers
                 return View(vaiTro);
             }
 
-            await _vaiTroService.CreateAsync(vaiTro);
-            return RedirectToAction(nameof(Index));
+            var createResult = await _vaiTroService.CreateAsync(vaiTro);
+            if (createResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể tạo vai trò. Vui lòng kiểm tra dữ liệu liên quan.");
+            return View(vaiTro);
         }
 
         // GET: VaiTros/Edit/5
@@ -107,8 +114,14 @@ namespace PBL3.Controllers
                 return View(vaiTro);
             }
 
-            await _vaiTroService.UpdateAsync(vaiTro);
-            return RedirectToAction(nameof(Index));
+            var updateResult = await _vaiTroService.UpdateAsync(vaiTro);
+            if (updateResult)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError(string.Empty, "Không thể cập nhật vai trò. Vui lòng kiểm tra dữ liệu liên quan.");
+            return View(vaiTro);
         }
 
         // GET: VaiTros/Delete/5
@@ -133,8 +146,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _vaiTroService.DeleteAsync(id);
+            var deleteResult = await _vaiTroService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa vai trò vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

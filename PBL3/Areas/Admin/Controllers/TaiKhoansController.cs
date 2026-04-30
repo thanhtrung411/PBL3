@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Controllers
+namespace PBL3.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class TaiKhoansController : Controller
     {
         private readonly ITaiKhoanService _taiKhoanService;
@@ -64,8 +65,13 @@ namespace PBL3.Controllers
                 }
                 else
                 {
-                    await _taiKhoanService.CreateAsync(taiKhoan);
-                    return RedirectToAction(nameof(Index));
+                    var createResult = await _taiKhoanService.CreateAsync(taiKhoan);
+                    if (createResult)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    ModelState.AddModelError(string.Empty, "Không thể tạo tài khoản. Vui lòng kiểm tra dữ liệu liên quan.");
                 }
             }
             ViewData["MaNv"] = new SelectList(await _nhanVienService.GetAllAsync(), "MaNv", "HoTen", taiKhoan.MaNv);
@@ -106,8 +112,13 @@ namespace PBL3.Controllers
                 }
                 else
                 {
-                    await _taiKhoanService.UpdateAsync(taiKhoan);
-                    return RedirectToAction(nameof(Index));
+                    var updateResult = await _taiKhoanService.UpdateAsync(taiKhoan);
+                    if (updateResult)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    ModelState.AddModelError(string.Empty, "Không thể cập nhật tài khoản. Vui lòng kiểm tra dữ liệu liên quan.");
                 }
             }
             ViewData["MaNv"] = new SelectList(await _nhanVienService.GetAllAsync(), "MaNv", "HoTen", taiKhoan.MaNv);
@@ -129,8 +140,13 @@ namespace PBL3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            await _taiKhoanService.DeleteAsync(id);
+            var deleteResult = await _taiKhoanService.DeleteAsync(id);
+            if (!deleteResult)
+            {
+                TempData["Error"] = "Không thể xóa tài khoản vì dữ liệu đang được sử dụng hoặc không còn tồn tại.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
 }
+

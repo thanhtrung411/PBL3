@@ -31,8 +31,8 @@
             <td>@Html.DisplayFor(modelItem => item.MaCthd)</td>
             <td>@Html.DisplayFor(modelItem => item.LoaiMuc)</td>
             <td>@Html.DisplayFor(modelItem => item.NoiDung)</td>
-            <td>@Html.DisplayFor(modelItem => item.MaPhongNavigation.SoPhong)</td>
-            <td>@Html.DisplayFor(modelItem => item.MaDvNavigation.TenDv)</td>
+            <td>@(item.MaPhongNavigation?.SoPhong ?? "-")</td>
+            <td>@(item.MaDvNavigation?.TenDv ?? "-")</td>
             <td>@Html.DisplayFor(modelItem => item.SoLuong)</td>
             <td><b class="text-danger">@Html.DisplayFor(modelItem => item.ThanhTien)</b></td>
             <td>@Html.DisplayFor(modelItem => item.TrangThai)</td>
