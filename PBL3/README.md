@@ -1,69 +1,152 @@
-# Dự án Quản lý Khách sạn (PBL3)
+# PBL3 - Hotel Management
 
-## 📌 Tổng quan
-Hệ thống quản lý khách sạn được xây dựng trên nền tảng ASP.NET Core MVC (C# 14, .NET 10). Dự án áp dụng chuẩn mô hình kiến trúc 3 lớp (3-Layer Architecture) để tách biệt logic nghiệp vụ, quản lý truy xuất dữ liệu, và giao diện người dùng.
+Ứng dụng quản lý khách sạn xây dựng bằng ASP.NET Core MVC (.NET 10), Entity Framework Core và SQL Server.
 
-## 🚀 Tiến độ dự án (Changelog)
+## Trạng thái hiện tại
 
-### ✅ Nền tảng kiến trúc & CRUD Cơ bản
-- Tổ chức dự án theo mô hình 3 lớp: `Models` - `Services` - `Controllers`.
-- Hoàn thiện các luồng CRUD (Thêm, Sửa, Xóa, Xem chi tiết) và Giao diện cơ bản (Razor Pages) cho toàn bộ các thực thể:
-  - **Cốt lõi**: Đặt phòng (`DatPhong`), Hóa đơn (`HoaDon`), Chi tiết hóa đơn (`ChiTietHoaDon`).
-  - **Phòng ốc**: Phòng, Loại phòng, Bảng giá phòng, Dịch vụ.
-  - **Khách và Nhân sự**: Khách hàng, Nhân viên, Tài khoản, Vai trò.
-  - **Khuyến mãi**: Mã giảm giá.
+Dự án đang trong giai đoạn gộp UI và chuẩn hóa route. Một số phần là template giao diện, chưa phải nghiệp vụ hoàn chỉnh.
 
-### ✅ Giai đoạn 1: Logic Nghiệp vụ Đặt phòng & Hóa đơn
-- **Dịch vụ Đặt Phòng (`DatPhongService`)**:
-  - Tích hợp thuật toán `KiemTraPhongTrongAsync` chống trùng phòng (Overlap validation), đảm bảo an toàn tuyệt đối không có 2 khách đặt cùng 1 phòng trong cùng khoảng thời gian.
-  - Snapshot tự động thông tin Khách hàng (Tên, SĐT, CCCD) tại thời điểm đặt phòng.
-  - Sử dụng Database Transaction để tự động sinh `HoaDon` rỗng đi kèm khi khởi tạo một `DatPhong` mới.
-- **Dịch vụ Hóa Đơn (`HoaDonService`)**:
-  - Hàm `TinhToanTongTienAsync` tự động tính toán tổng tiền: Phân loại rạch ròi Tiền Phòng và Tiền Dịch Vụ dựa trên `ChiTietHoaDon`.
-  - Tự động kiểm tra thời hạn và áp dụng `MaGiamGiaPhong` (Giảm theo % hoặc số tiền cứng, có kiểm tra giới hạn GiamToiDa).
-- **Dịch vụ Phòng (`PhongService`)**:
-  - Hỗ trợ hàm `CapNhatTrangThaiPhongAsync` phục vụ cho các luồng nghiệp vụ Check-in (Đổi thành "Đang sử dụng") và Check-out (Đổi thành "Cần dọn dẹp").
+### Public booking template
 
-### ✅ Giao diện Đặt phòng Online (BookingController)
-- **Luồng dành cho Khách hàng (Landing Page)**: Khách tự do tra cứu và đặt "Loại Phòng" mà không cần chọn phòng cụ thể.
-- **Tự động hóa dữ liệu**: 
-  - Khách chỉ nhập CCCD, hệ thống tự động tra cứu, tạo mới Khách Hàng (Tự sinh mã `KH...`) hoặc cập nhật thông tin nếu khách đổi SĐT.
-  - Tự động gán phiếu cho nhân viên ảo `NV_ONLINE`.
-- **API Tra cứu (AJAX)**: Cung cấp endpoint `[HttpGet] /KhachHangs/GetByCccd` để phục vụ Auto-fill không chạm.
-- **Chính sách cọc**: Code đã được thiết kế ép cọc 100% tiền phòng cho đơn hàng Online.
+Frontend đặt phòng online hiện đã được gom về `Booking`.
 
-### ✅ Giao diện Quản trị (Admin Dashboard)
-- **Hub Trung tâm (`/Admin`)**: Khởi tạo trang Dashboard cơ bản quản lý toàn bộ hệ thống khách sạn.
-- **Admin Layout (`_AdminLayout.cshtml`)**: Tách biệt giao diện của Khách và Quản trị viên. Tích hợp thanh điều hướng bên trái (Sidebar) kết nối tới toàn bộ 12 luồng CRUD của Database (Phòng, Khách hàng, Đặt phòng, Nhân sự,...).
+Route chuẩn:
 
----
-*Tài liệu này sẽ được tự động cập nhật liên tục mỗi khi hoàn thành thêm một tính năng mới trong tương lai.*
+| Route | Mục đích |
+| --- | --- |
+| `/` | Trang đặt phòng online |
+| `/Booking` | Trang đặt phòng online |
+| `/Booking/Rooms` | Trang chọn phòng mẫu |
+| `/Booking/Checkout?roomId=1` | Trang checkout mẫu |
+| `/Booking/Success?id=BKTEST` | Trang đặt phòng thành công |
 
-## Cấu hình bảo mật
+Các route cũ của `Guest` chỉ còn dùng để redirect:
 
-Không lưu connection string thật trong `appsettings.json`. Sau khi đổi mật khẩu database, cấu hình local bằng User Secrets:
+| Route cũ | Redirect sang |
+| --- | --- |
+| `/Guest/Index` | `/Booking` |
+| `/Guest/Rooms` | `/Booking/Rooms` |
+| `/Guest/Checkout?roomId=1` | `/Booking/Checkout?roomId=1` |
+| `/Guest/BookingSuccess?id=...` | `/Booking/Success/...` |
+
+Lưu ý: flow `Booking` hiện là template/mẫu frontend. Nút tìm kiếm chuyển sang trang chọn phòng mẫu, checkout tạo mã đặt phòng giả lập. Chưa lưu đặt phòng online vào DB ở flow này.
+
+### Admin template
+
+Khi bấm **Quản trị** trên navbar public, hệ thống đi vào dashboard/template quản trị.
+
+Route chuẩn:
+
+| Route | Mục đích |
+| --- | --- |
+| `/Admin` | Dashboard quản trị template |
+
+Các màn hình admin template mới được merge ở root như:
+
+- `/Home/Index`
+- `/Room`
+- `/BookingManagement`
+- `/Customer`
+- `/Invoice`
+- `/Promotion`
+- `/Report`
+- `/Service`
+- `/Facility`
+
+đang là template/dashboard mẫu, không coi là CRUD thật hoặc nghiệp vụ đã hoàn chỉnh.
+
+### Source CRUD
+
+Các màn hình CRUD scaffold/nối DB thật nằm trong Area Admin nhưng được publish dưới prefix `/Source`.
+
+| Route | Mục đích |
+| --- | --- |
+| `/Source` | Trang vào khu Source CRUD |
+| `/Source/LoaiPhongs` | CRUD loại phòng |
+| `/Source/Phongs` | CRUD phòng |
+| `/Source/BangGiaPhongs` | CRUD bảng giá |
+| `/Source/KhachHangs` | CRUD khách hàng |
+| `/Source/DatPhongs` | CRUD đặt phòng |
+| `/Source/HoaDons` | CRUD hóa đơn |
+| `/Source/ChiTietHoaDons` | CRUD chi tiết hóa đơn |
+| `/Source/DichVus` | CRUD dịch vụ |
+| `/Source/NhanViens` | CRUD nhân viên |
+| `/Source/TaiKhoans` | CRUD tài khoản |
+| `/Source/VaiTros` | CRUD vai trò |
+| `/Source/MaGiamGias` | CRUD mã giảm giá |
+
+Các route `/Admin` và `/Source` đều yêu cầu đăng nhập.
+
+## Auth
+
+Ứng dụng dùng cookie authentication.
+
+- Public booking không cần đăng nhập.
+- Admin dashboard template cần đăng nhập.
+- Source CRUD cần đăng nhập.
+- Login nằm ở `/Account/Login`.
+- Logout nằm ở `/Account/Logout`.
+
+Login hiện kiểm tra bảng `TaiKhoan` trong DB. Mật khẩu hiện so sánh plain text theo dữ liệu DB hiện tại; chưa có password hashing.
+
+## Cấu hình database
+
+Không lưu connection string thật trong `appsettings.json`.
+
+Dùng User Secrets khi chạy local:
 
 ```powershell
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<connection-string-moi>"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<connection-string>"
 ```
 
-Trên môi trường deploy, dùng biến môi trường:
+Với SQL Server remote hiện tại, máy local đang cần thêm:
+
+```text
+Encrypt=False;TrustServerCertificate=True;
+```
+
+Trên môi trường deploy, có thể dùng biến môi trường:
 
 ```powershell
-$env:ConnectionStrings__DefaultConnection = "<connection-string-moi>"
+$env:ConnectionStrings__DefaultConnection = "<connection-string>"
 ```
 
-## Các chỉnh sửa gần đây
+## Chạy dự án
 
-- **Bảo mật cấu hình DB**: Gỡ connection string thật khỏi `appsettings.json`, bật `UserSecretsId` trong project và yêu cầu cấu hình `ConnectionStrings:DefaultConnection` bằng User Secrets hoặc biến môi trường.
-- **Chuẩn hóa trạng thái theo DB**: Thêm `DomainValues` để dùng thống nhất các giá trị như `GIU_CHO`, `CHUA_THANH_TOAN`, `PHONG`, `DICHVU`, `HIEU_LUC`, tránh lệch với CHECK constraint trong SQL Server.
-- **Luồng đặt phòng online an toàn hơn**: Bọc quy trình tạo khách hàng, đặt phòng, hóa đơn và chi tiết hóa đơn trong transaction; nếu bước sau lỗi thì không commit dữ liệu dở dang.
-- **Sinh mã an toàn bằng DB sequence**: Thêm `CodeGenerator` lấy số từ SQL Server sequence để tránh trùng mã khi có nhiều request đồng thời, ví dụ `KH00000001`, `DP00000001`, `CT00000001`, và hóa đơn dạng `H000000001`.
-- **Nhân viên đặt phòng online**: Booking tự đảm bảo có nhân viên hệ thống `NV_ONLINE` trước khi tạo `DatPhong`, tránh lỗi khóa ngoại `FK_DatPhong_NhanVien`.
-- **Fix lỗi nullable trong CTHD**: Các trang `ChiTietHoaDons/Index` và `Details` hiển thị `-` khi không có `MaPhong` hoặc `MaDv`, tránh `NullReferenceException`.
-- **Tối ưu truy cập DB lần đầu**: Đổi sang `AddDbContextPool`, thêm warm-up DB khi app khởi động và dùng `AsNoTracking()` cho các truy vấn chỉ đọc trong service.
-- **Chặn booking giá 0**: Luồng đặt phòng online kiểm tra bảng giá active trước khi tạo dữ liệu; nếu loại phòng chưa có giá thì báo lỗi và không tạo khách hàng, đặt phòng, hóa đơn hoặc chi tiết hóa đơn.
-- **Chuẩn hóa xử lý lỗi service/controller**: Các controller Admin kiểm tra kết quả `CreateAsync`, `UpdateAsync`, `DeleteAsync` trước khi redirect; nếu thất bại thì hiển thị lỗi qua `ModelState` hoặc `TempData`. Các service xóa dữ liệu chỉ bắt `DbUpdateException`, không còn `catch` trống nuốt mọi lỗi.
-- **Sửa lỗi tạo hóa đơn Admin**: `HoaDonsController.Create` chỉ bắt lỗi DB dự kiến và báo đúng hơn khi đặt phòng không tồn tại hoặc đã có hóa đơn, tránh thông báo sai cho mọi exception.
-- **Tách layout Public/Admin**: Thêm `Areas/Admin/Views/Shared/_AdminLayout.cshtml` với sidebar quản trị riêng; layout public chỉ giữ điều hướng khách và link vào trang quản trị.
-- **Rà soát View**: Sửa form trang chủ trỏ nhầm `SearchController` chưa tồn tại, bỏ header public bị trùng trong trang khách, đổi icon Booking sang Font Awesome, bỏ alert lỗi trùng và sửa link về trang chủ bằng tag helper.
+Khuyến nghị chạy HTTP, không dùng launch profile `https` nếu máy local bị treo ở bước HTTPS.
+
+```powershell
+dotnet restore
+dotnet build --no-restore
+dotnet run --no-build --no-launch-profile --urls http://localhost:5199
+```
+
+Mở:
+
+```text
+http://localhost:5199
+```
+
+hoặc:
+
+```text
+http://localhost:5199/Booking
+```
+
+## Ranh giới cần giữ khi phát triển tiếp
+
+1. `BookingController` là nơi sở hữu frontend đặt phòng online.
+2. `GuestController` chỉ giữ redirect để tương thích link cũ, không thêm UI mới vào `Views/Guest`.
+3. `/Admin` là dashboard/template quản trị.
+4. `/Source` là khu CRUD scaffold/nối DB thật, code vẫn nằm trong `Areas/Admin`.
+5. Khi nối booking online với DB thật, nên tách service riêng như `OnlineBookingService`, không nhét thêm logic lớn vào controller.
+6. Cần sửa encoding tiếng Việt toàn dự án trước khi hoàn thiện nghiệp vụ, đặc biệt trong `.cshtml`, `DomainValues.cs` và các thông báo lỗi.
+
+## Việc cần làm tiếp
+
+- Dọn admin root template và Area Admin để không trùng khái niệm.
+- Chuẩn hóa tên route admin.
+- Sửa encoding tiếng Việt.
+- Tách nghiệp vụ đặt phòng online thật khỏi controller.
+- Bổ sung model/view model cho booking search, room selection và checkout.
+- Thêm test route cơ bản cho public booking, auth và admin CRUD.

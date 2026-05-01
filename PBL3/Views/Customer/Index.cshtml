@@ -1,0 +1,168 @@
+﻿@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý khách hàng";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-1 fw-bold">Quản lý khách hàng</h3>
+        <p class="text-muted mb-0">Theo dõi thông tin và lịch sử khách hàng</p>
+    </div>
+    <button class="btn btn-dark px-4"><i class="bi bi-person-plus"></i> Thêm khách hàng</button>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom text-center py-4">
+            <div class="text-muted small mb-2">Tổng khách hàng</div>
+            <div class="fw-bold display-6">50</div>
+            <div class="small text-muted mt-2">Khách hàng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom text-center py-4">
+            <div class="text-muted small mb-2">VIP Platinum</div>
+            <div class="fw-bold display-6 text-primary">10</div>
+            <div class="small text-muted mt-2">Khách hàng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom text-center py-4">
+            <div class="text-muted small mb-2">VIP Gold</div>
+            <div class="fw-bold display-6 text-warning">25</div>
+            <div class="small text-muted mt-2">Khách hàng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom text-center py-4">
+            <div class="text-muted small mb-2">Khách mới</div>
+            <div class="fw-bold display-6 text-success">15</div>
+            <div class="small text-muted mt-2">Khách hàng</div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex w-100 gap-2 mb-4">
+    <div class="input-group flex-grow-1">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control bg-white border-start-0 py-2" placeholder="Tìm kiếm theo tên, email, số điện thoại,...">
+    </div>
+    <button class="btn btn-primary px-4"><i class="bi bi-download"></i> Xuất file</button>
+</div>
+
+<!-- Table -->
+<div class="card-custom p-0 overflow-hidden border">
+    <div class="p-3 bg-light border-bottom fw-bold text-dark d-flex justify-content-between align-items-center">
+        <span>Danh sách khách hàng</span>
+    </div>
+    <div class="table-responsive p-3">
+        <table class="table-custom mb-0 w-100 align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th>Khách hàng</th>
+                    <th>Liên hệ</th>
+                    <th class="text-center">Tổng số phòng</th>
+                    <th class="text-end">Tổng chi tiêu</th>
+                    <th class="text-center">Hạng VIP</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 40px; height: 40px;">NV</div>
+                            <div>
+                                <div class="fw-bold">Nguyễn Văn A</div>
+                                <small class="text-muted">ID: CU0001</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div><i class="bi bi-telephone text-muted me-2"></i> 0912453482</div>
+                        <div><i class="bi bi-envelope text-muted me-2"></i> nguyenvana@gmail.com</div>
+                    </td>
+                    <td class="text-center fw-bold">5</td>
+                    <td class="text-end fw-bold">15,000,000đ</td>
+                    <td class="text-center">
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Gold</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 40px; height: 40px;">TT</div>
+                            <div>
+                                <div class="fw-bold">Trần Thị B</div>
+                                <small class="text-muted">ID: CU0002</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div><i class="bi bi-telephone text-muted me-2"></i> 0905642357</div>
+                        <div><i class="bi bi-envelope text-muted me-2"></i> tranthib@gmail.com</div>
+                    </td>
+                    <td class="text-center fw-bold">12</td>
+                    <td class="text-end fw-bold">28,000,000đ</td>
+                    <td class="text-center">
+                        <span class="badge" style="background-color: #6b7280; color: white; padding: 0.5rem 1rem; border-radius: 999px;">Platinum</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 40px; height: 40px;">LV</div>
+                            <div>
+                                <div class="fw-bold">Lê Văn C</div>
+                                <small class="text-muted">ID: CU0003</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div><i class="bi bi-telephone text-muted me-2"></i> 0932365421</div>
+                        <div><i class="bi bi-envelope text-muted me-2"></i> levanc@gmail.com</div>
+                    </td>
+                    <td class="text-center fw-bold">2</td>
+                    <td class="text-end fw-bold">4,200,000đ</td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary px-3 py-2 rounded-pill">Silver</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 40px; height: 40px;">PT</div>
+                            <div>
+                                <div class="fw-bold">Phạm Thị D</div>
+                                <small class="text-muted">ID: CU0004</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div><i class="bi bi-telephone text-muted me-2"></i> 0387214482</div>
+                        <div><i class="bi bi-envelope text-muted me-2"></i> phamthid@gmail.com</div>
+                    </td>
+                    <td class="text-center fw-bold">8</td>
+                    <td class="text-end fw-bold">19,800,000đ</td>
+                    <td class="text-center">
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Gold</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

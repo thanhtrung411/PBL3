@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace PBL3.Areas.Admin.Controllers
+namespace PBL3.Controllers
 {
-    [Area("Admin")]
-    public class RoomController : Controller
+    public class ReportController : Controller
     {
         public IActionResult Index()
         {

@@ -1,0 +1,161 @@
+﻿@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Báo cáo & Thống kê";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-1 fw-bold">Báo cáo & Thống kê</h3>
+        <p class="text-muted mb-0">Phân tích doanh thu và hiệu suất hoạt động</p>
+    </div>
+</div>
+
+<div class="card-custom mb-4">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+        <div>
+            <div class="fw-bold fs-5">Báo cáo tổng hợp</div>
+            <div class="text-muted small">Thời gian: 01/01/2026 - 01/02/2026</div>
+        </div>
+        <div class="d-flex gap-2">
+            <select class="form-select bg-light text-muted" style="width: auto;">
+                <option>Thời gian</option>
+            </select>
+            <button class="btn btn-primary"><i class="bi bi-download"></i> Xuất file</button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="p-3 border rounded">
+                <div class="text-muted small mb-2">Tổng doanh thu</div>
+                <div class="d-flex justify-content-between align-items-end">
+                    <div class="fw-bold fs-3 text-dark">14.2 tỷ</div>
+                    <div class="text-success small fw-bold">+15%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 border rounded">
+                <div class="text-muted small mb-2">Tổng đặt phòng</div>
+                <div class="d-flex justify-content-between align-items-end">
+                    <div class="fw-bold fs-3 text-dark">318</div>
+                    <div class="text-success small fw-bold">+8%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 border rounded">
+                <div class="text-muted small mb-2">Tỷ lệ lấp đầy TB</div>
+                <div class="d-flex justify-content-between align-items-end">
+                    <div class="fw-bold fs-3 text-dark">82%</div>
+                    <div class="text-success small fw-bold">+3%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 border rounded">
+                <div class="text-muted small mb-2">Giá trị đơn TB</div>
+                <div class="d-flex justify-content-between align-items-end">
+                    <div class="fw-bold fs-3 text-dark">1.2 triệu</div>
+                    <div class="text-success small fw-bold">+12%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-custom mb-4">
+    <div class="fw-bold fs-5 mb-3 text-dark">Xu hướng doanh thu</div>
+    <div style="height: 300px; width: 100%;">
+        <canvas id="revenueTrendChart"></canvas>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card-custom">
+            <div class="fw-bold fs-5 mb-3 text-dark">Doanh thu theo loại phòng</div>
+            <div style="height: 250px; width: 100%;">
+                <canvas id="revenueByTypeChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-custom">
+            <div class="fw-bold fs-5 mb-3 text-dark">Tỷ lệ lấp đầy</div>
+            <div style="height: 250px; width: 100%;">
+                <canvas id="occupancyChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const ctxTrend = document.getElementById('revenueTrendChart').getContext('2d');
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: [1.2, 1.3, 1.25, 1.4, 1.45, 1.6],
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: false, min: 0.8 }
+                }
+            }
+        });
+
+        const ctxType = document.getElementById('revenueByTypeChart').getContext('2d');
+        new Chart(ctxType, {
+            type: 'bar',
+            data: {
+                labels: ['Standard', 'Deluxe', 'Suit', 'Presidential'],
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: [5, 8, 12, 10],
+                    backgroundColor: '#4e73df',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        const ctxOcc = document.getElementById('occupancyChart').getContext('2d');
+        new Chart(ctxOcc, {
+            type: 'line',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+                datasets: [{
+                    label: 'Tỷ lệ lấp đầy',
+                    data: [75, 80, 85, 83, 88, 90],
+                    borderColor: '#1cc88a',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { min: 50, max: 100 }
+                }
+            }
+        });
+    </script>
+}
+

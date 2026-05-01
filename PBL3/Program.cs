@@ -1,9 +1,15 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using PBL3.Services;
 using PBL3.Services.Interfaces;
 using PBL3.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // Read from User Secrets, environment variables, or appsettings fallback.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -14,10 +20,29 @@ if (string.IsNullOrWhiteSpace(connectionString))
 }
 
 builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(
+        connectionString,
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorNumbersToAdd: null)));
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/Login";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    });
+
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AuthorizeFilter());
+});
 
 //Add services for DI
 builder.Services.AddScoped<ILoaiPhongService, LoaiPhongService>();
@@ -39,7 +64,7 @@ builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
 
 var app = builder.Build();
 
-await WarmUpDatabaseAsync(app.Services);
+_ = Task.Run(() => WarmUpDatabaseAsync(app.Services));
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -51,17 +76,24 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
 
 app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Admin}/{action=Index}/{id?}");
+    name: "admin-dashboard",
+    pattern: "Admin/{action=Index}/{id?}",
+    defaults: new { controller = "Home" });
+
+app.MapAreaControllerRoute(
+    name: "source-crud",
+    areaName: "Admin",
+    pattern: "Source/{controller=Admin}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Guest}/{action=Index}/{id?}")
+    pattern: "{controller=Booking}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 app.Run();
@@ -76,8 +108,13 @@ static async Task WarmUpDatabaseAsync(IServiceProvider services)
 
     try
     {
-        await context.Database.CanConnectAsync();
-        await context.LoaiPhongs.AsNoTracking().AnyAsync();
+        using var warmUpTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        await context.Database.CanConnectAsync(warmUpTimeout.Token);
+        await context.LoaiPhongs.AsNoTracking().AnyAsync(warmUpTimeout.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        logger.LogWarning("Database warm-up timed out. The first database request may be slower.");
     }
     catch (Exception ex)
     {

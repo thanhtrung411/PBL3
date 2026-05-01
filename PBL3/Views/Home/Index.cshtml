@@ -1,82 +1,212 @@
 ﻿@{
+    Layout = "_AdminLayout";
     ViewData["Title"] = "Tổng quan";
 }
-
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h3 class="fw-bold">Tổng quan</h3>
-        <p class="text-muted">Chào mừng bạn quay trở lại với hệ thống quản lý khách sạn</p>
+        <h3 class="mb-1 fw-bold">Tổng quan</h3>
+        <p class="text-muted mb-0">Chào mừng bạn quay trở lại với hệ thống quản lý khách sạn</p>
     </div>
 </div>
 
-<div class="stats-grid">
-    <div class="card-stat">
-        <span class="label">Tổng phòng <i class="fa fa-bed ms-2"></i></span>
-        <span class="value">120</span>
-        <small class="text-success"><i class="fa fa-arrow-up"></i> +2 từ tháng trước</small>
-    </div>
-    <div class="card-stat">
-        <span class="label">Khách đang ở <i class="fa fa-users ms-2"></i></span>
-        <span class="value">89</span>
-        <small class="text-success"><i class="fa fa-arrow-up"></i> +2% so với tuần trước</small>
-    </div>
-    <div class="card-stat">
-        <span class="label">Doanh thu hôm nay <i class="fa fa-money-bill-wave ms-2"></i></span>
-        <span class="value">24,500,000đ</span>
-        <small class="text-success"><i class="fa fa-arrow-up"></i> +8% so với hôm qua</small>
-    </div>
-    <div class="card-stat">
-        <span class="label">Tỷ lệ lấp đầy <i class="fa fa-chart-line ms-2"></i></span>
-        <span class="value">87%</span>
-        <small class="text-success"><i class="fa fa-arrow-up"></i> +3% so với tháng trước</small>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card-stat h-100">
-            <h5 class="fw-bold mb-3">Doanh thu 6 tháng gần nhất</h5>
-            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+<!-- Stat Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="card-title-sm">Tổng phòng <i class="bi bi-door-closed ms-2 text-muted"></i></div>
+            </div>
+            <div class="card-value">120</div>
+            <div class="card-title-sm">Tổng số phòng</div>
+            <div class="card-subtext">+2 từ tháng trước</div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card-stat h-100">
-            <h5 class="fw-bold mb-3">Tình trạng phòng</h5>
-            <canvas id="roomStatusChart"></canvas>
+    <div class="col-md-3">
+        <div class="card-custom">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="card-title-sm">Khách đang ở <i class="bi bi-people ms-2 text-muted"></i></div>
+            </div>
+            <div class="card-value">89</div>
+            <div class="card-title-sm">Phòng đã thuê</div>
+            <div class="card-subtext">+3% so với tuần trước</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom">
+            <div class="card-title-sm">Doanh thu hôm nay <i class="bi bi-currency-dollar ms-2 text-muted"></i></div>
+            <div class="card-value">24,500,000đ</div>
+            <div class="card-title-sm">Tính đến 14:30</div>
+            <div class="card-subtext">+8% so với hôm qua</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="card-title-sm">Tỷ lệ lấp đầy <i class="bi bi-graph-up ms-2 text-muted"></i></div>
+            </div>
+            <div class="card-value">87%</div>
+            <div class="card-title-sm">&nbsp;</div>
+            <div class="card-subtext">+3% so với tháng trước</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-4 mb-4">
+    <div class="col-md-7">
+        <div class="card-custom">
+            <div class="card-title-sm mb-3 text-dark fw-bold">Doanh thu 6 tháng gần nhất</div>
+            <canvas id="revenueChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card-custom">
+            <div class="card-title-sm mb-3 text-dark fw-bold">Tình Trạng Phòng</div>
+            <div class="d-flex justify-content-center">
+                <canvas id="statusChart" style="max-height: 250px; max-width: 250px;"></canvas>
+            </div>
+            <div class="d-flex justify-content-center gap-3 mt-3">
+                <span style="font-size: 0.8rem;"><i class="bi bi-circle-fill text-primary"></i> Đã đặt: 70</span>
+                <span style="font-size: 0.8rem;"><i class="bi bi-circle-fill text-warning"></i> Bảo trì: 10</span>
+                <span style="font-size: 0.8rem;"><i class="bi bi-circle-fill text-success"></i> Trống: 20</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tables Area -->
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card-custom">
+            <div class="card-title-sm mb-3 text-dark fw-bold">Danh sách đặt phòng</div>
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Mã đặt phòng</th>
+                            <th>Khách hàng</th>
+                            <th>Phòng</th>
+                            <th>Nhận phòng</th>
+                            <th>Số đêm</th>
+                            <th>Trạng thái</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">BK001</td>
+                            <td>
+                                <div>Nguyễn Văn A</div>
+                                <small class="text-muted">0912453482</small>
+                            </td>
+                            <td>301</td>
+                            <td>2024-11-15</td>
+                            <td>3</td>
+                            <td><span class="badge-status badge-booked">Đã xác nhận</span></td>
+                            <td>
+                                <button class="btn-icon-only"><i class="bi bi-eye"></i></button>
+                                <button class="btn-icon-only"><i class="bi bi-pencil"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">BK002</td>
+                            <td>
+                                <div>Trần Thị B</div>
+                                <small class="text-muted">0905642357</small>
+                            </td>
+                            <td>102</td>
+                            <td>2024-11-15</td>
+                            <td>1</td>
+                            <td><span class="badge-status badge-empty">Đã nhận phòng</span></td>
+                            <td>
+                                <button class="btn-icon-only"><i class="bi bi-eye"></i></button>
+                                <button class="btn-icon-only"><i class="bi bi-pencil"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">BK003</td>
+                            <td>
+                                <div>Lê Văn C</div>
+                                <small class="text-muted">0932365421</small>
+                            </td>
+                            <td>202</td>
+                            <td>2024-11-15</td>
+                            <td>5</td>
+                            <td><span class="badge-status badge-maintenance">Chờ xác nhận</span></td>
+                            <td>
+                                <button class="btn-icon-only"><i class="bi bi-eye"></i></button>
+                                <button class="btn-icon-only"><i class="bi bi-pencil"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">BK004</td>
+                            <td>
+                                <div>Phạm Thị D</div>
+                                <small class="text-muted">0387214482</small>
+                            </td>
+                            <td>204</td>
+                            <td>2024-11-15</td>
+                            <td>2</td>
+                            <td><span class="badge-status badge-occupied">Đã trễ hẹn</span></td>
+                            <td>
+                                <button class="btn-icon-only"><i class="bi bi-eye"></i></button>
+                                <button class="btn-icon-only"><i class="bi bi-pencil"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Biểu đồ cột Doanh thu
+        // Revenue Chart (Bar)
         const ctxRev = document.getElementById('revenueChart').getContext('2d');
         new Chart(ctxRev, {
-        type: 'bar',
-        data: {
-        labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
-        datasets: [{
-        label: 'Doanh thu',
-        data: [4.5, 5.2, 6.0, 4.8, 5.8, 6.0],
-        backgroundColor: '#3b82f6',
-        borderRadius: 5
-        }]
-        }
+            type: 'bar',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: [4.5, 6, 5.8, 5, 5.5, 6],
+                    backgroundColor: '#4e73df',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 7 }
+                }
+            }
         });
 
-        // Biểu đồ tròn Tình trạng phòng
-        const ctxStatus = document.getElementById('roomStatusChart').getContext('2d');
+        // Status Chart (Doughnut)
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
         new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-        labels: ['Đã đặt', 'Bảo trì', 'Trống'],
-        datasets: [{
-        data: [70, 10, 20],
-        backgroundColor: ['#3b82f6', '#fbbf24', '#10b981']
-        }]
-        },
-        options: { cutout: '70%' }
+            type: 'doughnut',
+            data: {
+                labels: ['Đã đặt', 'Trống', 'Bảo trì'],
+                datasets: [{
+                    data: [70, 20, 10],
+                    backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e'],
+                    borderWidth: 0,
+                    cutout: '75%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
         });
     </script>
 }

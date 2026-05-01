@@ -1,0 +1,159 @@
+﻿@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Hoá đơn";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-1 fw-bold">Hoá đơn</h3>
+        <p class="text-muted mb-0">Quản lý các khoản thu và hoá đơn khách hàng</p>
+    </div>
+    <div class="d-flex gap-2">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control bg-white border-start-0" placeholder="Tìm kiếm hoá đơn...">
+        </div>
+        <input type="date" class="form-control text-muted" style="width: auto;">
+        <button class="btn btn-secondary px-3"><i class="bi bi-download"></i> Xuất báo cáo</button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-success bg-opacity-10 rounded d-flex align-items-center justify-content-center text-success" style="width: 48px; height: 48px;">
+                    <i class="bi bi-currency-dollar fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-4">9M</div>
+                    <div class="text-muted small">Đã thu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-warning bg-opacity-10 rounded d-flex align-items-center justify-content-center text-warning" style="width: 48px; height: 48px;">
+                    <i class="bi bi-clock fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-4">1M</div>
+                    <div class="text-muted small">Chờ thu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-danger bg-opacity-10 rounded d-flex align-items-center justify-content-center text-danger" style="width: 48px; height: 48px;">
+                    <i class="bi bi-exclamation-circle fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-4">2M</div>
+                    <div class="text-muted small">Quá hạn</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary" style="width: 48px; height: 48px;">
+                    <i class="bi bi-check2-circle fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-4">10M</div>
+                    <div class="text-muted small">Thanh toán</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card-custom p-0 overflow-hidden border">
+    <div class="table-responsive p-3">
+        <table class="table-custom mb-0 w-100 text-center align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th class="text-start">Số hoá đơn</th>
+                    <th class="text-start">Khách hàng</th>
+                    <th>Phòng</th>
+                    <th>Ngày lập</th>
+                    <th>Tiền phòng</th>
+                    <th>Dịch vụ</th>
+                    <th class="text-end">Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Row 1 -->
+                <tr>
+                    <td class="text-start fw-bold">INV-2024-001</td>
+                    <td class="text-start">Nguyễn Văn A</td>
+                    <td>101</td>
+                    <td>07/02/2026</td>
+                    <td>1,000,000 đ</td>
+                    <td>250,000 đ</td>
+                    <td class="fw-bold text-end">1,250,000 đ</td>
+                    <td><span class="badge border text-dark rounded-pill bg-light fw-normal py-2 px-3">Đã thanh toán</span></td>
+                    <td>
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-printer"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-download"></i></button>
+                    </td>
+                </tr>
+                <!-- Row 2 -->
+                <tr>
+                    <td class="text-start fw-bold">INV-2024-002</td>
+                    <td class="text-start">Nguyễn Văn B</td>
+                    <td>102</td>
+                    <td>07/02/2026</td>
+                    <td>1,000,000 đ</td>
+                    <td>250,000 đ</td>
+                    <td class="fw-bold text-end">1,250,000 đ</td>
+                    <td><span class="badge border text-dark rounded-pill bg-light fw-normal py-2 px-3">Đã thanh toán</span></td>
+                    <td>
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-printer"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-download"></i></button>
+                    </td>
+                </tr>
+                <!-- Row 3 -->
+                <tr>
+                    <td class="text-start fw-bold">INV-2024-003</td>
+                    <td class="text-start">Nguyễn Văn C</td>
+                    <td>103</td>
+                    <td>07/02/2026</td>
+                    <td>1,000,000 đ</td>
+                    <td>250,000 đ</td>
+                    <td class="fw-bold text-end">1,250,000 đ</td>
+                    <td><span class="badge badge-maintenance text-dark rounded-pill py-2 px-3">Chưa thanh toán</span></td>
+                    <td>
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-printer"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-download"></i></button>
+                    </td>
+                </tr>
+                <!-- Row 4 -->
+                <tr>
+                    <td class="text-start fw-bold">INV-2024-004</td>
+                    <td class="text-start">Nguyễn Văn D</td>
+                    <td>201</td>
+                    <td>07/02/2026</td>
+                    <td>1,000,000 đ</td>
+                    <td>250,000 đ</td>
+                    <td class="fw-bold text-end">1,250,000 đ</td>
+                    <td><span class="badge border text-dark rounded-pill bg-light fw-normal py-2 px-3">Đã thanh toán</span></td>
+                    <td>
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-printer"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-download"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

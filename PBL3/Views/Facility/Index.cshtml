@@ -1,0 +1,192 @@
+﻿@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý cơ sở vật chất";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-1 fw-bold">Quản lí cơ sở vật chất</h3>
+        <p class="text-muted mb-0">Theo dõi thông tin và trạng thái tài sản khách sạn</p>
+    </div>
+    <button class="btn btn-dark px-4"><i class="bi bi-plus"></i> Thêm cơ sở vật chất</button>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex flex-column mb-3">
+                <div class="bg-primary bg-opacity-10 text-primary rounded p-2 d-inline-block align-self-start">
+                    <i class="bi bi-building"></i>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-end mt-2">
+                <div class="text-muted small fw-bold">Tổng tài sản</div>
+                <div class="fw-bold fs-3">8</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex flex-column mb-3">
+                <div class="bg-primary bg-opacity-10 text-primary rounded p-2 d-inline-block align-self-start" style="background-color: #f3e8ff !important; color: #a855f7 !important;">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-end mt-2">
+                <div class="text-muted small fw-bold">Tổng giá trị</div>
+                <div class="fw-bold fs-4">1,660,000,000đ</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border text-center">
+            <div class="d-flex flex-column mb-3">
+                <div class="bg-warning bg-opacity-10 text-warning rounded p-2 d-inline-block align-self-start" style="background-color: #fef08a !important; color: #a16207 !important;">
+                    <i class="bi bi-tools"></i>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-end mt-2">
+                <div class="text-muted small fw-bold">Cần sửa chữa</div>
+                <div class="fw-bold fs-3">10</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border text-center">
+            <div class="d-flex flex-column mb-3">
+                <div class="bg-danger bg-opacity-10 text-danger rounded p-2 d-inline-block align-self-start" style="background-color: #fecaca !important; color: #b91c1c !important;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-end mt-2">
+                <div class="text-muted small fw-bold">Sắp bảo trì</div>
+                <div class="fw-bold fs-3">2</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card-custom p-0 overflow-hidden border">
+    <div class="p-3 bg-white border-bottom fw-bold text-dark fs-5">
+        Danh sách tài sản
+    </div>
+    <div class="table-responsive p-3">
+        <table class="table-custom mb-0 w-100 text-center align-middle">
+            <thead class="bg-light">
+                <tr>
+                    <th class="text-start">Tên tài sản</th>
+                    <th>Danh mục</th>
+                    <th>Vị trí</th>
+                    <th>Số lượng</th>
+                    <th>Giá trị</th>
+                    <th>Bảo trì tiếp theo</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-start fw-bold">Giường ngủ King size</td>
+                    <td><span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-normal">Phòng ngủ</span></td>
+                    <td>Tầng 1-5</td>
+                    <td>60</td>
+                    <td>160,000,000đ</td>
+                    <td>3/2/2032</td>
+                    <td><span class="badge border bg-light text-dark rounded-pill px-3 py-2 fw-normal">Đã bảo trì</span></td>
+                    <td>
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-start fw-bold">Điều hoà nhiệt độ</td>
+                    <td><span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-normal">Phòng ngủ</span></td>
+                    <td>Tất cả phòng</td>
+                    <td>120</td>
+                    <td>360,000,000đ</td>
+                    <td>3/2/2032</td>
+                    <td><span class="badge border bg-light text-dark rounded-pill px-3 py-2 fw-normal" style="color: #166534 !important; border-color: #bbf7d0 !important;">Chờ bảo trì</span></td>
+                    <td>
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-start fw-bold">Hệ thống camera an ninh</td>
+                    <td><span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal" style="background-color: #e0e7ff;">An ninh</span></td>
+                    <td>Toàn khách sạn</td>
+                    <td>45</td>
+                    <td>150,000,000đ</td>
+                    <td>3/2/2032</td>
+                    <td><span class="badge border bg-light text-dark rounded-pill px-3 py-2 fw-normal" style="color: #854d0e !important; border-color: #fef08a !important;">Chờ sửa chữa</span></td>
+                    <td>
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-start fw-bold">Máy giặt công nghiệp</td>
+                    <td><span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal" style="background-color: #ffedd5; color: #c2410c !important;">Dịch vụ</span></td>
+                    <td>Phòng giặt ủi</td>
+                    <td>3</td>
+                    <td>90,000,000đ</td>
+                    <td>3/2/2032</td>
+                    <td><span class="badge border bg-light text-dark rounded-pill px-3 py-2 fw-normal" style="color: #4b5563 !important;">Đang sửa chữa</span></td>
+                    <td>
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-start fw-bold">Thiết bị phòng gym</td>
+                    <td><span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal" style="background-color: #fce7f3; color: #be185d !important;">Giải trí</span></td>
+                    <td>Phòng gym tầng 1</td>
+                    <td>25</td>
+                    <td>200,000,000đ</td>
+                    <td>3/2/2032</td>
+                    <td><span class="badge border bg-light text-dark rounded-pill px-3 py-2 fw-normal" style="color: #4b5563 !important;">Đang bảo trì</span></td>
+                    <td>
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-start fw-bold">Thang máy</td>
+                    <td><span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal" style="background-color: #cffafe; color: #0e7490 !important;">Tiện ích</span></td>
+                    <td>Toà nhà chính</td>
+                    <td>4</td>
+                    <td>400,000,000đ</td>
+                    <td>3/2/2032</td>
+                    <td><span class="badge border bg-light text-dark rounded-pill px-3 py-2 fw-normal">Đã bảo trì</span></td>
+                    <td>
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-start fw-bold">Hệ thống lọc nước bể bơi</td>
+                    <td><span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal" style="background-color: #fce7f3; color: #be185d !important;">Giải trí</span></td>
+                    <td>Bể bơi ngoài trời</td>
+                    <td>2</td>
+                    <td>160,000,000đ</td>
+                    <td>3/2/2032</td>
+                    <td><span class="badge border bg-light text-dark rounded-pill px-3 py-2 fw-normal">Đã bảo trì</span></td>
+                    <td>
+                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

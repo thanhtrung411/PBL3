@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using PBL3.Services.Interfaces;
 
 namespace PBL3.Controllers
 {
+    [AllowAnonymous]
     public class BookingController : Controller
     {
         private const string OnlineEmployeeId = "NV_ONLINE";
@@ -38,15 +40,37 @@ namespace PBL3.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            ViewBag.LoaiPhongs = new SelectList(await _loaiPhongService.GetAllLoaiPhongsAsync(), "MaLoaiPhong", "TenLoaiPhong");
+            return View();
+        }
+
+        public IActionResult Rooms()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Checkout(int roomId)
+        {
+            ViewBag.RoomId = roomId;
             return View();
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitBooking(string cccd, string hoTen, string soDienThoai, string maLoaiPhong, DateOnly ngayNhan, DateOnly ngayTra)
+        public IActionResult ProcessPayment(
+            string customerName,
+            string email,
+            string phoneNumber,
+            string? note,
+            string? paymentMethod)
+        {
+            var bookingCode = $"BK{DateTime.Now:yyyyMMddHHmmss}";
+            return RedirectToAction(nameof(Success), new { id = bookingCode });
+        }
+
+        [NonAction]
+        public async Task<IActionResult> SubmitDatabaseBookingAsync(string cccd, string hoTen, string soDienThoai, string maLoaiPhong, DateOnly ngayNhan, DateOnly ngayTra)
         {
             if (ngayNhan >= ngayTra)
             {
@@ -224,7 +248,7 @@ namespace PBL3.Controllers
             return RedirectToAction("Success", new { id = maDatPhong });
         }
 
-        public IActionResult Success(string id)
+        public IActionResult Success(string? id)
         {
             ViewBag.MaDatPhong = id;
             return View();

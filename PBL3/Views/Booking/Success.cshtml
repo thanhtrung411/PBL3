@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Đặt Phòng Thành Công";
+    ViewData["Title"] = "Đặt phòng thành công";
 }
 
 <div class="container mt-5 text-center">
@@ -9,17 +9,17 @@
                 <div class="text-success mb-4">
                     <i class="fa-solid fa-circle-check" style="font-size: 5rem;"></i>
                 </div>
-                <h2 class="fw-bold mb-3">Đặt Phòng Thành Công!</h2>
+                <h2 class="fw-bold mb-3">Đặt phòng thành công!</h2>
                 <p class="text-muted fs-5 mb-4">
                     Cảm ơn bạn đã lựa chọn dịch vụ của chúng tôi. Yêu cầu đặt phòng của bạn đã được ghi nhận.
                 </p>
                 <div class="alert alert-light border border-success border-2 rounded-3 py-3 mb-4">
-                    <h4 class="text-success mb-1">Mã Đặt Phòng</h4>
-                    <p class="fs-3 fw-bold mb-0">@ViewBag.MaDatPhong</p>
+                    <h4 class="text-success mb-1">Mã đặt phòng</h4>
+                    <p class="fs-3 fw-bold mb-0">@(ViewBag.MaDatPhong ?? "Đang xử lý")</p>
                 </div>
-                <p class="small text-muted mb-4">Vui lòng lưu lại mã này để Lễ tân đối chiếu khi bạn đến Check-in.</p>
-                
-                <a asp-controller="Guest" asp-action="Index" class="btn btn-primary btn-lg">Về Trang Chủ</a>
+                <p class="small text-muted mb-4">Vui lòng lưu lại mã này để lễ tân đối chiếu khi bạn đến check-in.</p>
+
+                <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg">Về trang chủ</a>
             </div>
         </div>
     </div>
