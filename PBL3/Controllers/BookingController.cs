@@ -51,20 +51,31 @@ namespace PBL3.Controllers
         }
 
         [HttpGet]
-        public IActionResult Checkout(int roomId)
+        public async Task<IActionResult> Checkout(string? roomId, DateTime? checkIn, DateTime? checkOut)
         {
-            ViewBag.RoomId = roomId;
-            return View();
+            var normalizedCheckIn = checkIn ?? DateTime.Today;
+            var normalizedCheckOut = checkOut ?? normalizedCheckIn.AddDays(2);
+            if (normalizedCheckOut <= normalizedCheckIn)
+            {
+                normalizedCheckOut = normalizedCheckIn.AddDays(1);
+            }
+
+            var model = await BuildCheckoutViewModelAsync(
+                string.IsNullOrWhiteSpace(roomId) ? "1" : roomId,
+                normalizedCheckIn,
+                normalizedCheckOut);
+
+            return View(model);
         }
 
         [HttpPost]
-        public IActionResult ProcessPayment(
-            string customerName,
-            string email,
-            string phoneNumber,
-            string? note,
-            string? paymentMethod)
+        public IActionResult ProcessPayment(CheckoutViewModel data)
         {
+            if (!ModelState.IsValid)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
             var bookingCode = $"BK{DateTime.Now:yyyyMMddHHmmss}";
             return RedirectToAction(nameof(Success), new { id = bookingCode });
         }
@@ -252,6 +263,83 @@ namespace PBL3.Controllers
         {
             ViewBag.MaDatPhong = id;
             return View();
+        }
+
+        private async Task<CheckoutViewModel> BuildCheckoutViewModelAsync(string roomId, DateTime checkIn, DateTime checkOut)
+        {
+            var roomName = "Deluxe Hướng Biển";
+            var imageUrl = "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop";
+            var pricePerNight = 1_200_000m;
+
+            var loaiPhong = await _loaiPhongService.GetLoaiPhongByIdAsync(roomId);
+            if (loaiPhong != null)
+            {
+                roomName = loaiPhong.TenLoaiPhong;
+                imageUrl = GetRoomImage(roomName);
+
+                var configuredPrice = await _bangGiaPhongService.LayGiaPhongHienTaiAsync(roomId);
+                if (configuredPrice > 0)
+                {
+                    pricePerNight = configuredPrice;
+                }
+            }
+            else
+            {
+                (roomName, imageUrl, pricePerNight) = GetFallbackRoom(roomId);
+            }
+
+            return new CheckoutViewModel
+            {
+                RoomId = roomId,
+                RoomName = roomName,
+                ImageUrl = imageUrl,
+                PricePerNight = pricePerNight,
+                CheckIn = checkIn,
+                CheckOut = checkOut
+            };
+        }
+
+        private static (string Name, string ImageUrl, decimal PricePerNight) GetFallbackRoom(string roomId)
+        {
+            return roomId switch
+            {
+                "2" => (
+                    "Suite Cao Cấp",
+                    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
+                    2_500_000m),
+                "3" => (
+                    "Venus Suite Cao Cấp",
+                    "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop",
+                    3_200_000m),
+                "4" => (
+                    "Presidential Tổng Thống",
+                    "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800&auto=format&fit=crop",
+                    5_000_000m),
+                _ => (
+                    "Deluxe Hướng Biển",
+                    "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop",
+                    1_200_000m)
+            };
+        }
+
+        private static string GetRoomImage(string roomName)
+        {
+            if (roomName.Contains("Standard", StringComparison.OrdinalIgnoreCase))
+            {
+                return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop";
+            }
+
+            if (roomName.Contains("Deluxe", StringComparison.OrdinalIgnoreCase))
+            {
+                return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800&auto=format&fit=crop";
+            }
+
+            if (roomName.Contains("Suite", StringComparison.OrdinalIgnoreCase))
+            {
+                return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop";
+            }
+
+            return "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800&auto=format&fit=crop";
         }
 
         private async Task<bool> EnsureOnlineEmployeeAsync()

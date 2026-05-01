@@ -18,7 +18,7 @@ namespace PBL3.Controllers
         }
 
         [HttpGet]
-        public IActionResult Checkout(int roomId)
+        public IActionResult Checkout(string? roomId)
         {
             return RedirectToAction("Checkout", "Booking", new { roomId });
         }
@@ -36,6 +36,11 @@ namespace PBL3.Controllers
         }
 
         public IActionResult BookingSuccess(string? id)
+        {
+            return RedirectToAction("Success", "Booking", new { id });
+        }
+
+        public IActionResult Success(string? id)
         {
             return RedirectToAction("Success", "Booking", new { id });
         }
