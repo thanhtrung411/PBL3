@@ -13,7 +13,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "Missing database connection string. Configure ConnectionStrings:DefaultConnection with User Secrets or the ConnectionStrings__DefaultConnection environment variable.");
 }
 
-builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Add services to the container.
