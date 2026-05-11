@@ -1,0 +1,174 @@
+@model IEnumerable<PBL3.Models.LoaiPhong>
+
+@{
+    ViewData["Title"] = "Test Database Connection";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; background: white; padding: 30px; border-radius: 10px; }
+        .test-section { margin-bottom: 30px; }
+        .test-section h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        table { margin-top: 15px; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Database Connection</h1>
+        <p class="text-muted">Kiểm tra kết nối database và xem dữ liệu</p>
+        <hr>
+
+        <!-- Test 1: Xem tất cả loại phòng -->
+        <div class="test-section">
+            <h2>📋 Test 1: Danh Sách Loại Phòng</h2>
+            <p><strong>URL:</strong> <code>/Test/GetAllRoomTypes</code></p>
+
+            @if (Model != null && Model.Any())
+            {
+                <p class="text-success">✅ <strong>Kết nối thành công!</strong> Tìm được @Model.Count() loại phòng</p>
+
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Mã Loại</th>
+                            <th>Tên Loại Phòng</th>
+                            <th>Số Người Tối Đa</th>
+                            <th>Mô Tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var room in Model)
+                        {
+                            <tr>
+                                <td><strong>@room.MaLoaiPhong</strong></td>
+                                <td>@room.TenLoaiPhong</td>
+                                <td>@room.SoNguoiToiDa người</td>
+                                <td>@(string.IsNullOrWhiteSpace(room.MoTa) ? "N/A" : room.MoTa)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-danger">❌ <strong>Không có dữ liệu</strong> hoặc kết nối thất bại</p>
+                @if (ViewBag.Error != null)
+                {
+                    <p class="text-danger"><strong>Lỗi:</strong> @ViewBag.Error</p>
+                }
+            }
+        </div>
+
+        <!-- Test 2: API JSON -->
+        <div class="test-section">
+            <h2>📡 Test 2: API JSON</h2>
+            <p>Bạn có thể test các API sau bằng Postman hoặc browser:</p>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5>GET /Test/GetAllRoomTypes</h5>
+                    <p>Lấy tất cả loại phòng dưới dạng JSON</p>
+                    <a href="/Test/GetAllRoomTypes" class="btn btn-primary btn-sm" target="_blank">
+                        🔗 Test ngay
+                    </a>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5>GET /Test/GetCurrentPrice?roomId=STANDARD</h5>
+                    <p>Lấy giá phòng hiện tại</p>
+                    <a href="/Test/GetCurrentPrice?roomId=STANDARD" class="btn btn-primary btn-sm" target="_blank">
+                        🔗 Test Standard
+                    </a>
+                    <a href="/Test/GetCurrentPrice?roomId=DELUXE" class="btn btn-primary btn-sm" target="_blank">
+                        🔗 Test Deluxe
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 3: Thông tin kết nối -->
+        <div class="test-section">
+            <h2>🔌 Thông Tin Kết Nối Database</h2>
+            <table class="table table-bordered">
+                <tr>
+                    <th>Server</th>
+                    <td><code>35.247.129.108</code></td>
+                </tr>
+                <tr>
+                    <th>Database</th>
+                    <td><code>PBL3_Ver5</code></td>
+                </tr>
+                <tr>
+                    <th>User</th>
+                    <td><code>sqlserver</code></td>
+                </tr>
+                <tr>
+                    <th>Authentication</th>
+                    <td>SQL Server Authentication</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Test 4: Hướng dẫn -->
+        <div class="test-section">
+            <h2>📚 Hướng Dẫn Xem Database</h2>
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <strong>Cách 1: SQL Server Management Studio (SSMS) - RECOMMENDED</strong>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Tải SSMS từ: <a href="https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms" target="_blank">Microsoft SQL Server Management Studio</a></li>
+                        <li>Mở SSMS, nhập Server: <code>35.247.129.108</code></li>
+                        <li>Login với <code>sqlserver</code></li>
+                        <li>Xem database <code>PBL3_Ver5</code></li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <strong>Cách 2: Visual Studio Server Explorer</strong>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Mở Visual Studio</li>
+                        <li>View → Server Explorer</li>
+                        <li>Chuột phải Data Connections → Add Connection</li>
+                        <li>Nhập server info ở trên</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <strong>Cách 3: Azure Data Studio</strong>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Tải tại: <a href="https://learn.microsoft.com/en-us/sql/azure-data-studio/download-azure-data-studio" target="_blank">Azure Data Studio</a></li>
+                        <li>New Connection với server info ở trên</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="test-section">
+            <h2>🏠 Quay Lại</h2>
+            <a href="@Url.Action("Index", "Booking")" class="btn btn-secondary">← Về trang chủ đặt phòng</a>
+        </div>
+    </div>
+</body>
+</html>

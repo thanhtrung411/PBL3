@@ -40,9 +40,10 @@ namespace PBL3.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var loaiPhongs = await _loaiPhongService.GetAllLoaiPhongsAsync();
+            return View(loaiPhongs);
         }
 
         public IActionResult Rooms()
