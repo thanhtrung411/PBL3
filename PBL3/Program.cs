@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using PBL3.Services;
 using PBL3.Services.Interfaces;
 using PBL3.Data;
+using PBL3.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +46,15 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AuthorizeFilter());
 });
 
+var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtectionKeys");
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services
+    .AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+    .SetApplicationName("PBL3");
+
+builder.Services.Configure<VnPayOptions>(builder.Configuration.GetSection("Payment:VnPay"));
+
 //Add services for DI
 builder.Services.AddScoped<ILoaiPhongService, LoaiPhongService>();
 
@@ -61,6 +72,8 @@ builder.Services.AddScoped<IBangGiaPhongService, BangGiaPhongService>();
 builder.Services.AddScoped<IDatPhongService, DatPhongService>();
 builder.Services.AddScoped<IHoaDonService, HoaDonService>();
 builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
+builder.Services.AddScoped<IPublicBookingService, PublicBookingService>();
+builder.Services.AddScoped<IVnPayService, VnPayService>();
 
 var app = builder.Build();
 

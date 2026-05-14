@@ -20,7 +20,13 @@ namespace PBL3.Controllers
         [HttpGet]
         public IActionResult Checkout(string? roomId)
         {
-            return RedirectToAction("Checkout", "Booking", new { roomId });
+            var values = ToRouteValues();
+            if (!string.IsNullOrWhiteSpace(roomId))
+            {
+                values["roomId"] = roomId;
+            }
+
+            return RedirectToAction("Checkout", "Booking", values);
         }
 
         [HttpPost]
@@ -31,8 +37,8 @@ namespace PBL3.Controllers
             string? note,
             string? paymentMethod)
         {
-            var bookingCode = $"BK{DateTime.Now:yyyyMMddHHmmss}";
-            return RedirectToAction("Success", "Booking", new { id = bookingCode });
+            TempData["Error"] = "Vui lòng đặt phòng qua biểu mẫu xác nhận mới để hệ thống tạo giữ chỗ trong database.";
+            return RedirectToAction("Index", "Booking");
         }
 
         public IActionResult BookingSuccess(string? id)

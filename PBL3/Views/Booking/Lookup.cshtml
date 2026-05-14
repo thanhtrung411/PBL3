@@ -1,0 +1,246 @@
+@model PBL3.Models.BookingLookupViewModel
+
+@{
+    ViewData["Title"] = "Tra cứu đặt phòng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .booking-lookup {
+        --hotel-ink: #111111;
+        --hotel-gold: #d4af37;
+        --hotel-muted: #667085;
+        --hotel-border: #e9ecef;
+        --hotel-danger: #b42318;
+        overflow-x: hidden;
+    }
+
+    .booking-lookup .lookup-shell {
+        max-width: 960px;
+        margin: 0 auto;
+    }
+
+    .booking-lookup .page-kicker {
+        color: var(--hotel-gold);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .booking-lookup .lookup-card,
+    .booking-lookup .result-card,
+    .booking-lookup .state-card {
+        border: 1px solid var(--hotel-border);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+        background: #ffffff;
+    }
+
+    .booking-lookup .lookup-card {
+        overflow: hidden;
+    }
+
+    .booking-lookup .lookup-card::before {
+        content: "";
+        display: block;
+        height: 4px;
+        background: linear-gradient(90deg, var(--hotel-ink), var(--hotel-gold));
+    }
+
+    .booking-lookup .form-label {
+        color: var(--hotel-muted);
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .booking-lookup .form-control {
+        min-height: 50px;
+        border-radius: 6px;
+        border-color: var(--hotel-border);
+        font-weight: 600;
+    }
+
+    .booking-lookup .form-control:focus {
+        border-color: var(--hotel-ink);
+        box-shadow: 0 0 0 0.2rem rgba(17, 17, 17, 0.12);
+    }
+
+    .booking-lookup .form-control[aria-invalid="true"] {
+        border-color: var(--hotel-danger);
+        box-shadow: 0 0 0 0.2rem rgba(180, 35, 24, 0.1);
+    }
+
+    .booking-lookup .btn-hotel {
+        min-height: 50px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-color: var(--hotel-ink);
+        background-color: var(--hotel-ink);
+        color: #ffffff;
+        font-weight: 800;
+        white-space: normal;
+    }
+
+    .booking-lookup .btn-hotel:disabled {
+        cursor: wait;
+        opacity: 0.82;
+    }
+
+    .booking-lookup .loading-icon,
+    .booking-lookup .btn-hotel.is-loading .default-icon {
+        display: none;
+    }
+
+    .booking-lookup .btn-hotel.is-loading .loading-icon {
+        display: inline-block;
+    }
+
+    .booking-lookup .btn-hotel:hover,
+    .booking-lookup .btn-hotel:focus-visible {
+        border-color: var(--hotel-gold);
+        background-color: var(--hotel-gold);
+        color: var(--hotel-ink);
+    }
+
+    .booking-lookup .state-card {
+        padding: 34px 22px;
+        text-align: center;
+    }
+
+    .booking-lookup .state-card i,
+    .booking-lookup .result-icon {
+        color: var(--hotel-gold);
+    }
+
+    .booking-lookup .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--hotel-border);
+    }
+
+    .booking-lookup .summary-row:last-child {
+        border-bottom: 0;
+    }
+
+    .booking-lookup .summary-row span:first-child {
+        color: var(--hotel-muted);
+    }
+
+    .booking-lookup .summary-row span:last-child {
+        font-weight: 800;
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    @@media (max-width: 575.98px) {
+        .booking-lookup .summary-row {
+            display: block;
+        }
+
+        .booking-lookup .summary-row span:last-child {
+            display: block;
+            margin-top: 4px;
+            text-align: left;
+        }
+
+        .booking-lookup .btn-hotel {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="booking-lookup container py-5">
+    <div class="lookup-shell">
+        <div class="text-center mb-4">
+            <div class="page-kicker mb-2">Venus Hotel</div>
+            <h1 class="h2 fw-bold mb-2">Tra cứu đặt phòng</h1>
+            <p class="text-muted mb-0">Nhập mã đặt phòng và số điện thoại để kiểm tra thông tin giữ chỗ.</p>
+        </div>
+
+        <section class="lookup-card mb-4" aria-label="Form tra cứu đặt phòng" id="lookupPanel" aria-busy="false">
+            <div class="p-4">
+                <form asp-action="Lookup" asp-controller="Booking" method="post" class="row g-3 align-items-end" id="lookupForm" novalidate>
+                    @Html.AntiForgeryToken()
+                    <div class="col-12">
+                        <div asp-validation-summary="ModelOnly" class="text-danger fw-semibold" role="alert"></div>
+                    </div>
+                    <div class="col-md-5">
+                        <label asp-for="BookingCode" class="form-label">Mã đặt phòng</label>
+                        <input asp-for="BookingCode" class="form-control" placeholder="VD: DP00000001" autocomplete="off" required autocapitalize="characters" />
+                        <span asp-validation-for="BookingCode" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-5">
+                        <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="Số điện thoại đã đặt" autocomplete="tel" inputmode="tel" required />
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-hotel w-100" id="lookupButton">
+                            <i class="fa fa-magnifying-glass default-icon" aria-hidden="true"></i>
+                            <i class="fa fa-spinner fa-spin loading-icon" aria-hidden="true"></i>
+                            <span>Tra cứu</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        @if (Model.Found && Model.Result != null)
+        {
+            <section class="result-card p-4" role="status" aria-live="polite">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <i class="fa fa-circle-check result-icon fs-3" aria-hidden="true"></i>
+                    <div>
+                        <h2 class="h4 fw-bold mb-1">Tìm thấy đặt phòng</h2>
+                        <p class="text-muted mb-0">Vui lòng đối chiếu thông tin bên dưới khi đến check-in.</p>
+                    </div>
+                </div>
+                <div class="summary-row"><span>Mã đặt phòng</span><span>@Model.Result.BookingCode</span></div>
+                <div class="summary-row"><span>Khách hàng</span><span>@Model.Result.CustomerName</span></div>
+                <div class="summary-row"><span>Số điện thoại</span><span>@Model.Result.PhoneNumber</span></div>
+                <div class="summary-row"><span>Ngày lưu trú</span><span>@Model.Result.CheckIn.ToString("dd/MM/yyyy") - @Model.Result.CheckOut.ToString("dd/MM/yyyy")</span></div>
+                <div class="summary-row"><span>Phòng</span><span>@Model.Result.RoomSummary</span></div>
+                <div class="summary-row"><span>Trạng thái</span><span>@Model.Result.Status</span></div>
+                <div class="summary-row"><span>Dự kiến thanh toán</span><span>@Model.Result.TotalAmount.ToString("N0")đ</span></div>
+            </section>
+        }
+        else if (Model.HasSearched)
+        {
+            <section class="state-card" role="status" aria-live="polite">
+                <i class="fa fa-circle-info fs-2 mb-3" aria-hidden="true"></i>
+                <h2 class="h5 fw-bold mb-2">Không tìm thấy đặt phòng</h2>
+                <p class="text-muted mb-0">Vui lòng kiểm tra lại mã đặt phòng và số điện thoại đã dùng khi đặt phòng.</p>
+            </section>
+        }
+    </div>
+</div>
+
+<script>
+    (function () {
+        const form = document.getElementById('lookupForm');
+        const button = document.getElementById('lookupButton');
+        const panel = document.getElementById('lookupPanel');
+
+        form?.addEventListener('submit', function (event) {
+            const firstInvalid = Array.from(form.querySelectorAll('[required]')).find(input => !input.value.trim());
+            if (firstInvalid) {
+                event.preventDefault();
+                firstInvalid.setAttribute('aria-invalid', 'true');
+                firstInvalid.focus();
+                return;
+            }
+
+            button.disabled = true;
+            button.classList.add('is-loading');
+            panel.setAttribute('aria-busy', 'true');
+            button.querySelector('span').textContent = 'Đang tra cứu...';
+        });
+    })();
+</script>

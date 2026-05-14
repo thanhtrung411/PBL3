@@ -9,47 +9,123 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PBL3.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Booking" asp-action="Index">PBL3</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Booking" asp-action="Index">Trang chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-primary fw-bold" asp-area="" asp-controller="Booking" asp-action="Index">
-                                <i class="fa-solid fa-hotel"></i> Đặt phòng Online
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="/Admin">Quản trị</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <style>
+        :root {
+            --guest-ink: #111111;
+            --guest-gold: #d4af37;
+            --guest-muted: #667085;
+            --guest-border: #e9ecef;
+            --guest-soft: #f8f9fa;
+        }
 
-    <div class="container-fluid px-5">
+        body {
+            background: var(--guest-soft);
+            color: #333333;
+        }
+
+        .guest-navbar {
+            border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 2px 14px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(10px);
+        }
+
+        .guest-navbar .navbar-brand {
+            color: var(--guest-ink);
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .guest-navbar .nav-link {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            color: #333333;
+            font-weight: 700;
+        }
+
+        .guest-navbar .nav-link:hover,
+        .guest-navbar .nav-link:focus-visible {
+            color: var(--guest-gold);
+        }
+
+        .guest-navbar .nav-link-primary {
+            color: var(--guest-ink);
+        }
+
+        .guest-shell {
+            width: min(1220px, 100%);
+            margin: 0 auto;
+            padding: 0 clamp(14px, 4vw, 28px);
+        }
+
+        .guest-alert {
+            margin-top: 18px;
+            border-radius: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        .guest-footer {
+            margin-top: 52px;
+            padding: 24px 0;
+            border-top: 1px solid var(--guest-border);
+            background: #ffffff;
+            color: var(--guest-muted);
+        }
+
+        .guest-footer-inner {
+            width: min(1220px, 100%);
+            margin: 0 auto;
+            padding: 0 clamp(14px, 4vw, 28px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .guest-footer a {
+            color: var(--guest-ink);
+            font-weight: 700;
+        }
+
+        .guest-footer a:hover,
+        .guest-footer a:focus-visible {
+            color: var(--guest-gold);
+        }
+
+        @@media (max-width: 575.98px) {
+            .guest-navbar .navbar-brand {
+                font-size: 1.15rem;
+            }
+
+            .guest-navbar .nav-link {
+                width: 100%;
+            }
+
+            .guest-footer-inner {
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body class="public-page">
+    @await Html.PartialAsync("_PublicHeader")
+
+    <div class="guest-shell public-main" id="public-content" tabindex="-1">
         <main role="main" class="pb-3">
             @if (TempData["Error"] != null)
             {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="alert alert-danger alert-dismissible fade show guest-alert" role="alert">
                     @TempData["Error"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
             @if (TempData["Success"] != null)
             {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="alert alert-success alert-dismissible fade show guest-alert" role="alert">
                     @TempData["Success"]
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -58,11 +134,7 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted mt-5">
-        <div class="container-fluid px-5">
-            &copy; 2026 - PBL3 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    @await Html.PartialAsync("_PublicFooter")
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

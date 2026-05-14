@@ -1,0 +1,25 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isBooking = string.Equals(currentController, "Booking", StringComparison.OrdinalIgnoreCase);
+    var isPayment = string.Equals(currentController, "Payment", StringComparison.OrdinalIgnoreCase);
+    var isHome = isBooking && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase);
+    var isRooms = isPayment || (isBooking &&
+        (string.Equals(currentAction, "Rooms", StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(currentAction, "Checkout", StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(currentAction, "Success", StringComparison.OrdinalIgnoreCase)));
+    var isLookup = isBooking && string.Equals(currentAction, "Lookup", StringComparison.OrdinalIgnoreCase);
+}
+
+<a class="public-skip-link" href="#public-content">Bỏ qua điều hướng</a>
+<header class="public-header">
+    <nav class="public-nav" aria-label="Điều hướng công khai">
+        <a class="public-brand" asp-area="" asp-controller="Booking" asp-action="Index">Venus Hotel</a>
+        <div class="public-links">
+            <a asp-area="" asp-controller="Booking" asp-action="Index" class="@(isHome ? "is-active" : "")" aria-current="@(isHome ? "page" : null)">Trang chủ</a>
+            <a asp-area="" asp-controller="Booking" asp-action="Rooms" class="@(isRooms ? "is-active" : "")" aria-current="@(isRooms ? "page" : null)">Loại phòng</a>
+            <a asp-area="" asp-controller="Booking" asp-action="Lookup" class="@(isLookup ? "is-active" : "")" aria-current="@(isLookup ? "page" : null)">Tra cứu</a>
+            <a href="/Admin">Quản trị</a>
+        </div>
+    </nav>
+</header>

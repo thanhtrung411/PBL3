@@ -12,6 +12,17 @@ public static class DomainValues
     public static class HoaDonTrangThai
     {
         public const string ChuaThanhToan = "CHUA_THANH_TOAN";
+        public const string ThanhToanMotPhan = "THANH_TOAN_MOT_PHAN";
+        public const string DaThanhToan = "DA_THANH_TOAN";
+        public const string DaHuy = "DA_HUY";
+    }
+
+    public static class PhuongThucThanhToan
+    {
+        public const string TienMat = "Tiền mặt";
+        public const string ChuyenKhoan = "Chuyển khoản";
+        public const string The = "Thẻ";
+        public const string Qr = "QR";
     }
 
     public static class ChiTietHoaDonLoaiMuc

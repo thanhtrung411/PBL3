@@ -1,8 +1,10 @@
-@model IEnumerable<PBL3.Models.LoaiPhong>
+@model PBL3.Models.RoomSearchViewModel
 
 @{
-    ViewData["Title"] = "Venus Hotel - Trang chủ & Đặt phòng";
+    ViewData["Title"] = "Venus Hotel - Đặt phòng";
     Layout = null;
+    var pageModel = Model ?? new PBL3.Models.RoomSearchViewModel();
+    var roomOptions = pageModel.Results;
 }
 
 <!DOCTYPE html>
@@ -13,467 +15,768 @@
     <title>@ViewData["Title"]</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
+        :root {
+            --hotel-ink: #111111;
+            --hotel-muted: #666666;
+            --hotel-soft: #f8f9fa;
+            --hotel-gold: #d4af37;
+            --hotel-border: #e9ecef;
+            --hotel-danger: #b42318;
+        }
+
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
+            margin: 0;
+            overflow-x: hidden;
+            background-color: var(--hotel-soft);
+            color: #333333;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
         }
 
         a {
-            text-decoration: none;
             color: inherit;
-            transition: all 0.3s ease;
+            text-decoration: none;
         }
 
-        header {
-            background-color: white;
-            padding: 15px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        .site-header {
             position: sticky;
             top: 0;
             z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 14px clamp(18px, 5vw, 50px);
+            border-bottom: 1px solid rgba(17, 17, 17, 0.06);
+            background-color: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 2px 14px rgba(0, 0, 0, 0.04);
+            backdrop-filter: blur(10px);
         }
 
         .logo {
+            flex: 0 0 auto;
+            color: var(--hotel-ink);
             font-size: 24px;
-            font-weight: bold;
-            color: #111;
-            letter-spacing: 1px;
+            font-weight: 800;
+            letter-spacing: 0;
+            white-space: nowrap;
         }
 
         .nav-links {
             display: flex;
-            gap: 30px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: clamp(14px, 3vw, 30px);
+            color: #333333;
+            font-weight: 600;
+        }
+
+        .nav-links a,
+        .btn-login,
+        .btn-search,
+        .btn-book-room {
+            transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .nav-links a {
-            font-weight: 500;
-            color: #333;
+            display: inline-flex;
+            align-items: center;
+            min-height: 42px;
+            overflow-wrap: anywhere;
         }
 
-        .nav-links a:hover {
-            color: #d4af37;
+        .nav-links a:hover,
+        .nav-links a:focus-visible {
+            color: var(--hotel-gold);
         }
 
         .btn-login {
-            background-color: #111;
-            color: white;
-            padding: 10px 20px;
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 10px 18px;
             border-radius: 6px;
-            font-weight: 500;
-            display: inline-block;
+            background-color: var(--hotel-ink);
+            color: #ffffff;
+            font-weight: 700;
         }
 
-        .btn-login:hover {
-            background-color: #333;
-            color: white;
+        .btn-login:hover,
+        .btn-login:focus-visible {
+            background-color: #333333;
+            color: #ffffff;
         }
 
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
-                        url('https://noithatduckhang.com/img/uploads/images/review/T6-2019/quay-le-tan-5-sao-2.jpg')
-                        center/cover no-repeat;
-            height: 60vh;
-            min-height: 460px;
+            min-height: clamp(500px, 64vh, 640px);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            color: white;
+            justify-content: center;
+            padding: clamp(42px, 7vw, 78px) 20px;
+            background:
+                linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.45)),
+                url("/images/booking_hero.jpg") center/cover no-repeat;
+            color: #ffffff;
             text-align: center;
-            padding: 20px;
+        }
+
+        .hero-content {
+            width: min(1040px, 100%);
         }
 
         .hero h1 {
-            font-size: 48px;
-            margin-bottom: 10px;
-            font-weight: bold;
+            margin: 0 0 12px;
+            font-size: clamp(34px, 5vw, 58px);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: 0;
+            overflow-wrap: anywhere;
         }
 
         .hero p {
-            font-size: 18px;
-            margin-bottom: 40px;
+            margin: 0 auto 34px;
+            max-width: 720px;
+            color: rgba(255, 255, 255, 0.92);
+            font-size: clamp(16px, 2vw, 19px);
+            overflow-wrap: anywhere;
+        }
+
+        .booking-panel {
+            width: min(1040px, 100%);
+            margin: 0 auto;
+            padding: clamp(18px, 3vw, 26px);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.97);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+            color: #333333;
+            text-align: left;
+        }
+
+        .booking-error {
+            display: none;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            border: 1px solid rgba(180, 35, 24, 0.22);
+            border-radius: 6px;
+            background-color: #fff4f2;
+            color: var(--hotel-danger);
+            font-size: 14px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .booking-error.is-visible {
+            display: flex;
+        }
+
+        .server-error {
+            width: min(1040px, calc(100% - 36px));
+            margin: 22px auto 0;
+            padding: 12px 14px;
+            border: 1px solid rgba(180, 35, 24, 0.22);
+            border-radius: 8px;
+            background-color: #fff4f2;
+            color: var(--hotel-danger);
+            font-size: 14px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
         }
 
         .booking-bar {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            display: flex;
-            gap: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 1000px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(130px, 1fr)) minmax(150px, auto);
+            gap: 16px;
+            align-items: end;
         }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
-            flex: 1;
-            min-width: 150px;
+        .field-group {
+            min-width: 0;
         }
 
-        .input-group label {
+        .field-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--hotel-muted);
             font-size: 12px;
-            font-weight: 600;
-            color: #666;
-            margin-bottom: 5px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .input-group input,
-        .input-group select {
+        .field-control {
+            width: 100%;
+            min-width: 0;
+            min-height: 46px;
             padding: 10px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid #dddddd;
             border-radius: 6px;
-            font-size: 14px;
+            background-color: #ffffff;
+            color: #222222;
+            font-size: 15px;
             outline: none;
-            transition: border-color 0.3s;
         }
 
-        .input-group input:focus,
-        .input-group select:focus {
-            border-color: #111;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        .field-control:focus {
+            border-color: var(--hotel-ink);
+            box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.12);
+        }
+
+        .field-control[aria-invalid="true"] {
+            border-color: var(--hotel-danger);
+            box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.1);
         }
 
         .btn-search {
-            background-color: #111;
-            color: white;
-            border: none;
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            max-width: 100%;
+            padding: 10px 26px;
+            border: 0;
             border-radius: 6px;
-            font-weight: bold;
+            background-color: var(--hotel-ink);
+            color: #ffffff;
+            font-weight: 800;
+            white-space: nowrap;
             cursor: pointer;
-            padding: 10px 30px;
-            transition: all 0.3s;
-            align-self: flex-end;
-            margin-top: auto;
         }
 
-        .btn-search:hover {
-            background-color: #d4af37;
-            color: #111;
+        .btn-search:hover,
+        .btn-search:focus-visible {
+            background-color: var(--hotel-gold);
+            color: var(--hotel-ink);
+        }
+
+        .btn-search:disabled {
+            cursor: wait;
+            opacity: 0.78;
+        }
+
+        .loading-icon,
+        .btn-search.is-loading .default-icon {
+            display: none;
+        }
+
+        .btn-search.is-loading .loading-icon {
+            display: inline-block;
+        }
+
+        .loading-hint {
+            display: none;
+            margin: 14px 0 0;
+            color: var(--hotel-muted);
+            font-size: 13px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .booking-panel.is-loading .loading-hint {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .section-title {
+            max-width: 760px;
+            margin: clamp(48px, 7vw, 68px) auto 32px;
+            padding: 0 20px;
             text-align: center;
-            margin: 60px 0 40px;
-            font-size: 28px;
+        }
+
+        .section-title h2 {
+            margin: 0 0 10px;
+            color: var(--hotel-ink);
+            font-size: clamp(24px, 3vw, 32px);
+            font-weight: 800;
+            letter-spacing: 0;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
-            color: #111;
+            overflow-wrap: anywhere;
+        }
+
+        .section-title p {
+            margin: 0;
+            color: var(--hotel-muted);
+            font-size: 15px;
+            overflow-wrap: anywhere;
         }
 
         .rooms-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 22px;
             max-width: 1300px;
             margin: 0 auto;
-            padding: 0 20px 40px;
+            padding: 0 clamp(18px, 4vw, 32px) 48px;
         }
 
         .room-card {
-            background: white;
-            border-radius: 10px;
+            min-width: 0;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            transition: all 0.3s ease;
             border: 1px solid #f0f0f0;
+            border-radius: 10px;
+            background: #ffffff;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
         }
 
         .room-card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
         }
 
         .room-card img {
             width: 100%;
-            height: 220px;
-            object-fit: cover;
+            aspect-ratio: 16 / 10;
             display: block;
+            object-fit: cover;
+            background-color: #eeeeee;
         }
 
         .room-info {
-            padding: 20px;
+            flex: 1;
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
             justify-content: space-between;
+            padding: 20px;
         }
 
         .room-info h3 {
+            margin: 0 0 10px;
+            color: var(--hotel-ink);
             font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #111;
+            font-weight: 800;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
         }
 
-        .room-info .max-guests {
-            font-size: 12px;
-            color: #999;
+        .max-guests {
             margin-bottom: 10px;
-        }
-
-        .room-info .description {
-            color: #666;
+            color: #777777;
             font-size: 13px;
-            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .description {
+            margin-bottom: 18px;
+            color: var(--hotel-muted);
+            font-size: 14px;
             line-height: 1.6;
+            overflow-wrap: anywhere;
         }
 
         .btn-book-room {
-            display: inline-block;
-            padding: 10px 15px;
-            border: 2px solid #111;
-            color: #111;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.5px;
-            transition: all 0.3s;
-            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            max-width: 100%;
+            min-height: 44px;
             margin-top: auto;
-            border-radius: 4px;
+            padding: 10px 14px;
+            border: 2px solid var(--hotel-ink);
+            border-radius: 5px;
+            color: var(--hotel-ink);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-align: center;
+            text-transform: uppercase;
         }
 
-        .btn-book-room:hover {
-            background: #111;
-            color: white;
+        .btn-book-room:hover,
+        .btn-book-room:focus-visible {
+            background: var(--hotel-ink);
+            color: #ffffff;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            max-width: 620px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            border: 1px dashed #d5d5d5;
+            border-radius: 10px;
+            background-color: #ffffff;
+            color: var(--hotel-muted);
+            text-align: center;
+        }
+
+        .empty-state i {
+            margin-bottom: 14px;
+            color: var(--hotel-gold);
+            font-size: 32px;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 8px;
+            color: var(--hotel-ink);
+            font-size: 20px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .empty-state p {
+            overflow-wrap: anywhere;
+        }
+
+        .empty-state a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            margin-top: 10px;
+            padding: 9px 16px;
+            border: 2px solid var(--hotel-ink);
+            border-radius: 6px;
+            color: var(--hotel-ink);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .empty-state a:hover,
+        .empty-state a:focus-visible {
+            background-color: var(--hotel-ink);
+            color: #ffffff;
         }
 
         footer {
-            background-color: #111;
-            color: white;
+            margin-top: 36px;
+            padding: 24px 20px;
+            background-color: var(--hotel-ink);
+            color: #ffffff;
             text-align: center;
-            padding: 20px;
-            margin-top: 60px;
         }
 
-        @@media (max-width: 768px) {
-            header {
-                padding: 15px 20px;
-                flex-wrap: wrap;
-            }
+        footer p {
+            margin: 0 0 6px;
+        }
 
-            .logo {
-                font-size: 20px;
-                flex: 1;
-            }
+        footer p:last-child {
+            margin-bottom: 0;
+            color: rgba(255, 255, 255, 0.78);
+        }
 
-            .nav-links {
-                gap: 15px;
-                font-size: 14px;
-            }
-
-            .btn-login {
-                padding: 8px 15px;
-                font-size: 12px;
-            }
-
-            .hero {
-                height: auto;
-                min-height: 520px;
-            }
-
-            .hero h1 {
-                font-size: 32px;
-            }
-
-            .hero p {
-                font-size: 16px;
-            }
-
+        @@media (max-width: 900px) {
             .booking-bar {
-                flex-direction: column;
-                width: 95%;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .btn-search {
                 width: 100%;
-                align-self: stretch;
             }
         }
 
-        @@media (max-width: 600px) {
-            header {
-                justify-content: center;
-                gap: 10px;
-            }
-
-            .nav-links {
-                flex-direction: column;
-                gap: 10px;
-                width: 100%;
-                text-align: center;
+        @@media (max-width: 700px) {
+            .site-header {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 10px 14px;
+                text-align: left;
             }
 
             .logo {
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .nav-links {
+                grid-column: 1 / -1;
+                justify-content: flex-start;
+                gap: 10px 18px;
                 width: 100%;
-                text-align: center;
             }
 
             .btn-login {
-                width: 100%;
+                min-height: 44px;
+                white-space: nowrap;
             }
 
-            .section-title {
+            .booking-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                min-height: auto;
+                padding-top: 44px;
+            }
+
+            .btn-search,
+            .btn-book-room {
+                width: 100%;
+                white-space: normal;
+            }
+
+            .rooms-container {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @@media (max-width: 420px) {
+            .site-header {
+                gap: 12px;
+                padding: 12px 16px;
+            }
+
+            .logo {
                 font-size: 20px;
-                margin: 40px 0 20px;
+            }
+
+            .nav-links {
+                justify-content: space-between;
+                gap: 6px 10px;
+            }
+
+            .nav-links a {
+                min-height: 40px;
+                font-size: 14px;
+            }
+
+            .hero {
+                padding: 34px 14px;
+            }
+
+            .hero h1 {
+                font-size: 30px;
+            }
+
+            .booking-panel {
+                padding: 16px;
+                border-radius: 10px;
+            }
+
+            .field-control,
+            .btn-search,
+            .btn-book-room {
+                min-height: 48px;
+            }
+
+            .room-info {
+                padding: 18px;
+            }
+
+            .empty-state {
+                padding: 30px 18px;
             }
         }
     </style>
 </head>
-<body>
-    <header>
-        <div class="logo">Venus Hotel</div>
-        <nav class="nav-links">
-            <a href="@Url.Action("Index", "Booking")" title="Trang chủ">Trang chủ</a>
-            <a href="#rooms" title="Xem các loại phòng">Loại phòng</a>
-            <a href="#contact" title="Liên hệ chúng tôi">Liên hệ</a>
-        </nav>
-        <a href="/Admin" class="btn-login" title="Đăng nhập quản trị">Đăng nhập</a>
-    </header>
+<body class="public-page">
+    @await Html.PartialAsync("_PublicHeader")
 
+    <div class="public-main" id="public-content" tabindex="-1">
     <section class="hero">
-        <h1>Chào mừng đến với Venus Hotel</h1>
-        <p>Tận hưởng không gian nghỉ dưỡng tuyệt vời với giá tốt nhất</p>
+        <div class="hero-content">
+            <h1>Chào mừng đến với Venus Hotel</h1>
+            <p>Tận hưởng không gian nghỉ dưỡng thoải mái với mức giá tốt nhất</p>
 
-        <div class="booking-bar">
-            <div class="input-group">
-                <label for="checkInDate">Nhận phòng</label>
-                <input type="date" id="checkInDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" required>
+            <div class="booking-panel" id="bookingPanel" aria-label="Tìm phòng" aria-busy="false">
+                <div class="booking-error" id="bookingError" role="alert" aria-live="assertive" tabindex="-1">
+                    <i class="fa fa-circle-exclamation" aria-hidden="true"></i>
+                    <span></span>
+                </div>
+
+                <div class="booking-bar">
+                    <div class="field-group">
+                        <label for="checkInDate">Nhận phòng</label>
+                        <input class="field-control" type="date" id="checkInDate" value="@pageModel.CheckIn.ToString("yyyy-MM-dd")" required>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="checkOutDate">Trả phòng</label>
+                        <input class="field-control" type="date" id="checkOutDate" value="@pageModel.CheckOut.ToString("yyyy-MM-dd")" required>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="roomTypeSelect">Loại phòng</label>
+                        <select class="field-control" id="roomTypeSelect">
+                            <option value="">Tất cả loại phòng</option>
+                            @foreach (var room in roomOptions)
+                            {
+                                <option value="@room.RoomTypeId">@room.RoomName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="guestCountSelect">Số người</label>
+                        <select class="field-control" id="guestCountSelect">
+                            <option value="1" selected="@(pageModel.Guests == 1)">1 Người lớn</option>
+                            <option value="2" selected="@(pageModel.Guests == 2)">2 Người lớn</option>
+                            <option value="3" selected="@(pageModel.Guests == 3)">3 Người lớn</option>
+                            <option value="4" selected="@(pageModel.Guests == 4)">Gia đình (4 người)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-search" id="searchButton" onclick="searchRooms()" type="button">
+                        <i class="fa fa-search default-icon" aria-hidden="true"></i>
+                        <i class="fa fa-spinner fa-spin loading-icon" aria-hidden="true"></i>
+                        <span>Tìm phòng</span>
+                    </button>
+                </div>
+
+                <p class="loading-hint" id="loadingHint" aria-live="polite">
+                    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+                    Đang kiểm tra thông tin tìm phòng, vui lòng chờ trong giây lát...
+                </p>
             </div>
-
-            <div class="input-group">
-                <label for="checkOutDate">Trả phòng</label>
-                <input type="date" id="checkOutDate" value="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required>
-            </div>
-
-            <div class="input-group">
-                <label for="roomTypeSelect">Loại phòng</label>
-                <select id="roomTypeSelect">
-                    <option value="">Tất cả loại phòng</option>
-                    @if (Model != null && Model.Any())
-                    {
-                        @foreach (var room in Model)
-                        {
-                            <option value="@room.MaLoaiPhong">@room.TenLoaiPhong</option>
-                        }
-                    }
-                </select>
-            </div>
-
-            <button class="btn-search" onclick="searchRooms()" type="button">
-                <i class="fa fa-search"></i> Tìm phòng
-            </button>
         </div>
     </section>
 
-    <main>
-        <h2 class="section-title" id="rooms">
-            Các loại phòng tại Venus Hotel
-        </h2>
+    @if (!string.IsNullOrWhiteSpace(pageModel.ErrorMessage))
+    {
+        <div class="server-error" role="alert">
+            <i class="fa fa-circle-exclamation" aria-hidden="true"></i>
+            @pageModel.ErrorMessage
+        </div>
+    }
 
-        <section class="rooms-container">
-            @if (Model != null && Model.Any())
+    @if (TempData["Error"] != null)
+    {
+        <div class="server-error" role="alert">
+            <i class="fa fa-circle-exclamation" aria-hidden="true"></i>
+            @TempData["Error"]
+        </div>
+    }
+
+    <main>
+        <section class="section-title" id="rooms">
+            <h2>Các loại phòng tại Venus Hotel</h2>
+            <p>Chọn hạng phòng phù hợp, sau đó kiểm tra thông tin trước khi hoàn tất đặt phòng.</p>
+        </section>
+
+        <section class="rooms-container" aria-live="polite">
+            @if (roomOptions.Any())
             {
-                @foreach (var loaiPhong in Model)
+                @foreach (var room in roomOptions)
                 {
-                    <div class="room-card">
-                        <img src="@GetRoomImage(loaiPhong.TenLoaiPhong)"
-                             alt="Ảnh @loaiPhong.TenLoaiPhong"
-                             onerror="this.src='https://via.placeholder.com/400x220?text=Phong';">
+                    <article class="room-card">
+                        <img src="@room.ImageUrl"
+                             alt="Ảnh minh họa @room.RoomName"
+                             loading="lazy"
+                             onerror="this.src='/images/deluxe-room.jpg';">
 
                         <div class="room-info">
                             <div>
-                                <h3>@loaiPhong.TenLoaiPhong</h3>
+                                <h3>@room.RoomName</h3>
 
                                 <div class="max-guests">
-                                    <i class="fa fa-users"></i>
-                                    Tối đa @loaiPhong.SoNguoiToiDa người
+                                    <i class="fa fa-users" aria-hidden="true"></i>
+                                    Tối đa @room.MaxGuests người · Còn @room.AvailableRooms phòng
                                 </div>
 
                                 <p class="description">
-                                    @if (!string.IsNullOrWhiteSpace(loaiPhong.MoTa))
-                                    {
-                                        @loaiPhong.MoTa
-                                    }
-                                    else
-                                    {
-                                        <text>Phòng chất lượng cao với đầy đủ tiện nghi.</text>
-                                    }
+                                    @room.Description
                                 </p>
+                                <p class="description fw-bold text-dark mb-3">@room.PricePerNight.ToString("N0")đ / đêm</p>
                             </div>
 
                             <a href="@Url.Action("Checkout", "Booking", new {
-                                roomId = loaiPhong.MaLoaiPhong,
-                                checkIn = DateTime.Today.ToString("yyyy-MM-dd"),
-                                checkOut = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")
+                                roomId = room.RoomTypeId,
+                                checkIn = pageModel.CheckIn.ToString("yyyy-MM-dd"),
+                                checkOut = pageModel.CheckOut.ToString("yyyy-MM-dd"),
+                                guests = pageModel.Guests
                             })"
                                class="btn-book-room"
-                               title="Đặt phòng @loaiPhong.TenLoaiPhong">
-                                <i class="fa fa-arrow-right"></i> Chọn phòng
+                               aria-label="Chọn phòng @room.RoomName">
+                                <i class="fa fa-arrow-right" aria-hidden="true"></i>
+                                <span>Chọn phòng</span>
                             </a>
                         </div>
-                    </div>
+                    </article>
                 }
             }
             else
             {
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                    <p style="color: #999; font-size: 16px;">
-                        <i class="fa fa-exclamation-triangle"></i>
-                        Hiện tại không có loại phòng nào có sẵn.
-                    </p>
+                <div class="empty-state" role="status">
+                    <i class="fa fa-bed" aria-hidden="true"></i>
+                    <h3>Chưa có loại phòng để hiển thị</h3>
+                    <p>Vui lòng thử lại sau hoặc liên hệ lễ tân để được hỗ trợ tìm phòng phù hợp.</p>
+                    <a href="#contact">Liên hệ lễ tân</a>
                 </div>
             }
         </section>
     </main>
 
-    <footer id="contact">
-        <p>&copy; 2026 Venus Hotel. Tất cả các quyền được bảo lưu.</p>
-        <p>Liên hệ: 1900-8888 | Email: info@venushotel.vn</p>
-    </footer>
+    </div>
+
+    @await Html.PartialAsync("_PublicFooter")
 
     <script>
+        function showBookingError(message) {
+            const error = document.getElementById('bookingError');
+            error.querySelector('span').textContent = message;
+            error.classList.add('is-visible');
+            error.focus();
+        }
+
+        function clearBookingError() {
+            const error = document.getElementById('bookingError');
+            error.classList.remove('is-visible');
+            error.querySelector('span').textContent = '';
+            document.getElementById('checkInDate')?.removeAttribute('aria-invalid');
+            document.getElementById('checkOutDate')?.removeAttribute('aria-invalid');
+        }
+
+        function setSearchLoading(isLoading) {
+            const button = document.getElementById('searchButton');
+            const panel = document.getElementById('bookingPanel');
+            button.disabled = isLoading;
+            button.classList.toggle('is-loading', isLoading);
+            panel.classList.toggle('is-loading', isLoading);
+            panel.setAttribute('aria-busy', String(isLoading));
+            button.querySelector('span').textContent = isLoading ? 'Đang tìm...' : 'Tìm phòng';
+        }
+
         function searchRooms() {
+            clearBookingError();
+
             const checkIn = document.getElementById('checkInDate').value;
             const checkOut = document.getElementById('checkOutDate').value;
             const roomType = document.getElementById('roomTypeSelect').value;
+            const guests = document.getElementById('guestCountSelect').value;
 
             if (!checkIn || !checkOut) {
-                alert('Vui lòng chọn ngày nhận và trả phòng');
+                document.getElementById('checkInDate').setAttribute('aria-invalid', String(!checkIn));
+                document.getElementById('checkOutDate').setAttribute('aria-invalid', String(!checkOut));
+                showBookingError('Vui lòng chọn ngày nhận và trả phòng.');
                 return;
             }
 
             if (new Date(checkOut) <= new Date(checkIn)) {
-                alert('Ngày trả phòng phải sau ngày nhận phòng');
+                document.getElementById('checkOutDate').setAttribute('aria-invalid', 'true');
+                showBookingError('Ngày trả phòng phải sau ngày nhận phòng.');
                 return;
             }
 
+            setSearchLoading(true);
+
             const query = new URLSearchParams({
                 checkIn,
-                checkOut
+                checkOut,
+                guests
             });
 
             if (roomType) {
@@ -483,51 +786,13 @@
             window.location.href = `/Booking/Rooms?${query.toString()}`;
         }
 
-        document.getElementById('checkOutDate')?.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') searchRooms();
+        document.getElementById('checkOutDate')?.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') searchRooms();
         });
 
-        document.getElementById('roomTypeSelect')?.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') searchRooms();
+        document.getElementById('roomTypeSelect')?.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') searchRooms();
         });
     </script>
 </body>
 </html>
-
-@functions {
-    string GetRoomImage(string? roomName)
-    {
-        if (string.IsNullOrWhiteSpace(roomName))
-        {
-            return "https://via.placeholder.com/400x220?text=Phong";
-        }
-
-        if (roomName.Contains("Standard", StringComparison.OrdinalIgnoreCase))
-        {
-            return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop";
-        }
-
-        if (roomName.Contains("Deluxe", StringComparison.OrdinalIgnoreCase))
-        {
-            return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800&auto=format&fit=crop";
-        }
-
-        if (roomName.Contains("Suite", StringComparison.OrdinalIgnoreCase)
-            && !roomName.Contains("Presidential", StringComparison.OrdinalIgnoreCase))
-        {
-            return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop";
-        }
-
-        if (roomName.Contains("Presidential", StringComparison.OrdinalIgnoreCase)
-            || roomName.Contains("Tổng Thống", StringComparison.OrdinalIgnoreCase))
-        {
-            return "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800&auto=format&fit=crop";
-        }
-
-        return "https://via.placeholder.com/400x220?text=" + Uri.EscapeDataString(roomName);
-    }
-}
-
-
-
-

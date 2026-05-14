@@ -86,7 +86,17 @@ namespace PBL3.Services
             {
                 return bangGia.GiaApDung;
             }
-            return 0; // Or standard base price if defined
+
+            var fallbackBangGia = await _context.BangGiaPhongs
+                .AsNoTracking()
+                .Where(b => b.MaLoaiPhong == maLoaiPhong &&
+                            b.TrangThai == "Hoạt động" &&
+                            b.GiaApDung > 0)
+                .OrderByDescending(b => b.DenNgay)
+                .ThenByDescending(b => b.UuTien)
+                .FirstOrDefaultAsync();
+
+            return fallbackBangGia?.GiaApDung ?? 0;
         }
     }
 }

@@ -1,376 +1,199 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using PBL3.Data;
+using Microsoft.Extensions.Options;
 using PBL3.Models;
-using PBL3.Services;
 using PBL3.Services.Interfaces;
+using System.Data.Common;
 
 namespace PBL3.Controllers
 {
     [AllowAnonymous]
     public class BookingController : Controller
     {
-        private const string OnlineEmployeeId = "NV_ONLINE";
-
-        private readonly ILoaiPhongService _loaiPhongService;
-        private readonly IDatPhongService _datPhongService;
-        private readonly IKhachHangService _khachHangService;
-        private readonly IBangGiaPhongService _bangGiaPhongService;
-        private readonly IChiTietHoaDonService _chiTietHoaDonService;
-        private readonly IHoaDonService _hoaDonService;
-        private readonly ApplicationDbContext _context;
+        private readonly IPublicBookingService _publicBookingService;
+        private readonly VnPayOptions _vnPayOptions;
 
         public BookingController(
-            ILoaiPhongService loaiPhongService, 
-            IDatPhongService datPhongService, 
-            IKhachHangService khachHangService,
-            IBangGiaPhongService bangGiaPhongService,
-            IChiTietHoaDonService chiTietHoaDonService,
-            IHoaDonService hoaDonService,
-            ApplicationDbContext context)
+            IPublicBookingService publicBookingService,
+            IOptions<VnPayOptions> vnPayOptions)
         {
-            _loaiPhongService = loaiPhongService;
-            _datPhongService = datPhongService;
-            _khachHangService = khachHangService;
-            _bangGiaPhongService = bangGiaPhongService;
-            _chiTietHoaDonService = chiTietHoaDonService;
-            _hoaDonService = hoaDonService;
-            _context = context;
+            _publicBookingService = publicBookingService;
+            _vnPayOptions = vnPayOptions.Value;
         }
 
         public async Task<IActionResult> Index()
         {
-            var loaiPhongs = await _loaiPhongService.GetAllLoaiPhongsAsync();
-            return View(loaiPhongs);
+            var model = await _publicBookingService.SearchRoomsAsync(
+                DateTime.Today,
+                DateTime.Today.AddDays(1),
+                2,
+                null);
+
+            return View(model);
         }
 
-        public IActionResult Rooms()
+        public async Task<IActionResult> Rooms(DateTime? checkIn, DateTime? checkOut, int? guests, string? roomType)
         {
-            return View();
+            var model = await _publicBookingService.SearchRoomsAsync(checkIn, checkOut, guests, roomType);
+            return View(model);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Checkout(string? roomId, DateTime? checkIn, DateTime? checkOut)
+        public async Task<IActionResult> Checkout(string? roomId, DateTime? checkIn, DateTime? checkOut, int? guests)
         {
-            var normalizedCheckIn = checkIn ?? DateTime.Today;
-            var normalizedCheckOut = checkOut ?? normalizedCheckIn.AddDays(2);
-            if (normalizedCheckOut <= normalizedCheckIn)
+            if (string.IsNullOrWhiteSpace(roomId))
             {
-                normalizedCheckOut = normalizedCheckIn.AddDays(1);
+                TempData["Error"] = "Vui lòng chọn loại phòng trước khi xác nhận đặt phòng.";
+                return RedirectToAction(nameof(Rooms), ToRoomsRoute(checkIn, checkOut, guests, null));
             }
 
-            var model = await BuildCheckoutViewModelAsync(
-                string.IsNullOrWhiteSpace(roomId) ? "1" : roomId,
-                normalizedCheckIn,
-                normalizedCheckOut);
+            var normalizedRoomId = roomId.Trim();
+            var model = await _publicBookingService.BuildCheckoutAsync(normalizedRoomId, checkIn, checkOut, guests);
+            if (model == null)
+            {
+                TempData["Error"] = "Loại phòng này hiện không còn phù hợp với lựa chọn của bạn. Vui lòng chọn lại.";
+                return RedirectToAction(nameof(Rooms), ToRoomsRoute(checkIn, checkOut, guests, normalizedRoomId));
+            }
 
             return View(model);
         }
 
         [HttpPost]
-        public IActionResult ProcessPayment(CheckoutViewModel data)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProcessPayment(CheckoutViewModel data)
         {
             if (!ModelState.IsValid)
             {
-                return RedirectToAction(nameof(Index));
+                var rebuilt = await RebuildCheckoutModelAsync(data);
+                TempData["Error"] = "Vui lòng kiểm tra và điền đầy đủ thông tin bắt buộc.";
+                return View("Checkout", rebuilt);
             }
 
-            var bookingCode = $"BK{DateTime.Now:yyyyMMddHHmmss}";
-            return RedirectToAction(nameof(Success), new { id = bookingCode });
-        }
-
-        [NonAction]
-        public async Task<IActionResult> SubmitDatabaseBookingAsync(string cccd, string hoTen, string soDienThoai, string maLoaiPhong, DateOnly ngayNhan, DateOnly ngayTra)
-        {
-            if (ngayNhan >= ngayTra)
+            PublicBookingResult result;
+            try
             {
-                TempData["Error"] = "Ngày trả phòng phải sau ngày nhận phòng.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            decimal giaPhong = await _bangGiaPhongService.LayGiaPhongHienTaiAsync(maLoaiPhong);
-            if (giaPhong <= 0)
-            {
-                TempData["Error"] = "Chưa cấu hình giá phòng cho loại phòng này. Vui lòng chọn loại phòng khác hoặc liên hệ lễ tân.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            await using var bookingTransaction = await _context.Database.BeginTransactionAsync();
-
-            var ensureOnlineEmployeeResult = await EnsureOnlineEmployeeAsync();
-            if (!ensureOnlineEmployeeResult)
-            {
-                TempData["Error"] = "Không thể chuẩn bị nhân viên xử lý đặt phòng online. Vui lòng thử lại.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            // 1. Xử lý Khách Hàng (Tạo mới hoặc cập nhật)
-            var khachHang = await _khachHangService.GetByCccdAsync(cccd);
-            string maKh;
-
-            if (khachHang == null)
-            {
-                var newMaKh = await CodeGenerator.GenerateFromSequenceAsync(
-                    _context,
-                    "dbo.Seq_KhachHang",
-                    "KH",
-                    8);
-                if (newMaKh == null)
+                if (data.PaymentMethod == PaymentMethods.VnPay && !IsVnPayConfigured())
                 {
-                    TempData["Error"] = "Không thể tạo mã khách hàng. Vui lòng thử lại.";
-                    return RedirectToAction(nameof(Index));
+                    data.PaymentMethod = PaymentMethods.PayAtHotel;
+                    TempData["Success"] = "VNPay chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh merchant. Há»‡ thá»‘ng Ä‘Ã£ chuyá»ƒn sang giá»¯ chá»— vÃ  thanh toÃ¡n táº¡i khÃ¡ch sáº¡n.";
                 }
 
-                maKh = newMaKh;
-                var newKh = new KhachHang
+                result = await _publicBookingService.ConfirmBookingAsync(data);
+            }
+            catch (Exception ex) when (IsDatabaseException(ex))
+            {
+                result = new PublicBookingResult
                 {
-                    MaKh = maKh,
-                    Cccd = cccd,
-                    HoTen = hoTen,
-                    SoDienThoai = soDienThoai
+                    Success = false,
+                    ErrorMessage = "Không thể kết nối cơ sở dữ liệu để giữ phòng. Vui lòng thử lại sau."
                 };
-                var createKhResult = await _khachHangService.CreateAsync(newKh);
-                if (!createKhResult)
-                {
-                    TempData["Error"] = "Không thể tạo thông tin khách hàng. Vui lòng thử lại.";
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            else
-            {
-                maKh = khachHang.MaKh;
-                if (khachHang.HoTen != hoTen || khachHang.SoDienThoai != soDienThoai)
-                {
-                    khachHang.HoTen = hoTen;
-                    khachHang.SoDienThoai = soDienThoai;
-                    var updateKhResult = await _khachHangService.UpdateAsync(khachHang);
-                    if (!updateKhResult)
-                    {
-                        TempData["Error"] = "Không thể cập nhật thông tin khách hàng. Vui lòng thử lại.";
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
             }
 
-            // 2. Tạo Đặt Phòng
-            string? maDatPhong = null;
-
-            maDatPhong = await CodeGenerator.GenerateFromSequenceAsync(
-                _context,
-                "dbo.Seq_DatPhong",
-                "DP",
-                8);
-            if (maDatPhong == null)
+            if (!result.Success)
             {
-                TempData["Error"] = "Không thể tạo mã đặt phòng. Vui lòng thử lại.";
-                return RedirectToAction(nameof(Index));
+                TempData["Error"] = result.ErrorMessage ?? "Không thể giữ phòng. Vui lòng thử lại.";
+                return RedirectToAction(nameof(Rooms), new
+                {
+                    checkIn = data.CheckIn.ToString("yyyy-MM-dd"),
+                    checkOut = data.CheckOut.ToString("yyyy-MM-dd"),
+                    guests = data.Guests,
+                    roomType = data.RoomId?.Trim()
+                });
             }
 
-            var datPhong = new DatPhong
+            if (data.PaymentMethod == PaymentMethods.VnPay)
             {
-                MaDatPhong = maDatPhong,
-                MaKh = maKh,
-                MaNv = OnlineEmployeeId, // Mã nhân viên ảo dành cho Đặt online
-                TenKhSnapshot = hoTen,
-                CccdSnapshot = cccd,
-                SdtSnapshot = soDienThoai,
-                NgayDat = DateTime.Now,
-                NgayNhanPhong = ngayNhan,
-                NgayTraPhong = ngayTra,
-                TrangThai = DomainValues.DatPhongTrangThai.GiuCho
-            };
-
-            // DatPhongService.CreateAsync sẽ tự động tạo một HoaDon rỗng đi kèm
-            var createDpResult = await _datPhongService.CreateAsync(datPhong);
-            if (!createDpResult)
-            {
-                 TempData["Error"] = "Lỗi hệ thống khi tạo phiếu đặt phòng. Vui lòng thử lại.";
-                 return RedirectToAction(nameof(Index));
+                return RedirectToAction("Start", "Payment", new { id = result.BookingCode });
             }
 
-            // 3. Xử lý giá cả và Chi Tiết Hóa Đơn
-            int soNgayO = ngayTra.DayNumber - ngayNhan.DayNumber;
-            decimal tongTienPhong = giaPhong * soNgayO;
-
-            // Tìm hóa đơn rỗng vừa được tạo tự động (mã HD tương ứng với DP)
-            // Vì HoaDonService chưa có hàm GetByMaDatPhong, ta lấy danh sách và lọc tạm
-            var hoaDons = await _hoaDonService.GetAllAsync();
-            var hoaDonHienTai = hoaDons.FirstOrDefault(h => h.MaDatPhong == maDatPhong);
-
-            if (hoaDonHienTai != null)
-            {
-                // Ép thanh toán 100% tiền phòng làm cọc cho Đặt online
-                hoaDonHienTai.TienDatCoc = tongTienPhong;
-                var updateHoaDonResult = await _hoaDonService.UpdateAsync(hoaDonHienTai);
-                if (!updateHoaDonResult)
-                {
-                    TempData["Error"] = "Không thể cập nhật hóa đơn. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var maCthd = await CodeGenerator.GenerateFromSequenceAsync(
-                    _context,
-                    "dbo.Seq_ChiTietHoaDon",
-                    "CT",
-                    8);
-                if (maCthd == null)
-                {
-                    TempData["Error"] = "Không thể tạo mã chi tiết hóa đơn. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Tạo Chi Tiết Hóa Đơn (Lưu ý: Không gán MaPhong cụ thể, chỉ ghi nhận loại)
-                var chiTiet = new ChiTietHoaDon
-                {
-                    MaCthd = maCthd,
-                    MaHoaDon = hoaDonHienTai.MaHoaDon,
-                    LoaiMuc = DomainValues.ChiTietHoaDonLoaiMuc.Phong,
-                    // MaPhong để rỗng (null), chờ lễ tân xếp phòng thật sau
-                    NoiDung = "Thuê phòng loại " + maLoaiPhong,
-                    SoNguoi = 2, // Mặc định
-                    SoLuong = 1, // 1 phòng
-                    DonGia = giaPhong,
-                    ThanhTien = tongTienPhong,
-                    TrangThai = DomainValues.ChiTietHoaDonTrangThai.HieuLuc
-                };
-                var createChiTietResult = await _chiTietHoaDonService.CreateAsync(chiTiet);
-                if (!createChiTietResult)
-                {
-                    TempData["Error"] = "Không thể tạo chi tiết hóa đơn. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Tính toán lại tổng tiền hóa đơn tự động
-                var tinhTienResult = await _hoaDonService.TinhToanTongTienAsync(hoaDonHienTai.MaHoaDon);
-                if (!tinhTienResult)
-                {
-                    TempData["Error"] = "Không thể tính tổng tiền hóa đơn. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            else
-            {
-                TempData["Error"] = "Không tìm thấy hóa đơn vừa tạo. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.";
-                return RedirectToAction(nameof(Index));
-            }
-            
-            await bookingTransaction.CommitAsync();
-            return RedirectToAction("Success", new { id = maDatPhong });
+            return RedirectToAction(nameof(Success), new { id = result.BookingCode });
         }
 
         public IActionResult Success(string? id)
         {
             ViewBag.MaDatPhong = id;
+            ViewBag.VnPayAvailable = IsVnPayConfigured();
+            ViewBag.PaymentUnavailableMessage = IsVnPayConfigured()
+                ? null
+                : "VNPay chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh merchant. Äáº·t phÃ²ng váº«n Ä‘Æ°á»£c giá»¯ chá»— vÃ  báº¡n cÃ³ thá»ƒ thanh toÃ¡n táº¡i khÃ¡ch sáº¡n.";
             return View();
         }
 
-        private async Task<CheckoutViewModel> BuildCheckoutViewModelAsync(string roomId, DateTime checkIn, DateTime checkOut)
+        [HttpGet]
+        public IActionResult Lookup()
         {
-            var roomName = "Deluxe Hướng Biển";
-            var imageUrl = "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop";
-            var pricePerNight = 1_200_000m;
-
-            var loaiPhong = await _loaiPhongService.GetLoaiPhongByIdAsync(roomId);
-            if (loaiPhong != null)
-            {
-                roomName = loaiPhong.TenLoaiPhong;
-                imageUrl = GetRoomImage(roomName);
-
-                var configuredPrice = await _bangGiaPhongService.LayGiaPhongHienTaiAsync(roomId);
-                if (configuredPrice > 0)
-                {
-                    pricePerNight = configuredPrice;
-                }
-            }
-            else
-            {
-                (roomName, imageUrl, pricePerNight) = GetFallbackRoom(roomId);
-            }
-
-            return new CheckoutViewModel
-            {
-                RoomId = roomId,
-                RoomName = roomName,
-                ImageUrl = imageUrl,
-                PricePerNight = pricePerNight,
-                CheckIn = checkIn,
-                CheckOut = checkOut
-            };
+            return View(new BookingLookupViewModel());
         }
 
-        private static (string Name, string ImageUrl, decimal PricePerNight) GetFallbackRoom(string roomId)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Lookup(BookingLookupViewModel model)
         {
-            return roomId switch
+            model.HasSearched = true;
+            if (!ModelState.IsValid)
             {
-                "2" => (
-                    "Suite Cao Cấp",
-                    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
-                    2_500_000m),
-                "3" => (
-                    "Venus Suite Cao Cấp",
-                    "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop",
-                    3_200_000m),
-                "4" => (
-                    "Presidential Tổng Thống",
-                    "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800&auto=format&fit=crop",
-                    5_000_000m),
-                _ => (
-                    "Deluxe Hướng Biển",
-                    "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop",
-                    1_200_000m)
-            };
-        }
-
-        private static string GetRoomImage(string roomName)
-        {
-            if (roomName.Contains("Standard", StringComparison.OrdinalIgnoreCase))
-            {
-                return "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=800&auto=format&fit=crop";
+                return View(model);
             }
-
-            if (roomName.Contains("Deluxe", StringComparison.OrdinalIgnoreCase))
-            {
-                return "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800&auto=format&fit=crop";
-            }
-
-            if (roomName.Contains("Suite", StringComparison.OrdinalIgnoreCase))
-            {
-                return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop";
-            }
-
-            return "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=800&auto=format&fit=crop";
-        }
-
-        private async Task<bool> EnsureOnlineEmployeeAsync()
-        {
-            if (await _context.NhanViens.AnyAsync(nv => nv.MaNv == OnlineEmployeeId))
-            {
-                return true;
-            }
-
-            _context.NhanViens.Add(new NhanVien
-            {
-                MaNv = OnlineEmployeeId,
-                HoTen = "Đặt phòng online",
-                SoDienThoai = "0000000000",
-                Email = "online@pbl3.local",
-                ChucVu = "Hệ thống",
-                TrangThai = DomainValues.NhanVienTrangThai.DangLam
-            });
 
             try
             {
-                await _context.SaveChangesAsync();
-                return true;
+                model.Result = await _publicBookingService.LookupAsync(model.BookingCode, model.PhoneNumber);
             }
-            catch (DbUpdateException)
+            catch (Exception ex) when (IsDatabaseException(ex))
             {
-                _context.ChangeTracker.Clear();
-                return await _context.NhanViens.AnyAsync(nv => nv.MaNv == OnlineEmployeeId);
+                ModelState.AddModelError(string.Empty, "Không thể kết nối cơ sở dữ liệu để tra cứu đặt phòng. Vui lòng thử lại sau.");
             }
+
+            return View(model);
         }
 
+        private async Task<CheckoutViewModel> RebuildCheckoutModelAsync(CheckoutViewModel submitted)
+        {
+            var rebuilt = await _publicBookingService.BuildCheckoutAsync(
+                submitted.RoomId,
+                submitted.CheckIn,
+                submitted.CheckOut,
+                submitted.Guests);
+
+            if (rebuilt == null)
+            {
+                return submitted;
+            }
+
+            rebuilt.CustomerName = submitted.CustomerName;
+            rebuilt.Cccd = submitted.Cccd;
+            rebuilt.PhoneNumber = submitted.PhoneNumber;
+            rebuilt.Email = submitted.Email;
+            rebuilt.Note = submitted.Note;
+            rebuilt.PaymentMethod = rebuilt.VnPayAvailable ? submitted.PaymentMethod : PaymentMethods.PayAtHotel;
+            return rebuilt;
+        }
+
+        private static object ToRoomsRoute(DateTime? checkIn, DateTime? checkOut, int? guests, string? roomType)
+        {
+            return new
+            {
+                checkIn = checkIn?.ToString("yyyy-MM-dd"),
+                checkOut = checkOut?.ToString("yyyy-MM-dd"),
+                guests,
+                roomType = roomType?.Trim()
+            };
+        }
+
+        private static bool IsDatabaseException(Exception ex)
+        {
+            return ex is DbException ||
+                   ex is TimeoutException ||
+                   ex is InvalidOperationException { InnerException: DbException } ||
+                   ex.InnerException is DbException;
+        }
+
+        private bool IsVnPayConfigured()
+        {
+            return _vnPayOptions.Enabled &&
+                   !string.IsNullOrWhiteSpace(_vnPayOptions.PaymentUrl) &&
+                   !string.IsNullOrWhiteSpace(_vnPayOptions.TmnCode) &&
+                   !string.IsNullOrWhiteSpace(_vnPayOptions.HashSecret);
+        }
     }
 }

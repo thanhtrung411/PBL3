@@ -1,26 +1,226 @@
 @{
+    var vnPayAvailable = ViewBag.VnPayAvailable == true;
     ViewData["Title"] = "Đặt phòng thành công";
 }
 
-<div class="container mt-5 text-center">
+<style>
+    .booking-success {
+        --hotel-ink: #111111;
+        --hotel-gold: #d4af37;
+        --hotel-border: #e9ecef;
+        --hotel-muted: #667085;
+        --hotel-success: #198754;
+        overflow-x: hidden;
+    }
+
+    .booking-success .success-card {
+        border: 1px solid var(--hotel-border);
+        border-radius: 12px;
+        box-shadow: 0 14px 36px rgba(16, 24, 40, 0.08);
+        overflow: hidden;
+    }
+
+    .booking-success .success-icon {
+        width: 86px;
+        height: 86px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #eaf7ef;
+        color: var(--hotel-success);
+        font-size: 3rem;
+    }
+
+    .booking-success .booking-code {
+        border: 1px dashed rgba(25, 135, 84, 0.45);
+        border-radius: 10px;
+        background: #f6fff9;
+        overflow-wrap: anywhere;
+    }
+
+    .booking-success .next-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin: 26px 0;
+        text-align: left;
+    }
+
+    .booking-success .step-item {
+        min-width: 0;
+        padding: 16px;
+        border: 1px solid var(--hotel-border);
+        border-radius: 10px;
+        background: #ffffff;
+        overflow-wrap: anywhere;
+    }
+
+    .booking-success .step-item i {
+        color: var(--hotel-gold);
+        font-size: 1.2rem;
+    }
+
+    .booking-success .step-item h3 {
+        margin: 10px 0 6px;
+        color: var(--hotel-ink);
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+
+    .booking-success .step-item p {
+        margin: 0;
+        color: var(--hotel-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .booking-success .btn-hotel {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+        border-color: var(--hotel-ink);
+        background-color: var(--hotel-ink);
+        color: #ffffff;
+        font-weight: 800;
+        white-space: normal;
+    }
+
+    .booking-success .payment-cta {
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        border-radius: 10px;
+        background: #fffdf7;
+    }
+
+    .booking-success .btn-hotel:hover,
+    .booking-success .btn-hotel:focus-visible {
+        border-color: var(--hotel-gold);
+        background-color: var(--hotel-gold);
+        color: var(--hotel-ink);
+    }
+
+    .booking-success .btn-soft {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--hotel-ink);
+        border-radius: 6px;
+        color: var(--hotel-ink);
+        font-weight: 800;
+        white-space: normal;
+    }
+
+    .booking-success .btn-soft:hover,
+    .booking-success .btn-soft:focus-visible {
+        border-color: var(--hotel-gold);
+        background: var(--hotel-gold);
+        color: var(--hotel-ink);
+    }
+
+    @@media (max-width: 767.98px) {
+        .booking-success {
+            padding-top: 2rem !important;
+            padding-bottom: 2.5rem !important;
+        }
+
+        .booking-success .next-steps {
+            grid-template-columns: 1fr;
+        }
+
+        .booking-success .success-card {
+            padding: 1.5rem !important;
+        }
+
+        .booking-success .btn-hotel,
+        .booking-success .btn-soft {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="booking-success container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow border-0 rounded-lg p-5">
-                <div class="text-success mb-4">
-                    <i class="fa-solid fa-circle-check" style="font-size: 5rem;"></i>
+        <div class="col-lg-7 col-md-9">
+            <section class="success-card card border-0 p-4 p-md-5 text-center" role="status" aria-live="polite">
+                <div class="success-icon mb-4 mx-auto">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                 </div>
-                <h2 class="fw-bold mb-3">Đặt phòng thành công!</h2>
+                <h1 class="h2 fw-bold mb-3">Đặt phòng thành công!</h1>
                 <p class="text-muted fs-5 mb-4">
-                    Cảm ơn bạn đã lựa chọn dịch vụ của chúng tôi. Yêu cầu đặt phòng của bạn đã được ghi nhận.
+                    Cảm ơn bạn đã lựa chọn Venus Hotel. Yêu cầu đặt phòng của bạn đã được ghi nhận.
                 </p>
-                <div class="alert alert-light border border-success border-2 rounded-3 py-3 mb-4">
-                    <h4 class="text-success mb-1">Mã đặt phòng</h4>
+                <div class="booking-code py-3 px-4 mb-4">
+                    <h2 class="h5 text-success fw-bold mb-1">Mã đặt phòng</h2>
                     <p class="fs-3 fw-bold mb-0">@(ViewBag.MaDatPhong ?? "Đang xử lý")</p>
                 </div>
-                <p class="small text-muted mb-4">Vui lòng lưu lại mã này để lễ tân đối chiếu khi bạn đến check-in.</p>
+                <p class="small text-muted mb-4">
+                    Vui lòng lưu lại mã này để lễ tân đối chiếu khi bạn đến check-in.
+                </p>
 
-                <a asp-controller="Booking" asp-action="Index" class="btn btn-primary btn-lg">Về trang chủ</a>
-            </div>
+                @if (ViewBag.MaDatPhong != null && vnPayAvailable)
+                {
+                    <div class="payment-cta p-3 p-md-4 mb-4 text-start">
+                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                            <div>
+                                <div class="public-pill mb-2">
+                                    <i class="fa fa-qrcode" aria-hidden="true"></i>
+                                    <span>Thanh toán online</span>
+                                </div>
+                                <h2 class="h5 fw-bold mb-1">Hoàn tất thanh toán qua VNPay</h2>
+                                <p class="text-muted mb-0">Bạn có thể thanh toán ngay để hóa đơn được ghi nhận tự động trong hệ thống.</p>
+                            </div>
+                            <a asp-controller="Payment" asp-action="Start" asp-route-id="@ViewBag.MaDatPhong" class="btn btn-hotel btn-lg px-4">
+                                <i class="fa fa-qrcode me-2" aria-hidden="true"></i>Thanh toán VNPay
+                            </a>
+                        </div>
+                    </div>
+                }
+                else if (ViewBag.MaDatPhong != null)
+                {
+                    <div class="payment-cta p-3 p-md-4 mb-4 text-start" role="status">
+                        <div class="public-pill mb-2">
+                            <i class="fa fa-building-columns" aria-hidden="true"></i>
+                            <span>Thanh toán tại khách sạn</span>
+                        </div>
+                        <h2 class="h5 fw-bold mb-1">Đặt phòng đang được giữ chỗ</h2>
+                        <p class="text-muted mb-0">@(ViewBag.PaymentUnavailableMessage ?? "VNPay chưa sẵn sàng. Bạn có thể thanh toán khi đến khách sạn.")</p>
+                    </div>
+                }
+
+                <div class="next-steps" aria-label="Các bước tiếp theo">
+                    <div class="step-item">
+                        <i class="fa fa-envelope-open-text" aria-hidden="true"></i>
+                        <h3>Kiểm tra thông tin</h3>
+                        <p>Đối chiếu mã đặt phòng và thông tin liên hệ trước khi đến khách sạn.</p>
+                    </div>
+                    <div class="step-item">
+                        <i class="fa fa-clock" aria-hidden="true"></i>
+                        <h3>Giờ nhận phòng</h3>
+                        <p>Nhận phòng từ 14:00 và trả phòng trước 12:00 theo chính sách Venus Hotel.</p>
+                    </div>
+                    <div class="step-item">
+                        <i class="fa fa-id-card" aria-hidden="true"></i>
+                        <h3>Khi check-in</h3>
+                        <p>Mang theo giấy tờ tùy thân và cung cấp mã đặt phòng cho lễ tân.</p>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    <a asp-controller="Booking" asp-action="Index" class="btn btn-hotel btn-lg px-4">
+                        <i class="fa fa-house me-2" aria-hidden="true"></i>Về trang chủ
+                    </a>
+                    <a asp-controller="Booking" asp-action="Rooms" class="btn btn-soft btn-lg px-4">
+                        <i class="fa fa-bed me-2" aria-hidden="true"></i>Xem thêm phòng
+                    </a>
+                    <a asp-controller="Booking" asp-action="Lookup" class="btn btn-soft btn-lg px-4">
+                        <i class="fa fa-magnifying-glass me-2" aria-hidden="true"></i>Tra cứu đặt phòng
+                    </a>
+                </div>
+            </section>
         </div>
     </div>
 </div>
