@@ -1,7 +1,10 @@
-﻿@model PBL3.Models.CheckoutViewModel
+@model PBL3.Models.CheckoutViewModel
 @{
-    // Bỏ qua Layout dùng chung
     Layout = null;
+    var vnPayAvailable = Model.VnPayAvailable;
+    var selectedPaymentMethod = vnPayAvailable && Model.PaymentMethod == PaymentMethods.VnPay
+        ? PaymentMethods.VnPay
+        : PaymentMethods.PayAtHotel;
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -9,71 +12,403 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hoàn tất đặt phòng - PBL3</title>
-    
+
     <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="/PBL3.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        .checkout-page {
+            --hotel-ink: #111111;
+            --hotel-gold: #d4af37;
+            --hotel-muted: #667085;
+            --hotel-border: #e9ecef;
+            --hotel-danger: #b42318;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: #f8f9fa;
+        }
+
+        .checkout-page .app-wrapper {
+            display: block;
+            min-height: auto;
+        }
+
+        .checkout-page .main-content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .checkout-shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: clamp(28px, 5vw, 52px) clamp(16px, 4vw, 28px);
+        }
+
+        .checkout-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .checkout-kicker {
+            color: var(--hotel-gold);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .checkout-card {
+            border: 1px solid var(--hotel-border);
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+            overflow: hidden;
+        }
+
+        .checkout-card .card-header {
+            border-bottom-color: var(--hotel-border);
+        }
+
+        .checkout-page .form-label {
+            color: #344054;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .checkout-page .form-control {
+            min-height: 46px;
+            border-radius: 6px;
+        }
+
+        .checkout-page .form-control:focus,
+        .checkout-page .form-check-input:focus {
+            border-color: var(--hotel-ink);
+            box-shadow: 0 0 0 0.2rem rgba(17, 17, 17, 0.12);
+        }
+
+        .checkout-page .form-control[aria-invalid="true"] {
+            border-color: var(--hotel-danger);
+            box-shadow: 0 0 0 0.2rem rgba(180, 35, 24, 0.1);
+        }
+
+        .payment-option {
+            min-height: 58px;
+            border-radius: 8px !important;
+            background: #ffffff;
+            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .payment-option label {
+            min-width: 0;
+            cursor: pointer;
+            overflow-wrap: anywhere;
+        }
+
+        .payment-option .payment-icon {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 42px;
+            border-radius: 8px;
+            background: #fbf7ec;
+            color: var(--hotel-gold);
+        }
+
+        .payment-option:has(.form-check-input:checked) {
+            border-color: var(--hotel-ink) !important;
+            background-color: #fffdf7;
+            box-shadow: 0 8px 18px rgba(16, 24, 40, 0.08);
+        }
+
+        .payment-option.is-disabled {
+            background: #f8f9fa;
+            color: #667085;
+        }
+
+        .payment-option.is-disabled label {
+            cursor: not-allowed;
+        }
+
+        .payment-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            background: #f2f4f7;
+            color: #344054;
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 4px 9px;
+            white-space: nowrap;
+        }
+
+        .summary-card {
+            top: 20px;
+            border: 1px solid var(--hotel-border);
+            border-radius: 10px;
+            box-shadow: 0 12px 32px rgba(16, 24, 40, 0.09);
+            overflow: hidden;
+        }
+
+        .summary-card .card-header {
+            background-color: var(--hotel-ink) !important;
+        }
+
+        .summary-room-image {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            flex: 0 0 auto;
+            background-color: #eeeeee;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 10px;
+        }
+
+        .summary-row span:first-child {
+            min-width: 0;
+        }
+
+        .summary-row span:last-child {
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        .total-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .total-row .total-amount {
+            color: var(--hotel-danger);
+            font-size: clamp(1.35rem, 3vw, 1.65rem);
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .min-w-0 {
+            min-width: 0;
+        }
+
+        .checkout-error {
+            display: none;
+            align-items: flex-start;
+            gap: 8px;
+            border: 1px solid rgba(180, 35, 24, 0.22);
+            border-radius: 6px;
+            background-color: #fff4f2;
+            color: var(--hotel-danger);
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .checkout-error.is-visible {
+            display: flex;
+        }
+
+        .btn-pay {
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-color: var(--hotel-ink);
+            background-color: var(--hotel-ink);
+            color: #ffffff;
+            font-weight: 800;
+        }
+
+        .btn-pay:hover,
+        .btn-pay:focus-visible {
+            border-color: var(--hotel-gold);
+            background-color: var(--hotel-gold);
+            color: var(--hotel-ink);
+        }
+
+        .btn-pay:disabled {
+            cursor: wait;
+            opacity: 0.82;
+        }
+
+        .btn-pay .loading-icon {
+            display: none;
+        }
+
+        .btn-pay.is-loading .default-icon {
+            display: none;
+        }
+
+        .btn-pay.is-loading .loading-icon {
+            display: inline-block;
+        }
+
+        @@media (max-width: 991.98px) {
+            .checkout-header {
+                display: block;
+            }
+
+            .summary-card {
+                position: static !important;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .checkout-card .card-body {
+                padding: 1.25rem !important;
+            }
+
+            .payment-option label {
+                align-items: flex-start !important;
+                line-height: 1.45;
+            }
+
+            .payment-badge {
+                white-space: normal;
+            }
+
+            .total-row {
+                display: block;
+            }
+
+            .total-row .total-amount {
+                display: block;
+                margin-top: 6px;
+            }
+        }
+    </style>
 </head>
-<body>
-    <div class="app-wrapper">
+<body class="checkout-page public-page">
+    @await Html.PartialAsync("_PublicHeader")
+
+    <div class="app-wrapper public-main" id="public-content" tabindex="-1">
         <main class="main-content">
-            <div class="container py-5">
-                <div class="mb-4">
-                    <h2 class="fw-bold">Hoàn tất đặt phòng</h2>
-                    <p class="text-muted">Vui lòng điền thông tin liên lạc và kiểm tra lại hóa đơn</p>
+            <div class="checkout-shell">
+                <div class="checkout-header">
+                    <div>
+                        <div class="checkout-kicker mb-2">Venus Hotel</div>
+                        <h1 class="h2 fw-bold mb-2">Hoàn tất đặt phòng</h1>
+                        <p class="text-muted mb-0">Điền thông tin liên lạc và kiểm tra lại hóa đơn trước khi xác nhận</p>
+                    </div>
+                    <a href="/Booking" class="btn btn-outline-dark mt-3 mt-lg-0">
+                        <i class="fa fa-arrow-left me-2" aria-hidden="true"></i>Quay lại
+                    </a>
                 </div>
 
-                <form action="/Booking/ProcessPayment" method="POST">
+                <form action="/Booking/ProcessPayment" method="POST" id="checkoutForm" novalidate>
+                    @Html.AntiForgeryToken()
                     <input type="hidden" name="RoomId" value="@Model.RoomId" />
-                    <input type="hidden" name="CheckIn" value="@Model.CheckIn" />
-                    <input type="hidden" name="CheckOut" value="@Model.CheckOut" />
-                    <input type="hidden" name="TotalAmount" value="@Model.GrandTotal" />
-                    <div class="row g-5">
+                    <input type="hidden" name="CheckIn" value="@Model.CheckIn.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="CheckOut" value="@Model.CheckOut.ToString("yyyy-MM-dd")" />
+                    <input type="hidden" name="Guests" value="@Model.Guests" />
+                    <input type="hidden" name="TotalAmount" value="@Model.RoomTotal" />
+
+                    <div class="checkout-error mb-4 p-3 @(TempData["Error"] != null ? "is-visible" : "")" id="checkoutError" role="alert" aria-live="polite" tabindex="-1">
+                        <i class="fa fa-circle-exclamation mt-1" aria-hidden="true"></i>
+                        <span>@TempData["Error"]</span>
+                    </div>
+                    <div asp-validation-summary="ModelOnly" class="text-danger fw-semibold mb-3" role="alert"></div>
+
+                    <div class="row g-4 g-xl-5">
                         <div class="col-lg-8">
-                            <div class="card shadow-sm border-0 mb-4">
-                                <div class="card-header bg-white py-3">
-                                    <h5 class="fw-bold mb-0">1. Thông tin liên lạc</h5>
+                            <div class="checkout-card card border-0 mb-4">
+                                <div class="card-header bg-white py-3 px-4">
+                                    <h2 class="h5 fw-bold mb-0">1. Thông tin liên lạc</h2>
                                 </div>
                                 <div class="card-body p-4">
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold small">HỌ VÀ TÊN <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="CustomerName" placeholder="VD: Nguyễn Văn A" required>
+                                            <label for="customerName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="customerName" name="CustomerName" value="@Model.CustomerName" placeholder="VD: Nguyễn Văn A" autocomplete="name" required>
+                                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold small">SỐ ĐIỆN THOẠI <span class="text-danger">*</span></label>
-                                            <input type="tel" class="form-control" name="PhoneNumber" placeholder="VD: 0912xxx..." required>
+                                            <label for="phoneNumber" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                            <input type="tel" class="form-control" id="phoneNumber" name="PhoneNumber" value="@Model.PhoneNumber" placeholder="VD: 0912xxx..." autocomplete="tel" inputmode="tel" pattern="[0-9]{10,15}" required>
+                                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="cccd" class="form-label">CCCD <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="cccd" name="Cccd" value="@Model.Cccd" placeholder="Số CCCD/CMND" autocomplete="off" inputmode="numeric" pattern="[0-9]{9,20}" required maxlength="20">
+                                            <span asp-validation-for="Cccd" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-12">
-                                            <label class="form-label fw-bold small">EMAIL <span class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" name="Email" placeholder="Để nhận mã xác nhận đặt phòng" required>
+                                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" id="email" name="Email" value="@Model.Email" placeholder="Để nhận mã xác nhận đặt phòng" autocomplete="email" required>
+                                            <span asp-validation-for="Email" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-12">
-                                            <label class="form-label fw-bold small">YÊU CẦU ĐẶC BIỆT</label>
-                                            <textarea class="form-control" name="Note" rows="3" placeholder="Ghi chú về thời gian đến, yêu cầu dị ứng..."></textarea>
+                                            <label for="note" class="form-label">Yêu cầu đặc biệt</label>
+                                            <textarea class="form-control" id="note" name="Note" rows="3" placeholder="Ghi chú về thời gian đến, yêu cầu dị ứng...">@Model.Note</textarea>
+                                            <span asp-validation-for="Note" class="text-danger small"></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="card shadow-sm border-0">
-                                <div class="card-header bg-white py-3">
-                                    <h5 class="fw-bold mb-0">2. Phương thức thanh toán</h5>
+                            <div class="checkout-card card border-0">
+                                <div class="card-header bg-white py-3 px-4">
+                                    <h2 class="h5 fw-bold mb-0">2. Phương thức thanh toán</h2>
                                 </div>
                                 <div class="card-body p-4">
-                                    <div class="form-check mb-3 p-3 border rounded">
-                                        <input class="form-check-input ms-1" type="radio" name="PaymentMethod" id="payMomo" value="Momo" checked>
-                                        <label class="form-check-label ms-3 fw-bold d-flex align-items-center" for="payMomo">
-                                            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="Momo" width="24" class="me-2">
-                                            Thanh toán qua ví MoMo
+                                    @if (!vnPayAvailable && !string.IsNullOrWhiteSpace(Model.PaymentUnavailableMessage))
+                                    {
+                                        <div class="alert alert-warning d-flex gap-2 align-items-start mb-3" role="alert">
+                                            <i class="fa fa-circle-info mt-1" aria-hidden="true"></i>
+                                            <span>@Model.PaymentUnavailableMessage</span>
+                                        </div>
+                                    }
+                                    <div class="payment-option p-3 border mb-3 @(vnPayAvailable ? "" : "is-disabled")">
+                                        <label class="d-flex align-items-start gap-3 mb-0" for="paymentVnPay">
+                                            @if (selectedPaymentMethod == PaymentMethods.VnPay)
+                                            {
+                                                <input class="form-check-input mt-1" type="radio" id="paymentVnPay" name="PaymentMethod" value="@PaymentMethods.VnPay" checked>
+                                            }
+                                            else
+                                            {
+                                                <input class="form-check-input mt-1" type="radio" id="paymentVnPay" name="PaymentMethod" value="@PaymentMethods.VnPay" disabled="@(!vnPayAvailable)">
+                                            }
+                                            <span class="payment-icon mt-1"><i class="fa fa-qrcode fs-4" aria-hidden="true"></i></span>
+                                            <div>
+                                                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                                    <h3 class="h6 fw-bold mb-0">Thanh toán online qua VNPay</h3>
+                                                    <span class="payment-badge">Xác nhận tự động</span>
+                                                </div>
+                                                <p class="text-muted mb-0">Sau khi xác nhận, hệ thống sẽ chuyển bạn sang cổng VNPay để thanh toán thật và ghi nhận giao dịch vào hóa đơn.</p>
+                                            </div>
                                         </label>
                                     </div>
-                                    <div class="form-check p-3 border rounded">
-                                        <input class="form-check-input ms-1" type="radio" name="PaymentMethod" id="payBank" value="VNPay">
-                                        <label class="form-check-label ms-3 fw-bold d-flex align-items-center" for="payBank">
-                                            <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/6/0oxhzjmxbksr1686814746087.png" alt="VNPay" width="60" class="me-2">
-                                            Thanh toán qua VNPay (Thẻ ATM/Visa)
+                                    <div class="payment-option p-3 border">
+                                        <label class="d-flex align-items-start gap-3 mb-0" for="paymentHotel">
+                                            @if (selectedPaymentMethod == PaymentMethods.PayAtHotel)
+                                            {
+                                                <input class="form-check-input mt-1" type="radio" id="paymentHotel" name="PaymentMethod" value="@PaymentMethods.PayAtHotel" checked>
+                                            }
+                                            else
+                                            {
+                                                <input class="form-check-input mt-1" type="radio" id="paymentHotel" name="PaymentMethod" value="@PaymentMethods.PayAtHotel">
+                                            }
+                                            <span class="payment-icon mt-1"><i class="fa fa-building-columns fs-4" aria-hidden="true"></i></span>
+                                            <div>
+                                                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                                    <h3 class="h6 fw-bold mb-0">Thanh toán tại khách sạn</h3>
+                                                    <span class="payment-badge">Giữ chỗ trước</span>
+                                                </div>
+                                                <p class="text-muted mb-0">Yêu cầu của bạn sẽ được giữ chỗ trong hệ thống. Lễ tân sẽ đối chiếu mã đặt phòng khi bạn đến check-in.</p>
+                                            </div>
                                         </label>
                                     </div>
                                 </div>
@@ -81,17 +416,17 @@
                         </div>
 
                         <div class="col-lg-4">
-                            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
-                                <div class="card-header bg-primary text-white py-3">
-                                    <h5 class="fw-bold mb-0">Chi tiết đặt phòng</h5>
+                            <aside class="summary-card card border-0 sticky-top">
+                                <div class="card-header text-white py-3 px-4">
+                                    <h2 class="h5 fw-bold mb-0">Chi tiết đặt phòng</h2>
                                 </div>
                                 <div class="card-body p-4">
-                                    <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
-                                        <div>
-                                            <h6 class="fw-bold">@Model.RoomName</h6>
-                                            <small class="text-muted">1 Phòng x @Model.NumberOfNights Đêm</small>
+                                    <div class="d-flex justify-content-between gap-3 mb-3 border-bottom pb-3">
+                                        <div class="min-w-0">
+                                            <h3 class="h6 fw-bold mb-1">@Model.RoomName</h3>
+                                            <small class="text-muted">1 Phòng x @Model.NumberOfNights Đêm · @Model.Guests khách</small>
                                         </div>
-                                        <img src="@Model.ImageUrl" alt="Room Image" class="rounded" width="60" height="60" style="object-fit: cover;">
+                                        <img src="@Model.ImageUrl" alt="Ảnh @Model.RoomName" class="summary-room-image rounded" loading="lazy">
                                     </div>
 
                                     <div class="row mb-3 border-bottom pb-3">
@@ -107,28 +442,32 @@
                                         </div>
                                     </div>
 
-                                    <div class="d-flex justify-content-between mb-2">
+                                    <div class="summary-row mb-3 border-bottom pb-3">
                                         <span class="text-muted">Giá phòng (@Model.NumberOfNights đêm)</span>
                                         <span>@Model.RoomTotal.ToString("N0")đ</span>
                                     </div>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Phí dịch vụ (5%)</span>
-                                        <span>@Model.ServiceFee.ToString("N0")đ</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
-                                        <span class="text-muted">Thuế VAT (8%)</span>
-                                        <span>@Model.VatFee.ToString("N0")đ</span>
+
+                                    <div class="total-row mb-4">
+                                        <span class="fw-bold fs-5">Dự kiến thanh toán</span>
+                                        <span class="total-amount">@Model.RoomTotal.ToString("N0")đ</span>
                                     </div>
 
-                                    <div class="d-flex justify-content-between align-items-center mb-4">
-                                        <span class="fw-bold fs-5">TỔNG CỘNG</span>
-                                        <span class="fw-bold fs-4 text-danger">@Model.GrandTotal.ToString("N0")đ</span>
+                                    <div class="public-pill w-100 justify-content-center mb-3">
+                                        <i class="fa @(vnPayAvailable ? "fa-lock" : "fa-building-columns")" aria-hidden="true"></i>
+                                        <span>@(vnPayAvailable ? "Thông tin thanh toán được xử lý qua cổng VNPay" : "VNPay chưa cấu hình, giữ chỗ và thanh toán tại khách sạn")</span>
                                     </div>
 
-                                    <button type="submit" class="btn btn-danger w-100 py-3 fw-bold fs-6">Thanh toán & Đặt phòng</button>
-                                    <p class="text-center text-muted small mt-3 mb-0"><i class="fa fa-lock me-1"></i> Thông tin được bảo mật mã hóa</p>
+                                    <button type="submit" class="btn btn-pay w-100 py-3 fs-6" id="payButton">
+                                        <i class="fa fa-check default-icon" aria-hidden="true"></i>
+                                        <i class="fa fa-spinner fa-spin loading-icon" aria-hidden="true"></i>
+                                        <span>@(selectedPaymentMethod == PaymentMethods.PayAtHotel ? "Xác nhận giữ phòng" : "Thanh toán VNPay")</span>
+                                    </button>
+                                    <p class="text-center text-muted small mt-3 mb-0">
+                                        <i class="fa fa-shield-halved me-1" aria-hidden="true"></i>
+                                        @(vnPayAvailable ? "VNPay xử lý giao dịch online an toàn; nếu chọn thanh toán tại khách sạn, hệ thống chỉ giữ chỗ." : "Hệ thống sẽ giữ chỗ và lễ tân sẽ đối chiếu mã đặt phòng khi bạn check-in.")
+                                    </p>
                                 </div>
-                            </div>
+                            </aside>
                         </div>
                     </div>
                 </form>
@@ -136,8 +475,72 @@
         </main>
     </div>
 
+    @await Html.PartialAsync("_PublicFooter")
+
     <script src="/lib/jquery/dist/jquery.min.js"></script>
     <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/site.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            const form = document.getElementById('checkoutForm');
+            const button = document.getElementById('payButton');
+            const error = document.getElementById('checkoutError');
+            const errorText = error?.querySelector('span');
+            const paymentInputs = Array.from(document.querySelectorAll('input[name="PaymentMethod"]'));
+            const vnPayInput = document.getElementById('paymentVnPay');
+
+            function getPaymentMethod() {
+                return paymentInputs.find(input => input.checked)?.value || (vnPayInput?.disabled ? 'PAY_AT_HOTEL' : 'VNPAY');
+            }
+
+            function updateButtonLabel() {
+                const label = getPaymentMethod() === 'PAY_AT_HOTEL' ? 'Xác nhận giữ phòng' : 'Thanh toán VNPay';
+                button.querySelector('span').textContent = label;
+            }
+
+            function showError(message) {
+                if (errorText) {
+                    errorText.textContent = message;
+                }
+                error.classList.add('is-visible');
+                error.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                error.focus({ preventScroll: true });
+            }
+
+            function clearError() {
+                if (errorText) {
+                    errorText.textContent = '';
+                }
+                error.classList.remove('is-visible');
+                form?.querySelectorAll('[aria-invalid="true"]').forEach(field => field.removeAttribute('aria-invalid'));
+            }
+
+            function setLoading(isLoading) {
+                button.disabled = isLoading;
+                button.classList.toggle('is-loading', isLoading);
+                button.querySelector('span').textContent = isLoading ? 'Đang xử lý...' : (getPaymentMethod() === 'PAY_AT_HOTEL' ? 'Xác nhận giữ phòng' : 'Thanh toán VNPay');
+            }
+
+            paymentInputs.forEach(input => input.addEventListener('change', updateButtonLabel));
+            updateButtonLabel();
+
+            form?.addEventListener('submit', function (event) {
+                clearError();
+
+                const requiredFields = Array.from(form.querySelectorAll('[required]'));
+                const firstInvalid = requiredFields.find(field => !field.value.trim() || !field.checkValidity());
+
+                if (firstInvalid) {
+                    event.preventDefault();
+                    firstInvalid.setAttribute('aria-invalid', 'true');
+                    showError('Vui lòng kiểm tra và điền đầy đủ thông tin bắt buộc.');
+                    firstInvalid.focus();
+                    return;
+                }
+
+                setLoading(true);
+            });
+        })();
+    </script>
 </body>
 </html>

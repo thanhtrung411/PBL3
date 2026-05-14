@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Local Codex/.NET smoke-test artifacts and runtime secrets
+.build-check/
+.dotnet-home/
+PBL3/App_Data/DataProtectionKeys/
