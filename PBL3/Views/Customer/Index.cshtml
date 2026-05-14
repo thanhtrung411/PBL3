@@ -1,4 +1,4 @@
-﻿@{
+﻿@* @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý khách hàng";
 }
@@ -165,4 +165,331 @@
         </table>
     </div>
 </div>
+ *@
 
+
+
+
+
+
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý khách hàng";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-2 flex-grow-1" style="max-width: 500px;">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control bg-white border-start-0" placeholder="Tìm kiếm khách hàng...">
+        </div>
+        <select id="tierFilter" class="form-select bg-white" style="width: 150px;">
+            <option value="all">Tất cả hạng</option>
+            <option value="Thường">Thường</option>
+            <option value="Bạc">Bạc</option>
+            <option value="Vàng">Vàng</option>
+            <option value="Bạch Kim">Bạch Kim</option>
+        </select>
+    </div>
+    <button class="btn btn-primary px-4"><i class="bi bi-plus"></i> Thêm khách hàng</button>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="fw-bold fs-3 text-dark">6</div>
+            <div class="text-muted small">Tổng khách hàng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-star text-secondary"></i>
+                <div class="fw-bold fs-3 text-dark">2</div>
+            </div>
+            <div class="text-muted small">Bạc</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-star text-warning"></i>
+                <div class="fw-bold fs-3 text-dark">2</div>
+            </div>
+            <div class="text-muted small">Vàng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-star" style="color: #a855f7;"></i>
+                <div class="fw-bold fs-3 text-dark">1</div>
+            </div>
+            <div class="text-muted small">Bạch Kim</div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards -->
+<div class="row g-4" id="customerList">
+    <!-- Card 1 -->
+    <div class="col-md-4 customer-item" data-name="Nguyễn Văn A" data-email="nguyenvana@email.com" data-phone="0901234567" data-tier="Vàng">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
+                    <i class="bi bi-person fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-5 text-dark mb-1">Nguyễn Văn A</div>
+                    <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 border border-warning rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Vàng</span>
+                </div>
+            </div>
+            <div class="mb-4">
+                <div class="text-muted small mb-2"><i class="bi bi-envelope me-2"></i> nguyenvana@email.com</div>
+                <div class="text-muted small mb-2"><i class="bi bi-telephone me-2"></i> 0901234567</div>
+                <div class="text-muted small"><i class="bi bi-geo-alt me-2"></i> Hà Nội</div>
+            </div>
+            <div class="d-flex justify-content-between mb-4 pb-4 border-bottom">
+                <div>
+                    <div class="text-muted small mb-1">Số lần đặt</div>
+                    <div class="fw-bold fs-5 text-dark">12</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1">Tổng chi tiêu</div>
+                    <div class="fw-bold fs-5 text-dark">15.0M</div>
+                </div>
+            </div>
+            <div class="text-muted small mb-3">Đặt gần nhất: 05/02/2026</div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill"><i class="bi bi-eye"></i> Chi tiết</button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 2 -->
+    <div class="col-md-4 customer-item" data-name="Trần Thị B" data-email="tranthib@email.com" data-phone="0907654321" data-tier="Bạch Kim">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
+                    <i class="bi bi-person fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-5 text-dark mb-1">Trần Thị B</div>
+                    <span class="badge px-2 py-1 border rounded-pill" style="font-size: 11px; background-color: #f3e8ff; color: #a855f7; border-color: #d8b4fe !important;"><i class="bi bi-star-fill me-1"></i> Bạch Kim</span>
+                </div>
+            </div>
+            <div class="mb-4">
+                <div class="text-muted small mb-2"><i class="bi bi-envelope me-2"></i> tranthib@email.com</div>
+                <div class="text-muted small mb-2"><i class="bi bi-telephone me-2"></i> 0907654321</div>
+                <div class="text-muted small"><i class="bi bi-geo-alt me-2"></i> TP. Hồ Chí Minh</div>
+            </div>
+            <div class="d-flex justify-content-between mb-4 pb-4 border-bottom">
+                <div>
+                    <div class="text-muted small mb-1">Số lần đặt</div>
+                    <div class="fw-bold fs-5 text-dark">25</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1">Tổng chi tiêu</div>
+                    <div class="fw-bold fs-5 text-dark">35.0M</div>
+                </div>
+            </div>
+            <div class="text-muted small mb-3">Đặt gần nhất: 04/02/2026</div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill"><i class="bi bi-eye"></i> Chi tiết</button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 3 -->
+    <div class="col-md-4 customer-item" data-name="Lê Văn C" data-email="levanc@email.com" data-phone="0912345678" data-tier="Bạc">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
+                    <i class="bi bi-person fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-5 text-dark mb-1">Lê Văn C</div>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 border border-secondary rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Bạc</span>
+                </div>
+            </div>
+            <div class="mb-4">
+                <div class="text-muted small mb-2"><i class="bi bi-envelope me-2"></i> levanc@email.com</div>
+                <div class="text-muted small mb-2"><i class="bi bi-telephone me-2"></i> 0912345678</div>
+                <div class="text-muted small"><i class="bi bi-geo-alt me-2"></i> Đà Nẵng</div>
+            </div>
+            <div class="d-flex justify-content-between mb-4 pb-4 border-bottom">
+                <div>
+                    <div class="text-muted small mb-1">Số lần đặt</div>
+                    <div class="fw-bold fs-5 text-dark">5</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1">Tổng chi tiêu</div>
+                    <div class="fw-bold fs-5 text-dark">7.0M</div>
+                </div>
+            </div>
+            <div class="text-muted small mb-3">Đặt gần nhất: 06/02/2026</div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill"><i class="bi bi-eye"></i> Chi tiết</button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 4 -->
+    <div class="col-md-4 customer-item" data-name="Phạm Thị D" data-email="phamthid@email.com" data-phone="0923456789" data-tier="Thường">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
+                    <i class="bi bi-person fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-5 text-dark mb-1">Phạm Thị D</div>
+                    <span class="badge bg-light text-muted px-2 py-1 border rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Thường</span>
+                </div>
+            </div>
+            <div class="mb-4">
+                <div class="text-muted small mb-2"><i class="bi bi-envelope me-2"></i> phamthid@email.com</div>
+                <div class="text-muted small mb-2"><i class="bi bi-telephone me-2"></i> 0923456789</div>
+                <div class="text-muted small"><i class="bi bi-geo-alt me-2"></i> Hải Phòng</div>
+            </div>
+            <div class="d-flex justify-content-between mb-4 pb-4 border-bottom">
+                <div>
+                    <div class="text-muted small mb-1">Số lần đặt</div>
+                    <div class="fw-bold fs-5 text-dark">3</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1">Tổng chi tiêu</div>
+                    <div class="fw-bold fs-5 text-dark">2.5M</div>
+                </div>
+            </div>
+            <div class="text-muted small mb-3">Đặt gần nhất: 07/02/2026</div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill"><i class="bi bi-eye"></i> Chi tiết</button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 5 -->
+    <div class="col-md-4 customer-item" data-name="Hoàng Văn E" data-email="hoangvane@email.com" data-phone="0934567890" data-tier="Bạc">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
+                    <i class="bi bi-person fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-5 text-dark mb-1">Hoàng Văn E</div>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 border border-secondary rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Bạc</span>
+                </div>
+            </div>
+            <div class="mb-4">
+                <div class="text-muted small mb-2"><i class="bi bi-envelope me-2"></i> hoangvane@email.com</div>
+                <div class="text-muted small mb-2"><i class="bi bi-telephone me-2"></i> 0934567890</div>
+                <div class="text-muted small"><i class="bi bi-geo-alt me-2"></i> Cần Thơ</div>
+            </div>
+            <div class="d-flex justify-content-between mb-4 pb-4 border-bottom">
+                <div>
+                    <div class="text-muted small mb-1">Số lần đặt</div>
+                    <div class="fw-bold fs-5 text-dark">8</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1">Tổng chi tiêu</div>
+                    <div class="fw-bold fs-5 text-dark">10.0M</div>
+                </div>
+            </div>
+            <div class="text-muted small mb-3">Đặt gần nhất: 03/02/2026</div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill"><i class="bi bi-eye"></i> Chi tiết</button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 6 -->
+    <div class="col-md-4 customer-item" data-name="Đặng Thị F" data-email="dangthif@email.com" data-phone="0945678901" data-tier="Vàng">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
+                    <i class="bi bi-person fs-4"></i>
+                </div>
+                <div>
+                    <div class="fw-bold fs-5 text-dark mb-1">Đặng Thị F</div>
+                    <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 border border-warning rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Vàng</span>
+                </div>
+            </div>
+            <div class="mb-4">
+                <div class="text-muted small mb-2"><i class="bi bi-envelope me-2"></i> dangthif@email.com</div>
+                <div class="text-muted small mb-2"><i class="bi bi-telephone me-2"></i> 0945678901</div>
+                <div class="text-muted small"><i class="bi bi-geo-alt me-2"></i> Đà Nẵng</div>
+            </div>
+            <div class="d-flex justify-content-between mb-4 pb-4 border-bottom">
+                <div>
+                    <div class="text-muted small mb-1">Số lần đặt</div>
+                    <div class="fw-bold fs-5 text-dark">15</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1">Tổng chi tiêu</div>
+                    <div class="fw-bold fs-5 text-dark">20M</div>
+                </div>
+            </div>
+            <div class="text-muted small mb-3">Đặt gần nhất: 01/02/2026</div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill"><i class="bi bi-eye"></i> Chi tiết</button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+            str = str.replace(/Đ/g, "D");
+            return str;
+        }
+
+        $(document).ready(function() {
+            function filterCustomers() {
+                var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
+                var tierObj = $('#tierFilter').val();
+
+                $('.customer-item').each(function() {
+                    var name = removeVietnameseTones($(this).data('name').toLowerCase());
+                    var email = removeVietnameseTones($(this).data('email').toLowerCase());
+                    var phone = removeVietnameseTones($(this).data('phone').toLowerCase());
+                    var tier = $(this).data('tier');
+
+                    var matchSearch = name.includes(searchObj) || email.includes(searchObj) || phone.includes(searchObj);
+                    var matchTier = (tierObj === 'all' || tier === tierObj);
+
+                    if (matchSearch && matchTier) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+
+            $('#searchInput').on('input', filterCustomers);
+            $('#tierFilter').on('change', filterCustomers);
+        });
+    </script>
+}

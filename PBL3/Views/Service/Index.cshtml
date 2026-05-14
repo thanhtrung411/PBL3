@@ -1,4 +1,4 @@
-﻿@{
+﻿@* @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý dịch vụ";
 }
@@ -191,4 +191,333 @@
         </table>
     </div>
 </div>
+ *@
 
+
+
+
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý dịch vụ";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="input-group" style="max-width: 400px;">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+        <input type="text" id="searchInput" class="form-control bg-white border-start-0"
+               placeholder="Tìm kiếm dịch vụ...">
+    </div>
+    <button class="btn btn-primary px-4"><i class="bi bi-plus"></i> Thêm dịch vụ mới</button>
+</div>
+
+<div class="d-flex gap-2 mb-4">
+    <button class="btn btn-primary text-white rounded-pill px-4 category-btn" data-category="all">Tất cả</button>
+    <button class="btn btn-outline-secondary bg-white text-dark border rounded-pill px-4 category-btn"
+            data-category="Ăn uống">
+        Ăn uống
+    </button>
+    <button class="btn btn-outline-secondary bg-white text-dark border rounded-pill px-4 category-btn"
+            data-category="Giải trí">
+        Giải trí
+    </button>
+    <button class="btn btn-outline-secondary bg-white text-dark border rounded-pill px-4 category-btn"
+            data-category="Tiện ích">
+        Tiện ích
+    </button>
+    <button class="btn btn-outline-secondary bg-white text-dark border rounded-pill px-4 category-btn"
+            data-category="Vận chuyển">
+        Vận chuyển
+    </button>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="fw-bold fs-3 text-dark">7</div>
+            <div class="text-muted small">Tổng dịch vụ</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="fw-bold fs-3 text-success">7</div>
+            <div class="text-muted small">Đang hoạt động</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="fw-bold fs-3 text-dark">256</div>
+            <div class="text-muted small">Lượt sử dụng tháng</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="fw-bold fs-3 text-dark">8.5 triệu</div>
+            <div class="text-muted small">Doanh thu tháng</div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards -->
+<div class="row g-4" id="serviceList">
+    <!-- Card 1 -->
+    <div class="col-md-4 service-item" data-name="Spa & Massage" data-category="Giải trí">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
+                     style="width: 40px; height: 40px;">
+                    <i class="bi bi-water"></i>
+                </div>
+                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
+                      style="font-size: 11px;">Giải trí</span>
+            </div>
+            <div class="fw-bold fs-5 text-dark mb-1">Spa & Massage</div>
+            <div class="text-muted small mb-3">Dịch vụ spa và massage thư giãn cao cấp</div>
+            <div class="fw-bold fs-4 text-dark mb-3">
+                500.000 đ <span class="text-muted fs-6 fw-normal">/ 60 phút</span>
+            </div>
+            <div class="mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
+                <span class="text-muted small">Đang hoạt động</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
+                    <i class="bi bi-eye"></i> Chi
+                    tiết
+                </button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 2 -->
+    <div class="col-md-4 service-item" data-name="Nhà hàng" data-category="Ăn uống">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
+                     style="width: 40px; height: 40px;">
+                    <i class="bi bi-cup-hot"></i>
+                </div>
+                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
+                      style="font-size: 11px;">Ăn uống</span>
+            </div>
+            <div class="fw-bold fs-5 text-dark mb-1">Nhà hàng</div>
+            <div class="text-muted small mb-3">Thực đơn đa dạng các món Á - Âu</div>
+            <div class="fw-bold fs-4 text-dark mb-3">
+                200.000 đ <span class="text-muted fs-6 fw-normal">/ người</span>
+            </div>
+            <div class="mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
+                <span class="text-muted small">Đang hoạt động</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
+                    <i class="bi bi-eye"></i> Chi
+                    tiết
+                </button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 3 -->
+    <div class="col-md-4 service-item" data-name="WiFi cao cấp" data-category="Tiện ích">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
+                     style="width: 40px; height: 40px;">
+                    <i class="bi bi-wifi"></i>
+                </div>
+                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
+                      style="font-size: 11px;">Tiện ích</span>
+            </div>
+            <div class="fw-bold fs-5 text-dark mb-1">WiFi cao cấp</div>
+            <div class="text-muted small mb-3">Wifi tốc độ cao không giới hạn</div>
+            <div class="fw-bold fs-4 text-dark mb-3">
+                100.000 đ <span class="text-muted fs-6 fw-normal">/ ngày</span>
+            </div>
+            <div class="mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
+                <span class="text-muted small">Đang hoạt động</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
+                    <i class="bi bi-eye"></i> Chi
+                    tiết
+                </button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 4 -->
+    <div class="col-md-4 service-item" data-name="Phòng gym" data-category="Giải trí">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
+                     style="width: 40px; height: 40px;">
+                    <i class="bi bi-activity"></i>
+                </div>
+                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
+                      style="font-size: 11px;">Giải trí</span>
+            </div>
+            <div class="fw-bold fs-5 text-dark mb-1">Phòng gym</div>
+            <div class="text-muted small mb-3">Phòng tập gym với thiết bị hiện đại</div>
+            <div class="fw-bold fs-4 text-dark mb-3">
+                150.000 đ <span class="text-muted fs-6 fw-normal">/ ngày</span>
+            </div>
+            <div class="mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
+                <span class="text-muted small">Đang hoạt động</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
+                    <i class="bi bi-eye"></i> Chi
+                    tiết
+                </button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 5 -->
+    <div class="col-md-4 service-item" data-name="Giặt ủi" data-category="Tiện ích">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
+                     style="width: 40px; height: 40px;">
+                    <i class="bi bi-basket"></i>
+                </div>
+                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
+                      style="font-size: 11px;">Tiện ích</span>
+            </div>
+            <div class="fw-bold fs-5 text-dark mb-1">Giặt ủi</div>
+            <div class="text-muted small mb-3">Dịch vụ giặt ủi chuyên nghiệp</div>
+            <div class="fw-bold fs-4 text-dark mb-3">50.000 đ <span class="text-muted fs-6 fw-normal">/ Kg</span></div>
+            <div class="mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
+                <span class="text-muted small">Đang hoạt động</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
+                    <i class="bi bi-eye"></i> Chi
+                    tiết
+                </button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 6 -->
+    <div class="col-md-4 service-item" data-name="Đưa đón sân bay" data-category="Vận chuyển">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
+                     style="width: 40px; height: 40px;">
+                    <i class="bi bi-airplane"></i>
+                </div>
+                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
+                      style="font-size: 11px;">Vận chuyển</span>
+            </div>
+            <div class="fw-bold fs-5 text-dark mb-1">Đưa đón sân bay</div>
+            <div class="text-muted small mb-3">Dịch vụ đưa đón sân bay 24/7</div>
+            <div class="fw-bold fs-4 text-dark mb-3">
+                300.000 đ <span class="text-muted fs-6 fw-normal">/ chuyến</span>
+            </div>
+            <div class="mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
+                <span class="text-muted small">Đang hoạt động</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
+                    <i class="bi bi-eye"></i> Chi
+                    tiết
+                </button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+    <!-- Card 7 -->
+    <div class="col-md-4 service-item" data-name="Bể bơi" data-category="Giải trí">
+        <div class="card-custom p-4 border h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
+                     style="width: 40px; height: 40px;">
+                    <i class="bi bi-water"></i>
+                </div>
+                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
+                      style="font-size: 11px;">Giải trí</span>
+            </div>
+            <div class="fw-bold fs-5 text-dark mb-1">Bể bơi</div>
+            <div class="text-muted small mb-3">Bể bơi ngoài trời</div>
+            <div class="fw-bold fs-4 text-success mb-3">Miễn phí</div>
+            <div class="mb-4 d-flex align-items-center gap-2">
+                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
+                <span class="text-muted small">Đang hoạt động</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
+                    <i class="bi bi-eye"></i> Chi
+                    tiết
+                </button>
+                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+            str = str.replace(/Đ/g, "D");
+            return str;
+        }
+
+        $(document).ready(function () {
+            var activeCategory = 'all';
+
+            $('.category-btn').click(function () {
+                $('.category-btn').removeClass('btn-primary text-white').addClass('btn-outline-secondary bg-white text-dark');
+                $(this).removeClass('btn-outline-secondary bg-white text-dark').addClass('btn-primary text-white');
+                activeCategory = $(this).data('category');
+                filterServices();
+            });
+
+            function filterServices() {
+                var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
+
+                $('.service-item').each(function () {
+                    var name = removeVietnameseTones($(this).data('name').toLowerCase());
+                    var category = $(this).data('category');
+
+                    var matchSearch = name.includes(searchObj);
+                    var matchCategory = (activeCategory === 'all' || category === activeCategory);
+
+                    if (matchSearch && matchCategory) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+
+            $('#searchInput').on('input', filterServices);
+        });
+    </script>
+}

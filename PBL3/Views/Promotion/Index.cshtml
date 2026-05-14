@@ -1,4 +1,4 @@
-﻿@{
+﻿@* @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý khuyến mãi";
 }
@@ -107,4 +107,222 @@
         </div>
     </div>
 </div>
+ *@
 
+
+
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý khuyến mãi";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-2 flex-grow-1" style="max-width: 500px;">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control bg-white border-start-0" placeholder="Tìm kiếm khuyến mãi...">
+        </div>
+        <select id="statusFilter" class="form-select bg-white" style="width: 160px;">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="Đang áp dụng">Đang áp dụng</option>
+            <option value="Sắp diễn ra">Sắp diễn ra</option>
+            <option value="Đã hết hạn">Đã hết hạn</option>
+        </select>
+    </div>
+    <button class="btn btn-primary px-4"><i class="bi bi-plus"></i> Tạo khuyến mãi mới</button>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-column">
+                <div class="bg-primary bg-opacity-10 text-primary rounded p-2 mb-3 align-self-start" style="background-color: #f3e8ff !important; color: #a855f7 !important;">
+                    <i class="bi bi-tags fs-5"></i>
+                </div>
+                <div class="fw-bold fs-3 text-dark">5</div>
+                <div class="text-muted small">Tổng chương trình</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-column">
+                <div class="bg-success bg-opacity-10 text-success rounded p-2 mb-3 align-self-start">
+                    <i class="bi bi-check-circle fs-5"></i>
+                </div>
+                <div class="fw-bold fs-3 text-dark">3</div>
+                <div class="text-muted small">Đang áp dụng</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-column">
+                <div class="bg-primary bg-opacity-10 text-primary rounded p-2 mb-3 align-self-start">
+                    <i class="bi bi-graph-up fs-5"></i>
+                </div>
+                <div class="fw-bold fs-3 text-dark">508</div>
+                <div class="text-muted small">Lượt sử dụng</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-column">
+                <div class="bg-warning bg-opacity-10 text-warning rounded p-2 mb-3 align-self-start" style="background-color: #ffedd5 !important; color: #ea580c !important;">
+                    <i class="bi bi-graph-up-arrow fs-5"></i>
+                </div>
+                <div class="fw-bold fs-3 text-dark">3.2 tỷ</div>
+                <div class="text-muted small">Tổng giảm giá</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Promotion List -->
+<div class="row g-4" id="promotionList">
+    <!-- Card 1 -->
+    <div class="col-md-6 promotion-item" data-name="Ưu đãi mùa hè" data-code="SUMMER2026" data-status="Sắp diễn ra">
+        <div class="card-custom p-4 border h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
+                        <i class="bi bi-tag fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5 text-dark mb-1">Ưu đãi mùa hè</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-muted border px-2 py-1 fw-normal" style="font-size: 11px;">SUMMER2026</span>
+                            <span class="text-primary small fw-bold"><i class="bi bi-clock me-1"></i> Sắp diễn ra</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-dark small mb-4">Giảm giá 20% cho tất cả phòng trong mùa hè</p>
+
+            <div class="bg-light rounded p-3 mb-4 mt-auto">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <div class="text-muted small mb-1">Mức giảm</div>
+                        <div class="fw-bold fs-4 text-primary">20%</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-muted small mb-1">Tối đa</div>
+                        <div class="fw-bold fs-5 text-dark">500.000 đ</div>
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size: 11px;">Đơn tối thiểu: 1.000.000 đ</div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
+                <i class="bi bi-calendar3"></i> 01/06/2026 - 31/08/2026
+            </div>
+
+            <div class="mb-2">
+                <div class="d-flex justify-content-between small text-dark fw-bold mb-2">
+                    <span>Lượt sử dụng</span>
+                    <span>45 / 100</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Card 2 -->
+    <div class="col-md-6 promotion-item" data-name="Giảm giá cuối tuần" data-code="WEEKEND50" data-status="Đang áp dụng">
+        <div class="card-custom p-4 border h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
+                        <i class="bi bi-tag fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5 text-dark mb-1">Giảm giá cuối tuần</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-muted border px-2 py-1 fw-normal" style="font-size: 11px;">WEEKEND50</span>
+                            <span class="text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> Đang áp dụng</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-dark small mb-4">Giảm 50k cho đặt phòng cuối tuần</p>
+
+            <div class="bg-light rounded p-3 mb-4 mt-auto">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <div class="text-muted small mb-1">Mức giảm</div>
+                        <div class="fw-bold fs-4 text-primary">50.000 đ</div>
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size: 11px;">Đơn tối thiểu: 500.000 đ</div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
+                <i class="bi bi-calendar3"></i> 01/01/2026 - 31/12/2026
+            </div>
+
+            <div class="mb-2">
+                <div class="d-flex justify-content-between small text-dark fw-bold mb-2">
+                    <span>Lượt sử dụng</span>
+                    <span>234 / 500</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 46.8%" aria-valuenow="46.8" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+            str = str.replace(/Đ/g, "D");
+            return str;
+        }
+
+        $(document).ready(function() {
+            function filterPromotions() {
+                var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
+                var statusObj = $('#statusFilter').val();
+
+                $('.promotion-item').each(function() {
+                    var name = removeVietnameseTones($(this).data('name').toLowerCase());
+                    var code = removeVietnameseTones($(this).data('code').toLowerCase());
+                    var status = $(this).data('status');
+
+                    var matchSearch = name.includes(searchObj) || code.includes(searchObj);
+                    var matchStatus = (statusObj === 'all' || status === statusObj);
+
+                    if (matchSearch && matchStatus) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+
+            $('#searchInput').on('input', filterPromotions);
+            $('#statusFilter').on('change', filterPromotions);
+        });
+    </script>
+}

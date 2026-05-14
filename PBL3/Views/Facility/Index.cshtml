@@ -1,4 +1,4 @@
-﻿@{
+﻿@* @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý cơ sở vật chất";
 }
@@ -189,4 +189,326 @@
         </table>
     </div>
 </div>
+ *@
+
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý cơ sở vật chất";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-2 flex-grow-1" style="max-width: 700px;">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control bg-white border-start-0"
+                   placeholder="Tìm kiếm cơ sở vật chất...">
+        </div>
+        <select id="categoryFilter" class="form-select bg-white" style="width: 150px;">
+            <option value="all">Tất cả</option>
+            <option value="Phòng khách">Phòng khách</option>
+            <option value="Dịch vụ">Dịch vụ</option>
+            <option value="An ninh">An ninh</option>
+            <option value="Tiện ích">Tiện ích</option>
+            <option value="Giải trí">Giải trí</option>
+        </select>
+        <select id="statusFilter" class="form-select bg-white" style="width: 150px;">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="Tốt">Tốt</option>
+            <option value="Bảo trì định kỳ">Bảo trì định kỳ</option>
+            <option value="Cần sửa chữa">Cần sửa chữa</option>
+        </select>
+    </div>
+    <button class="btn btn-primary px-4"><i class="bi bi-plus"></i> Thêm cơ sở vật chất</button>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-column">
+                <div class="bg-primary bg-opacity-10 text-primary rounded p-2 mb-3 align-self-start">
+                    <i class="bi bi-building fs-5"></i>
+                </div>
+                <div class="fw-bold fs-3 text-dark">8</div>
+                <div class="text-muted small">Tổng tài sản</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-column">
+                <div class="bg-primary bg-opacity-10 text-primary rounded p-2 mb-3 align-self-start"
+                     style="background-color: #f3e8ff !important; color: #a855f7 !important;">
+                    <i class="bi bi-cash-stack fs-5"></i>
+                </div>
+                <div class="fw-bold fs-3 text-dark">1.6 tỷ</div>
+                <div class="text-muted small">Tổng giá trị</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-column">
+                <div class="bg-warning bg-opacity-10 text-warning rounded p-2 mb-3 align-self-start"
+                     style="background-color: #fef08a !important; color: #a16207 !important;">
+                    <i class="bi bi-wrench fs-5"></i>
+                </div>
+                <div class="fw-bold fs-3 text-dark">0</div>
+                <div class="text-muted small">Sắp bảo trì</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-column">
+                <div class="bg-danger bg-opacity-10 text-danger rounded p-2 mb-3 align-self-start"
+                     style="background-color: #fecaca !important; color: #b91c1c !important;">
+                    <i class="bi bi-exclamation-triangle fs-5"></i>
+                </div>
+                <div class="fw-bold fs-3 text-dark">1</div>
+                <div class="text-muted small">Cần sửa chữa</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card-custom p-0 overflow-hidden border">
+    <div class="table-responsive">
+        <table class="table-custom mb-0 w-100 align-middle">
+            <thead class="bg-white border-bottom">
+                <tr>
+                    <th class="py-3 text-start">Tên tài sản</th>
+                    <th class="py-3">Danh mục</th>
+                    <th class="py-3">Vị trí</th>
+                    <th class="py-3 text-center">Số lượng</th>
+                    <th class="py-3 text-end">Giá trị</th>
+                    <th class="py-3">Bảo trì tiếp theo</th>
+                    <th class="py-3 text-center">Trạng thái</th>
+                    <th class="py-3 text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="facilityList">
+                <tr class="facility-item" data-name="Giường ngủ King Size" data-category="Phòng khách"
+                    data-status="Tốt">
+                    <td class="text-start fw-bold text-dark">Giường ngủ King Size</td>
+                    <td>
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-normal"
+                              style="background-color: #e0e7ff;">Phòng khách</span>
+                    </td>
+                    <td class="text-muted small">Tầng 1-5</td>
+                    <td class="text-center text-dark fw-bold">60</td>
+                    <td class="text-end fw-bold text-dark">180.000.000 đ</td>
+                    <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i> 01/07/2026</td>
+                    <td class="text-center">
+                        <span class="badge border bg-light text-success rounded-pill px-3 py-2 fw-normal"
+                              style="border-color: #bbf7d0 !important;"><i class="bi bi-check-circle"></i> Tốt</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only text-muted"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr class="facility-item" data-name="Điều hòa nhiệt độ" data-category="Phòng khách" data-status="Tốt">
+                    <td class="text-start fw-bold text-dark">Điều hòa nhiệt độ</td>
+                    <td>
+                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-normal"
+                              style="background-color: #e0e7ff;">Phòng khách</span>
+                    </td>
+                    <td class="text-muted small">Tất cả phòng</td>
+                    <td class="text-center text-dark fw-bold">120</td>
+                    <td class="text-end fw-bold text-dark">360.000.000 đ</td>
+                    <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i> 15/07/2026</td>
+                    <td class="text-center">
+                        <span class="badge border bg-light text-success rounded-pill px-3 py-2 fw-normal"
+                              style="border-color: #bbf7d0 !important;"><i class="bi bi-check-circle"></i> Tốt</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only text-muted"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr class="facility-item" data-name="Hệ thống camera an ninh" data-category="An ninh" data-status="Tốt">
+                    <td class="text-start fw-bold text-dark">Hệ thống camera an ninh</td>
+                    <td>
+                        <span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal"
+                              style="background-color: #e0e7ff;">An ninh</span>
+                    </td>
+                    <td class="text-muted small">Toàn khách sạn</td>
+                    <td class="text-center text-dark fw-bold">45</td>
+                    <td class="text-end fw-bold text-dark">150.000.000 đ</td>
+                    <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i> 20/06/2026</td>
+                    <td class="text-center">
+                        <span class="badge border bg-light text-success rounded-pill px-3 py-2 fw-normal"
+                              style="border-color: #bbf7d0 !important;"><i class="bi bi-check-circle"></i> Tốt</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only text-muted"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr class="facility-item" data-name="Máy giặt công nghiệp" data-category="Dịch vụ"
+                    data-status="Bảo trì định kỳ">
+                    <td class="text-start fw-bold text-dark">Máy giặt công nghiệp</td>
+                    <td>
+                        <span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal"
+                              style="background-color: #ffedd5; color: #c2410c !important;">Dịch vụ</span>
+                    </td>
+                    <td class="text-muted small">Phòng giặt ủi</td>
+                    <td class="text-center text-dark fw-bold">3</td>
+                    <td class="text-end fw-bold text-dark">90.000.000 đ</td>
+                    <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i> 05/03/2026</td>
+                    <td class="text-center">
+                        <span class="badge border bg-light text-warning rounded-pill px-3 py-2 fw-normal"
+                              style="color: #a16207 !important; border-color: #fef08a !important;">
+                            <i class="bi bi-wrench"></i> Bảo trì định kỳ
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only text-muted"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr class="facility-item" data-name="Thang máy" data-category="Tiện ích" data-status="Tốt">
+                    <td class="text-start fw-bold text-dark">Thang máy</td>
+                    <td>
+                        <span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal"
+                              style="background-color: #cffafe; color: #0e7490 !important;">Tiện ích</span>
+                    </td>
+                    <td class="text-muted small">Tòa nhà chính</td>
+                    <td class="text-center text-dark fw-bold">4</td>
+                    <td class="text-end fw-bold text-dark">400.000.000 đ</td>
+                    <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i> 01/05/2026</td>
+                    <td class="text-center">
+                        <span class="badge border bg-light text-success rounded-pill px-3 py-2 fw-normal"
+                              style="border-color: #bbf7d0 !important;"><i class="bi bi-check-circle"></i> Tốt</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only text-muted"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr class="facility-item" data-name="Thiết bị phòng gym" data-category="Giải trí" data-status="Tốt">
+                    <td class="text-start fw-bold text-dark">Thiết bị phòng gym</td>
+                    <td>
+                        <span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal"
+                              style="background-color: #e0e7ff; color: #4338ca !important;">Giải trí</span>
+                    </td>
+                    <td class="text-muted small">Phòng gym tầng 1</td>
+                    <td class="text-center text-dark fw-bold">25</td>
+                    <td class="text-end fw-bold text-dark">200.000.000 đ</td>
+                    <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i> 15/03/2026</td>
+                    <td class="text-center">
+                        <span class="badge border bg-light text-success rounded-pill px-3 py-2 fw-normal"
+                              style="border-color: #bbf7d0 !important;"><i class="bi bi-check-circle"></i> Tốt</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only text-muted"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr class="facility-item" data-name="Hệ thống lọc nước bể bơi" data-category="Giải trí"
+                    data-status="Cần sửa chữa">
+                    <td class="text-start fw-bold text-dark">Hệ thống lọc nước bể bơi</td>
+                    <td>
+                        <span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal"
+                              style="background-color: #e0e7ff; color: #4338ca !important;">Giải trí</span>
+                    </td>
+                    <td class="text-muted small">Bể bơi ngoài trời</td>
+                    <td class="text-center text-dark fw-bold">1</td>
+                    <td class="text-end fw-bold text-dark">80.000.000 đ</td>
+                    <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i> 10/07/2026</td>
+                    <td class="text-center">
+                        <span class="badge border bg-light text-danger rounded-pill px-3 py-2 fw-normal"
+                              style="border-color: #fecaca !important; color: #b91c1c !important;">
+                            <i class="bi bi-exclamation-triangle"></i> Cần sửa chữa
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only text-muted"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+                <tr class="facility-item" data-name="Bộ bàn ghế nhà hàng" data-category="Dịch vụ" data-status="Tốt">
+                    <td class="text-start fw-bold text-dark">Bộ bàn ghế nhà hàng</td>
+                    <td>
+                        <span class="badge text-primary bg-opacity-10 rounded-pill px-3 py-2 fw-normal"
+                              style="background-color: #ffedd5; color: #c2410c !important;">Dịch vụ</span>
+                    </td>
+                    <td class="text-muted small">Nhà hàng tầng 1</td>
+                    <td class="text-center text-dark fw-bold">40</td>
+                    <td class="text-end fw-bold text-dark">120.000.000 đ</td>
+                    <td class="text-muted small"><i class="bi bi-calendar3 me-1"></i> 20/07/2026</td>
+                    <td class="text-center">
+                        <span class="badge border bg-light text-success rounded-pill px-3 py-2 fw-normal"
+                              style="border-color: #bbf7d0 !important;"><i class="bi bi-check-circle"></i> Tốt</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-icon-only text-primary"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-icon-only text-muted"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function removeVietnameseTones(str) {
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+            str = str.replace(/Đ/g, "D");
+            return str;
+        }
+
+        $(document).ready(function () {
+            function filterFacilities() {
+                var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
+                var categoryObj = $('#categoryFilter').val();
+                var statusObj = $('#statusFilter').val();
+
+                $('.facility-item').each(function () {
+                    var name = removeVietnameseTones($(this).data('name').toLowerCase());
+                    var category = $(this).data('category');
+                    var status = $(this).data('status');
+
+                    var matchSearch = name.includes(searchObj);
+                    var matchCategory = (categoryObj === 'all' || category === categoryObj);
+                    var matchStatus = (statusObj === 'all' || status === statusObj);
+
+                    if (matchSearch && matchCategory && matchStatus) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+
+            $('#searchInput').on('input', filterFacilities);
+            $('#categoryFilter').on('change', filterFacilities);
+            $('#statusFilter').on('change', filterFacilities);
+        });
+    </script>
+}
 
