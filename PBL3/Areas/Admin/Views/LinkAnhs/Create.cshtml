@@ -1,0 +1,78 @@
+@model PBL3.Models.LinkAnh
+
+@{
+    ViewData["Title"] = "Thêm link ảnh";
+}
+
+<h1 class="h3 fw-bold mb-3">Thêm link ảnh</h1>
+
+<div class="row">
+    <div class="col-lg-7 col-xl-6">
+        <form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="MaAnh" class="form-label">Mã ảnh</label>
+                <input asp-for="MaAnh" class="form-control" placeholder="VD: ANH0000001" />
+                <span asp-validation-for="MaAnh" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="DoiTuong" class="form-label">Đối tượng</label>
+                <input asp-for="DoiTuong" class="form-control" placeholder="VD: DELUXE, P101, SPA" />
+                <div class="form-text">Nhập mã đối tượng cần gắn ảnh, ví dụ mã loại phòng, mã phòng, mã dịch vụ hoặc mã giảm giá.</div>
+                <span asp-validation-for="DoiTuong" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="UrlAnh" class="form-label">URL ảnh</label>
+                <input asp-for="UrlAnh" class="form-control" placeholder="/images/deluxe-room.jpg" />
+                <div class="form-text">Có thể nhập URL thủ công hoặc upload ảnh bên dưới.</div>
+                <span asp-validation-for="UrlAnh" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label for="tepAnh" class="form-label">Upload ảnh vào wwwroot</label>
+                <input type="file" id="tepAnh" name="tepAnh" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif" />
+                <div class="form-text">Nếu chọn file, hệ thống sẽ lưu vào <code>wwwroot/images/link-anh</code> và tự dùng đường dẫn ảnh upload.</div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ThongTin" class="form-label">Thông tin</label>
+                <textarea asp-for="ThongTin" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="ThongTin" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ThuTu" class="form-label">Thứ tự</label>
+                    <input asp-for="ThuTu" type="number" min="1" class="form-control" />
+                    <span asp-validation-for="ThuTu" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TrangThai" class="form-label">Trạng thái</label>
+                    <select asp-for="TrangThai" class="form-select">
+                        <option value="Hoạt động">Hoạt động</option>
+                        <option value="Ẩn">Ẩn</option>
+                        <option value="Ngừng sử dụng">Ngừng sử dụng</option>
+                    </select>
+                    <span asp-validation-for="TrangThai" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="LaAnhDaiDien" class="form-check-input" />
+                <label asp-for="LaAnhDaiDien" class="form-check-label">Là ảnh đại diện</label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Tạo mới</button>
+                <a asp-action="Index" class="btn btn-light border">Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -7,6 +7,9 @@ using PBL3.Services.Interfaces;
 using PBL3.Data;
 using PBL3.Models;
 
+LoadDotEnv(AppContext.BaseDirectory);
+LoadDotEnv(Directory.GetCurrentDirectory());
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
@@ -18,7 +21,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
-        "Missing database connection string. Configure ConnectionStrings:DefaultConnection with User Secrets or the ConnectionStrings__DefaultConnection environment variable.");
+        "Missing database connection string. Configure ConnectionStrings:DefaultConnection with User Secrets, .env, or the ConnectionStrings__DefaultConnection environment variable.");
 }
 
 builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
@@ -69,6 +72,7 @@ builder.Services.AddScoped<IDichVuService, DichVuService>();
 builder.Services.AddScoped<IMaGiamGiaService, MaGiamGiaService>();
 builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
 builder.Services.AddScoped<IBangGiaPhongService, BangGiaPhongService>();
+builder.Services.AddScoped<ILinkAnhService, LinkAnhService>();
 builder.Services.AddScoped<IDatPhongService, DatPhongService>();
 builder.Services.AddScoped<IHoaDonService, HoaDonService>();
 builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
@@ -132,5 +136,44 @@ static async Task WarmUpDatabaseAsync(IServiceProvider services)
     catch (Exception ex)
     {
         logger.LogWarning(ex, "Database warm-up failed. The first database request may be slower.");
+    }
+}
+
+static void LoadDotEnv(string directory)
+{
+    var envPath = Path.Combine(directory, ".env");
+    if (!File.Exists(envPath))
+    {
+        return;
+    }
+
+    foreach (var rawLine in File.ReadAllLines(envPath))
+    {
+        var line = rawLine.Trim();
+        if (line.Length == 0 || line.StartsWith('#'))
+        {
+            continue;
+        }
+
+        var separatorIndex = line.IndexOf('=');
+        if (separatorIndex <= 0)
+        {
+            continue;
+        }
+
+        var key = line[..separatorIndex].Trim();
+        var value = line[(separatorIndex + 1)..].Trim();
+        if (key.Length == 0 || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key)))
+        {
+            continue;
+        }
+
+        if ((value.StartsWith('"') && value.EndsWith('"')) ||
+            (value.StartsWith('\'') && value.EndsWith('\'')))
+        {
+            value = value[1..^1];
+        }
+
+        Environment.SetEnvironmentVariable(key, value);
     }
 }

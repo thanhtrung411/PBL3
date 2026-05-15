@@ -32,27 +32,27 @@ namespace PBL3.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> Rooms(DateTime? checkIn, DateTime? checkOut, int? guests, string? roomType)
+        public async Task<IActionResult> Rooms(DateTime? checkIn, DateTime? checkOut, int? guests, string? roomType, int? rooms)
         {
-            var model = await _publicBookingService.SearchRoomsAsync(checkIn, checkOut, guests, roomType);
+            var model = await _publicBookingService.SearchRoomsAsync(checkIn, checkOut, guests, roomType, rooms);
             return View(model);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Checkout(string? roomId, DateTime? checkIn, DateTime? checkOut, int? guests)
+        public async Task<IActionResult> Checkout(string? roomId, DateTime? checkIn, DateTime? checkOut, int? guests, int? rooms, string? roomSelection)
         {
-            if (string.IsNullOrWhiteSpace(roomId))
+            if (string.IsNullOrWhiteSpace(roomId) && string.IsNullOrWhiteSpace(roomSelection))
             {
                 TempData["Error"] = "Vui lòng chọn loại phòng trước khi xác nhận đặt phòng.";
-                return RedirectToAction(nameof(Rooms), ToRoomsRoute(checkIn, checkOut, guests, null));
+                return RedirectToAction(nameof(Rooms), ToRoomsRoute(checkIn, checkOut, guests, null, rooms));
             }
 
-            var normalizedRoomId = roomId.Trim();
-            var model = await _publicBookingService.BuildCheckoutAsync(normalizedRoomId, checkIn, checkOut, guests);
+            var normalizedRoomId = roomId?.Trim();
+            var model = await _publicBookingService.BuildCheckoutAsync(normalizedRoomId, checkIn, checkOut, guests, rooms, roomSelection);
             if (model == null)
             {
                 TempData["Error"] = "Loại phòng này hiện không còn phù hợp với lựa chọn của bạn. Vui lòng chọn lại.";
-                return RedirectToAction(nameof(Rooms), ToRoomsRoute(checkIn, checkOut, guests, normalizedRoomId));
+                return RedirectToAction(nameof(Rooms), ToRoomsRoute(checkIn, checkOut, guests, normalizedRoomId, rooms));
             }
 
             return View(model);
@@ -97,7 +97,9 @@ namespace PBL3.Controllers
                     checkIn = data.CheckIn.ToString("yyyy-MM-dd"),
                     checkOut = data.CheckOut.ToString("yyyy-MM-dd"),
                     guests = data.Guests,
-                    roomType = data.RoomId?.Trim()
+                    rooms = data.NumberOfRooms,
+                    roomType = data.RoomId?.Trim(),
+                    roomSelection = data.RoomSelection
                 });
             }
 
@@ -153,7 +155,9 @@ namespace PBL3.Controllers
                 submitted.RoomId,
                 submitted.CheckIn,
                 submitted.CheckOut,
-                submitted.Guests);
+                submitted.Guests,
+                submitted.NumberOfRooms,
+                submitted.RoomSelection);
 
             if (rebuilt == null)
             {
@@ -165,17 +169,20 @@ namespace PBL3.Controllers
             rebuilt.PhoneNumber = submitted.PhoneNumber;
             rebuilt.Email = submitted.Email;
             rebuilt.Note = submitted.Note;
+            rebuilt.NumberOfRooms = submitted.NumberOfRooms;
+            rebuilt.RoomSelection = submitted.RoomSelection;
             rebuilt.PaymentMethod = rebuilt.VnPayAvailable ? submitted.PaymentMethod : PaymentMethods.PayAtHotel;
             return rebuilt;
         }
 
-        private static object ToRoomsRoute(DateTime? checkIn, DateTime? checkOut, int? guests, string? roomType)
+        private static object ToRoomsRoute(DateTime? checkIn, DateTime? checkOut, int? guests, string? roomType, int? rooms)
         {
             return new
             {
                 checkIn = checkIn?.ToString("yyyy-MM-dd"),
                 checkOut = checkOut?.ToString("yyyy-MM-dd"),
                 guests,
+                rooms,
                 roomType = roomType?.Trim()
             };
         }

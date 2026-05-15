@@ -1,0 +1,17 @@
+bin/
+obj/
+artifacts/
+publish/
+*.zip
+.vs/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Runtime keys and uploaded/generated local data
+App_Data/DataProtectionKeys/
+
+# Local database scripts/dumps
+*.sql

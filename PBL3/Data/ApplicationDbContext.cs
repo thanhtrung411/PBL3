@@ -26,6 +26,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<LoaiPhong> LoaiPhongs { get; set; }
 
+    public virtual DbSet<LinkAnh> LinkAnhs { get; set; }
+
     public virtual DbSet<MaGiamGium> MaGiamGia { get; set; }
 
     public virtual DbSet<NhanVien> NhanViens { get; set; }
@@ -56,6 +58,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.MaDv).IsFixedLength();
             entity.Property(e => e.MaGiamGia).IsFixedLength();
             entity.Property(e => e.MaHoaDon).IsFixedLength();
+            entity.Property(e => e.MaLoaiPhong).IsFixedLength();
             entity.Property(e => e.MaPhong).IsFixedLength();
             entity.Property(e => e.SoLuong).HasDefaultValue(1, "DF_CTHD_SoLuong");
             entity.Property(e => e.TrangThai).HasDefaultValue("HIEU_LUC", "DF_CTHD_TrangThai");
@@ -67,6 +70,8 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.MaHoaDonNavigation).WithMany(p => p.ChiTietHoaDons)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CTHD_HoaDon");
+
+            entity.HasOne(d => d.MaLoaiPhongNavigation).WithMany(p => p.ChiTietHoaDons).HasConstraintName("FK_CTHD_LoaiPhong");
 
             entity.HasOne(d => d.MaPhongNavigation).WithMany(p => p.ChiTietHoaDons).HasConstraintName("FK_CTHD_Phong");
         });
@@ -117,6 +122,14 @@ public partial class ApplicationDbContext : DbContext
         modelBuilder.Entity<LoaiPhong>(entity =>
         {
             entity.Property(e => e.MaLoaiPhong).IsFixedLength();
+        });
+
+        modelBuilder.Entity<LinkAnh>(entity =>
+        {
+            entity.Property(e => e.MaAnh).IsFixedLength();
+            entity.Property(e => e.LaAnhDaiDien).HasDefaultValue(false);
+            entity.Property(e => e.ThuTu).HasDefaultValue(1);
+            entity.Property(e => e.TrangThai).HasDefaultValue(DomainValues.LinkAnhTrangThai.HoatDong);
         });
 
         modelBuilder.Entity<MaGiamGium>(entity =>

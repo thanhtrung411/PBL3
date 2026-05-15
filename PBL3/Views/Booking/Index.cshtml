@@ -5,6 +5,10 @@
     Layout = null;
     var pageModel = Model ?? new PBL3.Models.RoomSearchViewModel();
     var roomOptions = pageModel.Results;
+    var roomTypeOptions = pageModel.RoomTypeOptions;
+    var initialAdults = Math.Clamp(pageModel.Guests, 1, 80);
+    var initialChildren = 0;
+    var initialRooms = Math.Clamp(pageModel.NumberOfRooms, 1, 20);
 }
 
 <!DOCTYPE html>
@@ -136,7 +140,7 @@
         }
 
         .hero-content {
-            width: min(1040px, 100%);
+            width: min(1220px, 100%);
         }
 
         .hero h1 {
@@ -202,12 +206,13 @@
 
         .booking-bar {
             display: grid;
-            grid-template-columns: repeat(4, minmax(130px, 1fr)) minmax(150px, auto);
+            grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(190px, 1.1fr) minmax(250px, 1.35fr) minmax(170px, auto);
             gap: 16px;
             align-items: end;
         }
 
         .field-group {
+            position: relative;
             min-width: 0;
         }
 
@@ -242,6 +247,188 @@
         .field-control[aria-invalid="true"] {
             border-color: var(--hotel-danger);
             box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.1);
+        }
+
+        .guest-summary-button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .guest-summary-button i:first-child {
+            flex: 0 0 auto;
+            color: var(--hotel-muted);
+            font-size: 18px;
+        }
+
+        .guest-summary-button span {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+            color: #222222;
+            font-weight: 700;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .guest-chevron {
+            flex: 0 0 auto;
+            color: var(--hotel-ink);
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+
+        .guest-selector.is-open .guest-chevron {
+            transform: rotate(180deg);
+        }
+
+        .guest-picker-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            z-index: 30;
+            display: none;
+            width: min(360px, calc(100vw - 32px));
+            padding: 20px 24px 18px;
+            border: 1px solid rgba(17, 17, 17, 0.1);
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+        }
+
+        .guest-selector.is-open .guest-picker-panel {
+            display: block;
+        }
+
+        .guest-counter-row {
+            display: grid;
+            grid-template-columns: minmax(92px, 1fr) 142px;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 7px;
+        }
+
+        .guest-counter-label {
+            color: var(--hotel-ink);
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .guest-counter-control {
+            display: grid;
+            grid-template-columns: 42px 1fr 42px;
+            align-items: center;
+            min-height: 44px;
+            overflow: hidden;
+            border: 1px solid #aeb4bc;
+            border-radius: 4px;
+            background: #ffffff;
+        }
+
+        .guest-stepper {
+            width: 100%;
+            min-height: 42px;
+            border: 0;
+            background: transparent;
+            color: #0d6efd;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .guest-stepper:disabled {
+            color: #b8b8b8;
+            cursor: not-allowed;
+        }
+
+        .guest-count-value {
+            color: var(--hotel-ink);
+            font-size: 17px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .pet-option {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--hotel-border);
+        }
+
+        .pet-option-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 7px;
+            color: var(--hotel-ink);
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .pet-toggle {
+            position: relative;
+            flex: 0 0 auto;
+            width: 46px;
+            height: 26px;
+            border: 0;
+            border-radius: 999px;
+            background: #7f8389;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .pet-toggle[aria-pressed="true"] {
+            background: #0d6efd;
+        }
+
+        .pet-toggle-knob {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
+            transition: transform 0.2s ease;
+        }
+
+        .pet-toggle[aria-pressed="true"] .pet-toggle-knob {
+            transform: translateX(20px);
+        }
+
+        .pet-help {
+            margin: 0 0 4px;
+            color: var(--hotel-ink);
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .pet-link {
+            color: #0d6efd;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .guest-picker-done {
+            width: 100%;
+            min-height: 46px;
+            margin-top: 14px;
+            border: 1px solid #0d6efd;
+            border-radius: 4px;
+            background: #ffffff;
+            color: #0d6efd;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .guest-picker-done:hover,
+        .guest-picker-done:focus-visible {
+            background: #0d6efd;
+            color: #ffffff;
         }
 
         .btn-search {
@@ -279,21 +466,6 @@
 
         .btn-search.is-loading .loading-icon {
             display: inline-block;
-        }
-
-        .loading-hint {
-            display: none;
-            margin: 14px 0 0;
-            color: var(--hotel-muted);
-            font-size: 13px;
-            font-weight: 600;
-            overflow-wrap: anywhere;
-        }
-
-        .booking-panel.is-loading .loading-hint {
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .section-title {
@@ -486,6 +658,11 @@
             .btn-search {
                 width: 100%;
             }
+
+            .guest-picker-panel {
+                right: auto;
+                left: 0;
+            }
         }
 
         @@media (max-width: 700px) {
@@ -516,6 +693,18 @@
 
             .booking-bar {
                 grid-template-columns: 1fr;
+            }
+
+            .guest-picker-panel {
+                position: fixed;
+                top: auto;
+                right: 14px;
+                bottom: 18px;
+                left: 14px;
+                width: auto;
+                max-height: calc(100vh - 36px);
+                overflow-y: auto;
+                padding: 24px 24px 20px;
             }
 
             .hero {
@@ -613,21 +802,63 @@
                         <label for="roomTypeSelect">Loại phòng</label>
                         <select class="field-control" id="roomTypeSelect">
                             <option value="">Tất cả loại phòng</option>
-                            @foreach (var room in roomOptions)
+                            @foreach (var roomType in roomTypeOptions)
                             {
-                                <option value="@room.RoomTypeId">@room.RoomName</option>
+                                <option value="@roomType.RoomTypeId" selected="@(pageModel.RoomTypeId == roomType.RoomTypeId)">@roomType.RoomName</option>
                             }
                         </select>
                     </div>
 
-                    <div class="field-group">
-                        <label for="guestCountSelect">Số người</label>
-                        <select class="field-control" id="guestCountSelect">
-                            <option value="1" selected="@(pageModel.Guests == 1)">1 Người lớn</option>
-                            <option value="2" selected="@(pageModel.Guests == 2)">2 Người lớn</option>
-                            <option value="3" selected="@(pageModel.Guests == 3)">3 Người lớn</option>
-                            <option value="4" selected="@(pageModel.Guests == 4)">Gia đình (4 người)</option>
-                        </select>
+                    <div class="field-group guest-selector" id="guestSelector" data-adults="@initialAdults" data-children="@initialChildren" data-rooms="@initialRooms" data-pets="false">
+                        <label for="guestSummaryButton">Số người</label>
+                        <input type="hidden" id="guestCountSelect" value="@pageModel.Guests">
+                        <button class="field-control guest-summary-button" id="guestSummaryButton" type="button" aria-expanded="false" aria-controls="guestPickerPanel">
+                            <i class="fa-regular fa-user" aria-hidden="true"></i>
+                            <span id="guestSummaryText">@initialAdults người lớn · @initialChildren trẻ em · @initialRooms phòng</span>
+                            <i class="fa fa-chevron-down guest-chevron" aria-hidden="true"></i>
+                        </button>
+
+                        <div class="guest-picker-panel" id="guestPickerPanel" aria-label="Chọn số khách và phòng">
+                            <div class="guest-counter-row">
+                                <div class="guest-counter-label">Người lớn</div>
+                                <div class="guest-counter-control">
+                                    <button class="guest-stepper" type="button" data-counter="adults" data-delta="-1" aria-label="Giảm số người lớn">−</button>
+                                    <span class="guest-count-value" data-count-for="adults">@initialAdults</span>
+                                    <button class="guest-stepper" type="button" data-counter="adults" data-delta="1" aria-label="Tăng số người lớn">+</button>
+                                </div>
+                            </div>
+
+                            <div class="guest-counter-row">
+                                <div class="guest-counter-label">Trẻ em</div>
+                                <div class="guest-counter-control">
+                                    <button class="guest-stepper" type="button" data-counter="children" data-delta="-1" aria-label="Giảm số trẻ em">−</button>
+                                    <span class="guest-count-value" data-count-for="children">@initialChildren</span>
+                                    <button class="guest-stepper" type="button" data-counter="children" data-delta="1" aria-label="Tăng số trẻ em">+</button>
+                                </div>
+                            </div>
+
+                            <div class="guest-counter-row">
+                                <div class="guest-counter-label">Phòng</div>
+                                <div class="guest-counter-control">
+                                    <button class="guest-stepper" type="button" data-counter="rooms" data-delta="-1" aria-label="Giảm số phòng">−</button>
+                                    <span class="guest-count-value" data-count-for="rooms">@initialRooms</span>
+                                    <button class="guest-stepper" type="button" data-counter="rooms" data-delta="1" aria-label="Tăng số phòng">+</button>
+                                </div>
+                            </div>
+
+                            <div class="pet-option">
+                                <div class="pet-option-top">
+                                    <span>Mang thú cưng đi cùng</span>
+                                    <button class="pet-toggle" id="petToggle" type="button" aria-pressed="false" aria-label="Mang thú cưng đi cùng">
+                                        <span class="pet-toggle-knob" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <p class="pet-help">Động vật trợ giúp không được xem là vật nuôi.</p>
+                                <a class="pet-link" href="#" onclick="return false;">Đọc thêm về chủ đề du lịch cùng vật trợ giúp</a>
+                            </div>
+
+                            <button class="guest-picker-done" id="guestPickerDone" type="button">Xong</button>
+                        </div>
                     </div>
 
                     <button class="btn-search" id="searchButton" onclick="searchRooms()" type="button">
@@ -637,10 +868,6 @@
                     </button>
                 </div>
 
-                <p class="loading-hint" id="loadingHint" aria-live="polite">
-                    <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
-                    Đang kiểm tra thông tin tìm phòng, vui lòng chờ trong giây lát...
-                </p>
             </div>
         </div>
     </section>
@@ -672,11 +899,12 @@
             {
                 @foreach (var room in roomOptions)
                 {
+                    var roomsToBook = Math.Min(Math.Max(pageModel.NumberOfRooms, 1), Math.Max(room.AvailableRooms, 1));
                     <article class="room-card">
                         <img src="@room.ImageUrl"
                              alt="Ảnh minh họa @room.RoomName"
                              loading="lazy"
-                             onerror="this.src='/images/deluxe-room.jpg';">
+                             onerror="this.src='/images/booking_hero.jpg';">
 
                         <div class="room-info">
                             <div>
@@ -697,7 +925,8 @@
                                 roomId = room.RoomTypeId,
                                 checkIn = pageModel.CheckIn.ToString("yyyy-MM-dd"),
                                 checkOut = pageModel.CheckOut.ToString("yyyy-MM-dd"),
-                                guests = pageModel.Guests
+                                guests = pageModel.Guests,
+                                rooms = roomsToBook
                             })"
                                class="btn-book-room"
                                aria-label="Chọn phòng @room.RoomName">
@@ -725,6 +954,108 @@
     @await Html.PartialAsync("_PublicFooter")
 
     <script>
+        const guestSelector = document.getElementById('guestSelector');
+        const guestSummaryButton = document.getElementById('guestSummaryButton');
+        const guestSummaryText = document.getElementById('guestSummaryText');
+        const guestCountInput = document.getElementById('guestCountSelect');
+        const petToggle = document.getElementById('petToggle');
+        const guestLimits = {
+            adults: { min: 1, max: 80 },
+            children: { min: 0, max: 80 },
+            rooms: { min: 1, max: 20 },
+            totalGuests: 80
+        };
+        const guestState = {
+            adults: Number(guestSelector?.dataset.adults || 2),
+            children: Number(guestSelector?.dataset.children || 0),
+            rooms: Number(guestSelector?.dataset.rooms || 1),
+            pets: guestSelector?.dataset.pets === 'true'
+        };
+
+        function clampGuestValue(name, value) {
+            const limits = guestLimits[name];
+            return Math.min(limits.max, Math.max(limits.min, value));
+        }
+
+        function setGuestPanelOpen(isOpen) {
+            guestSelector?.classList.toggle('is-open', isOpen);
+            guestSummaryButton?.setAttribute('aria-expanded', String(isOpen));
+        }
+
+        function formatGuestSummary() {
+            const childrenText = guestState.children > 0 ? ` · ${guestState.children} trẻ em` : '';
+            return `${guestState.adults} người lớn${childrenText} · ${guestState.rooms} phòng`;
+        }
+
+        function updateGuestPicker() {
+            const totalGuests = guestState.adults + guestState.children;
+
+            document.querySelectorAll('[data-count-for]').forEach((item) => {
+                const name = item.getAttribute('data-count-for');
+                item.textContent = guestState[name];
+            });
+
+            document.querySelectorAll('.guest-stepper').forEach((button) => {
+                const name = button.getAttribute('data-counter');
+                const delta = Number(button.getAttribute('data-delta'));
+                const value = guestState[name];
+                const limits = guestLimits[name];
+                let disabled = delta < 0 ? value <= limits.min : value >= limits.max;
+
+                if ((name === 'adults' || name === 'children') && delta > 0) {
+                    disabled = disabled || totalGuests >= guestLimits.totalGuests;
+                }
+
+                button.disabled = disabled;
+            });
+
+            if (guestSummaryText) {
+                guestSummaryText.textContent = formatGuestSummary();
+            }
+
+            if (guestCountInput) {
+                guestCountInput.value = String(Math.max(1, totalGuests));
+            }
+
+            petToggle?.setAttribute('aria-pressed', String(guestState.pets));
+        }
+
+        guestSummaryButton?.addEventListener('click', function () {
+            setGuestPanelOpen(!guestSelector?.classList.contains('is-open'));
+        });
+
+        document.querySelectorAll('.guest-stepper').forEach((button) => {
+            button.addEventListener('click', function () {
+                const name = this.getAttribute('data-counter');
+                const delta = Number(this.getAttribute('data-delta'));
+                guestState[name] = clampGuestValue(name, guestState[name] + delta);
+                updateGuestPicker();
+            });
+        });
+
+        petToggle?.addEventListener('click', function () {
+            guestState.pets = !guestState.pets;
+            updateGuestPicker();
+        });
+
+        document.getElementById('guestPickerDone')?.addEventListener('click', function () {
+            setGuestPanelOpen(false);
+            guestSummaryButton?.focus();
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!guestSelector?.contains(event.target)) {
+                setGuestPanelOpen(false);
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                setGuestPanelOpen(false);
+                guestSummaryButton?.focus();
+            }
+        });
+
         function showBookingError(message) {
             const error = document.getElementById('bookingError');
             error.querySelector('span').textContent = message;
@@ -745,7 +1076,6 @@
             const panel = document.getElementById('bookingPanel');
             button.disabled = isLoading;
             button.classList.toggle('is-loading', isLoading);
-            panel.classList.toggle('is-loading', isLoading);
             panel.setAttribute('aria-busy', String(isLoading));
             button.querySelector('span').textContent = isLoading ? 'Đang tìm...' : 'Tìm phòng';
         }
@@ -779,6 +1109,11 @@
                 guests
             });
 
+            query.set('adults', String(guestState.adults));
+            query.set('children', String(guestState.children));
+            query.set('rooms', String(guestState.rooms));
+            query.set('pets', String(guestState.pets));
+
             if (roomType) {
                 query.set('roomType', roomType);
             }
@@ -793,6 +1128,8 @@
         document.getElementById('roomTypeSelect')?.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') searchRooms();
         });
+
+        updateGuestPicker();
     </script>
 </body>
 </html>

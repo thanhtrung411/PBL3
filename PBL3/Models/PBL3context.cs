@@ -27,6 +27,8 @@ namespace PBL3.Models
 
         public virtual DbSet<LoaiPhong> LoaiPhongs { get; set; }
 
+        public virtual DbSet<LinkAnh> LinkAnhs { get; set; }
+
         public virtual DbSet<MaGiamGium> MaGiamGiums { get; set; }
 
         public virtual DbSet<NhanVien> NhanViens { get; set; }
@@ -58,6 +60,9 @@ namespace PBL3.Models
                 entity.Property(e => e.MaHoaDon)
                     .HasMaxLength(10)
                     .IsUnicode(false);
+                entity.Property(e => e.MaLoaiPhong)
+                    .HasMaxLength(10)
+                    .IsUnicode(false);
                 entity.Property(e => e.MaPhong)
                     .HasMaxLength(10)
                     .IsUnicode(false);
@@ -75,6 +80,10 @@ namespace PBL3.Models
                     .HasForeignKey(d => d.MaHoaDon)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK__ChiTietHo__MaHoa__00200768");
+
+                entity.HasOne(d => d.MaLoaiPhongNavigation).WithMany(p => p.ChiTietHoaDons)
+                    .HasForeignKey(d => d.MaLoaiPhong)
+                    .HasConstraintName("FK_CTHD_LoaiPhong");
 
                 entity.HasOne(d => d.MaPhongNavigation).WithMany(p => p.ChiTietHoaDons)
                     .HasForeignKey(d => d.MaPhong)
@@ -192,6 +201,25 @@ namespace PBL3.Models
                     .IsUnicode(false);
                 entity.Property(e => e.MoTa).HasMaxLength(255);
                 entity.Property(e => e.TenLoaiPhong).HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<LinkAnh>(entity =>
+            {
+                entity.HasKey(e => e.MaAnh);
+
+                entity.ToTable("LinkAnh");
+
+                entity.Property(e => e.MaAnh)
+                    .HasMaxLength(10)
+                    .IsUnicode(false);
+                entity.Property(e => e.DoiTuong).HasMaxLength(50);
+                entity.Property(e => e.UrlAnh).HasMaxLength(500);
+                entity.Property(e => e.ThongTin).HasMaxLength(255);
+                entity.Property(e => e.ThuTu).HasDefaultValue(1);
+                entity.Property(e => e.LaAnhDaiDien).HasDefaultValue(false);
+                entity.Property(e => e.TrangThai)
+                    .HasMaxLength(30)
+                    .HasDefaultValue(DomainValues.LinkAnhTrangThai.HoatDong);
             });
 
             modelBuilder.Entity<NhanVien>(entity =>
