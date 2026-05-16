@@ -4,6 +4,7 @@ using PBL3.Data;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 using System.Globalization;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -192,7 +193,7 @@ public class VnPayService : IVnPayService
     {
         return string.Join("&", parameters
             .Where(x => !string.IsNullOrWhiteSpace(x.Value))
-            .Select(x => $"{Uri.EscapeDataString(x.Key)}={(encodeValues ? Uri.EscapeDataString(x.Value) : x.Value)}"));
+            .Select(x => $"{WebUtility.UrlEncode(x.Key)}={(encodeValues ? WebUtility.UrlEncode(x.Value) : x.Value)}"));
     }
 
     private static string HmacSha512(string key, string input)
