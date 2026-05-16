@@ -12,7 +12,7 @@ public class VnPayOptions
     public string Command { get; set; } = "pay";
     public string CurrencyCode { get; set; } = "VND";
     public string Locale { get; set; } = "vn";
-    public string OrderType { get; set; } = "hotel";
+    public string OrderType { get; set; } = "other";
     public int ExpireMinutes { get; set; } = 15;
 }
 
