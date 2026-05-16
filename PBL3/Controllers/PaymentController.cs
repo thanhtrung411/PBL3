@@ -12,11 +12,16 @@ public class PaymentController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly IVnPayService _vnPayService;
+    private readonly IExpiredBookingCleanupService _expiredBookingCleanupService;
 
-    public PaymentController(ApplicationDbContext context, IVnPayService vnPayService)
+    public PaymentController(
+        ApplicationDbContext context,
+        IVnPayService vnPayService,
+        IExpiredBookingCleanupService expiredBookingCleanupService)
     {
         _context = context;
         _vnPayService = vnPayService;
+        _expiredBookingCleanupService = expiredBookingCleanupService;
     }
 
     [HttpGet]
@@ -28,6 +33,8 @@ public class PaymentController : Controller
             return RedirectToAction("Index", "Booking");
         }
 
+        await _expiredBookingCleanupService.CancelExpiredOnlinePaymentsAsync();
+
         var bookingCode = id.Trim();
         var invoice = await _context.HoaDons
             .AsNoTracking()
@@ -37,6 +44,13 @@ public class PaymentController : Controller
         {
             TempData["Error"] = "Không tìm thấy hóa đơn thanh toán.";
             return RedirectToAction("Success", "Booking", new { id = bookingCode });
+        }
+
+        if (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
+            invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy)
+        {
+            TempData["Error"] = "Đơn đặt phòng đã quá hạn thanh toán và đã được hủy. Vui lòng đặt phòng lại.";
+            return RedirectToAction("Index", "Booking");
         }
 
         if (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaThanhToan)
@@ -50,7 +64,7 @@ public class PaymentController : Controller
         {
             BookingCode = bookingCode,
             Amount = invoice.TongThanhToan,
-            OrderInfo = $"Thanh toán đặt phòng {bookingCode}",
+            OrderInfo = $"Thanh toan dat phong {bookingCode}",
             IpAddress = GetClientIpAddress(),
             ReturnUrl = returnUrl
         });
@@ -75,22 +89,7 @@ public class PaymentController : Controller
     public async Task<IActionResult> VnPayIpn()
     {
         var result = await _vnPayService.ProcessCallbackAsync(Request.Query);
-        if (!result.IsValidSignature)
-        {
-            return Json(new { RspCode = "97", Message = "Invalid signature" });
-        }
-
-        if (string.IsNullOrWhiteSpace(result.BookingCode))
-        {
-            return Json(new { RspCode = "01", Message = "Order not found" });
-        }
-
-        if (!result.Success)
-        {
-            return Json(new { RspCode = "00", Message = "Confirm success" });
-        }
-
-        return Json(new { RspCode = "00", Message = "Confirm success" });
+        return Json(new { RspCode = result.IpnResponseCode, Message = result.IpnMessage });
     }
 
     private string GetClientIpAddress()

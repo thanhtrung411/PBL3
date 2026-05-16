@@ -39,14 +39,14 @@ public class VnPayService : IVnPayService
             return Fail("Số tiền thanh toán không hợp lệ.");
         }
 
-        var now = DateTime.Now;
+        var now = GetVietnamTime();
         var parameters = new SortedDictionary<string, string>(StringComparer.Ordinal)
         {
             ["vnp_Version"] = _options.Version,
             ["vnp_Command"] = _options.Command,
             ["vnp_TmnCode"] = _options.TmnCode,
             ["vnp_Amount"] = ((long)(request.Amount * 100)).ToString(CultureInfo.InvariantCulture),
-            ["vnp_CreateDate"] = now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture),
+            ["vnp_CreateDate"] = FormatVnPayDate(now),
             ["vnp_CurrCode"] = _options.CurrencyCode,
             ["vnp_IpAddr"] = string.IsNullOrWhiteSpace(request.IpAddress) ? "127.0.0.1" : request.IpAddress,
             ["vnp_Locale"] = _options.Locale,
@@ -58,7 +58,7 @@ public class VnPayService : IVnPayService
 
         if (_options.ExpireMinutes > 0)
         {
-            parameters["vnp_ExpireDate"] = now.AddMinutes(_options.ExpireMinutes).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            parameters["vnp_ExpireDate"] = FormatVnPayDate(now.AddMinutes(_options.ExpireMinutes));
         }
 
         var query = BuildQuery(parameters, encodeValues: true);
@@ -106,6 +106,8 @@ public class VnPayService : IVnPayService
         {
             IsValidSignature = isValid,
             Success = success,
+            IpnResponseCode = isValid ? "00" : "97",
+            IpnMessage = isValid ? "Confirm success" : "Invalid signature",
             BookingCode = data.GetValueOrDefault("vnp_TxnRef", "").Trim(),
             ResponseCode = responseCode,
             TransactionStatus = transactionStatus,
@@ -122,6 +124,8 @@ public class VnPayService : IVnPayService
         if (!result.IsValidSignature || string.IsNullOrWhiteSpace(result.BookingCode))
         {
             result.Message = "Chữ ký thanh toán không hợp lệ.";
+            result.IpnResponseCode = result.IsValidSignature ? "01" : "97";
+            result.IpnMessage = result.IsValidSignature ? "Order not found" : "Invalid signature";
             return result;
         }
 
@@ -131,15 +135,36 @@ public class VnPayService : IVnPayService
         if (invoice == null)
         {
             result.Message = "Không tìm thấy hóa đơn tương ứng.";
+            result.IpnResponseCode = "01";
+            result.IpnMessage = "Order not found";
             return result;
         }
 
-        if (result.Success && invoice.TrangThai != DomainValues.HoaDonTrangThai.DaThanhToan)
+        if (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
+            invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy)
+        {
+            result.Success = false;
+            result.Message = "Đơn đặt phòng đã quá hạn thanh toán và đã được hủy.";
+            result.IpnResponseCode = "02";
+            result.IpnMessage = "Order already processed";
+            return result;
+        }
+
+        if (result.Success && invoice.TrangThai == DomainValues.HoaDonTrangThai.DaThanhToan)
+        {
+            result.IpnResponseCode = "02";
+            result.IpnMessage = "Order already confirmed";
+            return result;
+        }
+
+        if (result.Success)
         {
             if (invoice.TongThanhToan > 0 && result.Amount != invoice.TongThanhToan)
             {
                 result.Success = false;
                 result.Message = "Số tiền thanh toán không khớp với hóa đơn.";
+                result.IpnResponseCode = "04";
+                result.IpnMessage = "Invalid amount";
                 return result;
             }
 
@@ -151,6 +176,9 @@ public class VnPayService : IVnPayService
             invoice.GhiChu = AppendNote(invoice.GhiChu, $"VNPay: {result.TransactionNo}; Bank: {result.BankCode}");
             await _context.SaveChangesAsync();
         }
+
+        result.IpnResponseCode = "00";
+        result.IpnMessage = "Confirm success";
 
         return result;
     }
@@ -173,6 +201,25 @@ public class VnPayService : IVnPayService
         var inputBytes = Encoding.UTF8.GetBytes(input);
         using var hmac = new HMACSHA512(keyBytes);
         return Convert.ToHexString(hmac.ComputeHash(inputBytes)).ToLowerInvariant();
+    }
+
+    private static DateTime GetVietnamTime()
+    {
+        try
+        {
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+        }
+        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+        }
+    }
+
+    private static string FormatVnPayDate(DateTime value)
+    {
+        return value.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
     }
 
     private static string AppendNote(string? current, string next)

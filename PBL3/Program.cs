@@ -78,6 +78,8 @@ builder.Services.AddScoped<IHoaDonService, HoaDonService>();
 builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
 builder.Services.AddScoped<IPublicBookingService, PublicBookingService>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
+builder.Services.AddScoped<IExpiredBookingCleanupService, ExpiredBookingCleanupService>();
+builder.Services.AddHostedService<ExpiredBookingCleanupHostedService>();
 
 var app = builder.Build();
 

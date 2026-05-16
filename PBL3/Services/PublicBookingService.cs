@@ -17,6 +17,7 @@ public class PublicBookingService : IPublicBookingService
     private readonly IBangGiaPhongService _bangGiaPhongService;
     private readonly IChiTietHoaDonService _chiTietHoaDonService;
     private readonly IHoaDonService _hoaDonService;
+    private readonly IExpiredBookingCleanupService _expiredBookingCleanupService;
     private readonly VnPayOptions _vnPayOptions;
 
     public PublicBookingService(
@@ -26,6 +27,7 @@ public class PublicBookingService : IPublicBookingService
         IBangGiaPhongService bangGiaPhongService,
         IChiTietHoaDonService chiTietHoaDonService,
         IHoaDonService hoaDonService,
+        IExpiredBookingCleanupService expiredBookingCleanupService,
         IOptions<VnPayOptions> vnPayOptions)
     {
         _context = context;
@@ -34,6 +36,7 @@ public class PublicBookingService : IPublicBookingService
         _bangGiaPhongService = bangGiaPhongService;
         _chiTietHoaDonService = chiTietHoaDonService;
         _hoaDonService = hoaDonService;
+        _expiredBookingCleanupService = expiredBookingCleanupService;
         _vnPayOptions = vnPayOptions.Value;
     }
 
@@ -54,6 +57,8 @@ public class PublicBookingService : IPublicBookingService
 
         try
         {
+            await _expiredBookingCleanupService.CancelExpiredOnlinePaymentsAsync();
+
             var allRoomTypes = await _context.LoaiPhongs
                 .AsNoTracking()
                 .OrderBy(x => x.MaLoaiPhong)
@@ -304,6 +309,8 @@ public class PublicBookingService : IPublicBookingService
 
     public async Task<PublicBookingResult> ConfirmBookingAsync(CheckoutViewModel model)
     {
+        await _expiredBookingCleanupService.CancelExpiredOnlinePaymentsAsync();
+
         var (checkIn, checkOut) = NormalizeDates(model.CheckIn, model.CheckOut);
         var checkInDate = DateOnly.FromDateTime(checkIn);
         var checkOutDate = DateOnly.FromDateTime(checkOut);
@@ -363,6 +370,24 @@ public class PublicBookingService : IPublicBookingService
             return Fail("Combo phòng bạn chọn chưa đủ sức chứa cho số khách.");
         }
 
+        var nights = Math.Max(checkOutDate.DayNumber - checkInDate.DayNumber, 1);
+        var roomTotal = roomLines.Sum(x => x.PricePerNight * x.Rooms * nights);
+
+        if (model.PaymentMethod == PaymentMethods.VnPay)
+        {
+            var pendingBookingCode = await FindReusablePendingOnlineBookingAsync(
+                model,
+                checkInDate,
+                checkOutDate,
+                roomLines,
+                roomTotal);
+
+            if (!string.IsNullOrWhiteSpace(pendingBookingCode))
+            {
+                return new PublicBookingResult { Success = true, BookingCode = pendingBookingCode };
+            }
+        }
+
         var executionStrategy = _context.Database.CreateExecutionStrategy();
         return await executionStrategy.ExecuteAsync(async () =>
         {
@@ -411,8 +436,6 @@ public class PublicBookingService : IPublicBookingService
                 return Fail("Không tìm thấy hóa đơn vừa tạo. Vui lòng liên hệ lễ tân để kiểm tra lại đặt phòng.");
             }
 
-            var nights = Math.Max(checkOutDate.DayNumber - checkInDate.DayNumber, 1);
-            var roomTotal = roomLines.Sum(x => x.PricePerNight * x.Rooms * nights);
             invoice.TongTienPhong = roomTotal;
             invoice.TongTienDichVu = 0;
             invoice.TienDatCoc = 0;
@@ -530,6 +553,55 @@ public class PublicBookingService : IPublicBookingService
             RoomSummary = roomDetail?.NoiDung ?? "Thông tin phòng đang được cập nhật",
             TotalAmount = booking.HoaDon?.TongThanhToan ?? 0
         };
+    }
+
+    private async Task<string?> FindReusablePendingOnlineBookingAsync(
+        CheckoutViewModel model,
+        DateOnly checkInDate,
+        DateOnly checkOutDate,
+        List<CheckoutRoomLineViewModel> roomLines,
+        decimal roomTotal)
+    {
+        var cccd = model.Cccd.Trim();
+        var phoneNumber = model.PhoneNumber.Trim();
+        var cutoff = DateTime.Now.AddMinutes(-Math.Clamp(_vnPayOptions.ExpireMinutes, 1, 1440));
+        var expectedSelection = roomLines
+            .GroupBy(x => NormalizeCode(x.RoomTypeId), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.Sum(line => line.Rooms), StringComparer.OrdinalIgnoreCase);
+
+        var candidates = await _context.DatPhongs
+            .AsNoTracking()
+            .Include(x => x.HoaDon)
+            .ThenInclude(x => x!.ChiTietHoaDons)
+            .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.GiuCho &&
+                        x.NgayDat >= cutoff &&
+                        x.NgayNhanPhong == checkInDate &&
+                        x.NgayTraPhong == checkOutDate &&
+                        x.CccdSnapshot == cccd &&
+                        x.SdtSnapshot == phoneNumber &&
+                        x.HoaDon != null &&
+                        x.HoaDon.TrangThai == DomainValues.HoaDonTrangThai.ChuaThanhToan &&
+                        x.HoaDon.PhuongThucThanhToan == DomainValues.PhuongThucThanhToan.Qr &&
+                        x.HoaDon.TongThanhToan == roomTotal)
+            .OrderByDescending(x => x.NgayDat)
+            .ToListAsync();
+
+        foreach (var candidate in candidates)
+        {
+            var candidateSelection = candidate.HoaDon!.ChiTietHoaDons
+                .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                            x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
+                            !string.IsNullOrWhiteSpace(x.MaLoaiPhong))
+                .GroupBy(x => NormalizeCode(x.MaLoaiPhong), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(x => x.Key, x => x.Count(), StringComparer.OrdinalIgnoreCase);
+
+            if (SelectionsMatch(expectedSelection, candidateSelection))
+            {
+                return candidate.MaDatPhong.Trim();
+            }
+        }
+
+        return null;
     }
 
     private async Task<KhachHang?> UpsertCustomerAsync(CheckoutViewModel model)
@@ -760,6 +832,26 @@ public class PublicBookingService : IPublicBookingService
             .Where(x => !string.IsNullOrWhiteSpace(x.Key) && x.Value > 0)
             .OrderBy(x => x.Key)
             .Select(x => $"{NormalizeCode(x.Key)}:{Math.Clamp(x.Value, 1, 20)}"));
+    }
+
+    private static bool SelectionsMatch(
+        Dictionary<string, int> expected,
+        Dictionary<string, int> actual)
+    {
+        if (expected.Count != actual.Count)
+        {
+            return false;
+        }
+
+        foreach (var item in expected)
+        {
+            if (!actual.TryGetValue(item.Key, out var value) || value != item.Value)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static decimal GetFallbackPrice(string roomName)
