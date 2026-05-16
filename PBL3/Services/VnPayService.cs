@@ -15,15 +15,18 @@ public class VnPayService : IVnPayService
     private readonly ApplicationDbContext _context;
     private readonly VnPayOptions _options;
     private readonly ILogger<VnPayService> _logger;
+    private readonly IWebHostEnvironment _environment;
 
     public VnPayService(
         ApplicationDbContext context,
         IOptions<VnPayOptions> options,
-        ILogger<VnPayService> logger)
+        ILogger<VnPayService> logger,
+        IWebHostEnvironment environment)
     {
         _context = context;
         _options = options.Value;
         _logger = logger;
+        _environment = environment;
     }
 
     public PaymentStartResult CreatePaymentUrl(VnPayPaymentRequest request)
@@ -78,6 +81,7 @@ public class VnPayService : IVnPayService
             request.Amount,
             request.ReturnUrl,
             hashData);
+        WriteDebugLog(request, tmnCode, hashSecret, hashData, secureHash);
 
         return new PaymentStartResult
         {
@@ -269,6 +273,52 @@ public class VnPayService : IVnPayService
         return new string(value
             .Where(c => !char.IsWhiteSpace(c) && c != '\u200b' && c != '\ufeff')
             .ToArray());
+    }
+
+    private void WriteDebugLog(
+        VnPayPaymentRequest request,
+        string tmnCode,
+        string hashSecret,
+        string hashData,
+        string secureHash)
+    {
+        try
+        {
+            var webRootPath = _environment.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRootPath))
+            {
+                webRootPath = Path.Combine(_environment.ContentRootPath, "wwwroot");
+            }
+
+            Directory.CreateDirectory(webRootPath);
+            var debugPath = Path.Combine(webRootPath, "vnpay-debug.log");
+            var hashSecretFingerprint = Sha256(hashSecret)[..16];
+            var lines = new[]
+            {
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] VNPay request",
+                $"BookingCode={request.BookingCode}",
+                $"Amount={request.Amount.ToString(CultureInfo.InvariantCulture)}",
+                $"TmnCode={tmnCode}",
+                $"HashSecretLength={hashSecret.Length}",
+                $"HashSecretSha256Prefix={hashSecretFingerprint}",
+                $"ReturnUrl={request.ReturnUrl}",
+                $"HashData={hashData}",
+                $"SecureHash={secureHash}",
+                ""
+            };
+
+            File.AppendAllLines(debugPath, lines);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not write VNPay debug log.");
+        }
+    }
+
+    private static string Sha256(string input)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
     private static DateTime GetVietnamTime()
