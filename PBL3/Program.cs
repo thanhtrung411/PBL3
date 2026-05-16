@@ -165,7 +165,7 @@ static void LoadDotEnv(string directory)
 
         var key = line[..separatorIndex].Trim();
         var value = line[(separatorIndex + 1)..].Trim();
-        if (key.Length == 0 || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key)))
+        if (key.Length == 0)
         {
             continue;
         }
