@@ -14,11 +14,16 @@ public class VnPayService : IVnPayService
 {
     private readonly ApplicationDbContext _context;
     private readonly VnPayOptions _options;
+    private readonly ILogger<VnPayService> _logger;
 
-    public VnPayService(ApplicationDbContext context, IOptions<VnPayOptions> options)
+    public VnPayService(
+        ApplicationDbContext context,
+        IOptions<VnPayOptions> options,
+        ILogger<VnPayService> logger)
     {
         _context = context;
         _options = options.Value;
+        _logger = logger;
     }
 
     public PaymentStartResult CreatePaymentUrl(VnPayPaymentRequest request)
@@ -43,7 +48,7 @@ public class VnPayService : IVnPayService
         }
 
         var now = GetVietnamTime();
-        var parameters = new SortedDictionary<string, string>(StringComparer.Ordinal)
+        var parameters = new SortedList<string, string>(new VnPayCompare())
         {
             ["vnp_Version"] = _options.Version,
             ["vnp_Command"] = _options.Command,
@@ -64,9 +69,16 @@ public class VnPayService : IVnPayService
             parameters["vnp_ExpireDate"] = FormatVnPayDate(now.AddMinutes(_options.ExpireMinutes));
         }
 
-        var query = BuildQuery(parameters, encodeValues: true);
-        var hashData = BuildQuery(parameters, encodeValues: true);
+        var (query, hashData) = BuildRequestQuery(parameters);
         var secureHash = HmacSha512(hashSecret, hashData);
+        _logger.LogInformation(
+            "VNPay request created. TxnRef={TxnRef}; TmnCode={TmnCode}; Amount={Amount}; ReturnUrl={ReturnUrl}; HashData={HashData}",
+            request.BookingCode,
+            tmnCode,
+            request.Amount,
+            request.ReturnUrl,
+            hashData);
+
         return new PaymentStartResult
         {
             Success = true,
@@ -85,7 +97,7 @@ public class VnPayService : IVnPayService
         var receivedHash = query.TryGetValue("vnp_SecureHash", out var hashValues)
             ? hashValues.ToString()
             : string.Empty;
-        var hashData = BuildQuery(new SortedDictionary<string, string>(data, StringComparer.Ordinal), encodeValues: true);
+        var hashData = BuildResponseHashData(new SortedList<string, string>(data, new VnPayCompare()));
         var hashSecret = NormalizeSecretValue(_options.HashSecret);
         var expectedHash = string.IsNullOrWhiteSpace(hashSecret)
             ? string.Empty
@@ -192,11 +204,51 @@ public class VnPayService : IVnPayService
         return new PaymentStartResult { Success = false, ErrorMessage = message };
     }
 
-    private static string BuildQuery(SortedDictionary<string, string> parameters, bool encodeValues)
+    private static (string Query, string HashData) BuildRequestQuery(SortedList<string, string> parameters)
     {
-        return string.Join("&", parameters
-            .Where(x => !string.IsNullOrWhiteSpace(x.Value))
-            .Select(x => $"{WebUtility.UrlEncode(x.Key)}={(encodeValues ? WebUtility.UrlEncode(x.Value) : x.Value)}"));
+        var data = new StringBuilder();
+        foreach (var parameter in parameters)
+        {
+            if (!string.IsNullOrEmpty(parameter.Value))
+            {
+                data.Append(WebUtility.UrlEncode(parameter.Key));
+                data.Append('=');
+                data.Append(WebUtility.UrlEncode(parameter.Value));
+                data.Append('&');
+            }
+        }
+
+        var queryString = data.ToString();
+        var hashData = queryString.Length > 0
+            ? queryString.Remove(queryString.Length - 1, 1)
+            : queryString;
+
+        return (queryString, hashData);
+    }
+
+    private static string BuildResponseHashData(SortedList<string, string> parameters)
+    {
+        parameters.Remove("vnp_SecureHashType");
+        parameters.Remove("vnp_SecureHash");
+
+        var data = new StringBuilder();
+        foreach (var parameter in parameters)
+        {
+            if (!string.IsNullOrEmpty(parameter.Value))
+            {
+                data.Append(WebUtility.UrlEncode(parameter.Key));
+                data.Append('=');
+                data.Append(WebUtility.UrlEncode(parameter.Value));
+                data.Append('&');
+            }
+        }
+
+        if (data.Length > 0)
+        {
+            data.Remove(data.Length - 1, 1);
+        }
+
+        return data.ToString();
     }
 
     private static string HmacSha512(string key, string input)
@@ -247,5 +299,29 @@ public class VnPayService : IVnPayService
 
         var combined = $"{current}; {next}";
         return combined.Length <= 255 ? combined : combined[..255];
+    }
+
+    private sealed class VnPayCompare : IComparer<string>
+    {
+        public int Compare(string? x, string? y)
+        {
+            if (x == y)
+            {
+                return 0;
+            }
+
+            if (x == null)
+            {
+                return -1;
+            }
+
+            if (y == null)
+            {
+                return 1;
+            }
+
+            var comparer = CompareInfo.GetCompareInfo("en-US");
+            return comparer.Compare(x, y, CompareOptions.Ordinal);
+        }
     }
 }

@@ -8,6 +8,7 @@ public class VnPayOptions
     public string PaymentUrl { get; set; } = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     public string TmnCode { get; set; } = "";
     public string HashSecret { get; set; } = "";
+    public string ReturnUrl { get; set; } = "";
     public string Version { get; set; } = "2.1.0";
     public string Command { get; set; } = "pay";
     public string CurrencyCode { get; set; } = "VND";

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using PBL3.Data;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
@@ -13,15 +14,18 @@ public class PaymentController : Controller
     private readonly ApplicationDbContext _context;
     private readonly IVnPayService _vnPayService;
     private readonly IExpiredBookingCleanupService _expiredBookingCleanupService;
+    private readonly VnPayOptions _vnPayOptions;
 
     public PaymentController(
         ApplicationDbContext context,
         IVnPayService vnPayService,
-        IExpiredBookingCleanupService expiredBookingCleanupService)
+        IExpiredBookingCleanupService expiredBookingCleanupService,
+        IOptions<VnPayOptions> vnPayOptions)
     {
         _context = context;
         _vnPayService = vnPayService;
         _expiredBookingCleanupService = expiredBookingCleanupService;
+        _vnPayOptions = vnPayOptions.Value;
     }
 
     [HttpGet]
@@ -59,7 +63,9 @@ public class PaymentController : Controller
             return RedirectToAction("Success", "Booking", new { id = bookingCode });
         }
 
-        var returnUrl = Url.Action(nameof(VnPayReturn), "Payment", null, Request.Scheme, Request.Host.Value) ?? "";
+        var returnUrl = string.IsNullOrWhiteSpace(_vnPayOptions.ReturnUrl)
+            ? Url.Action(nameof(VnPayReturn), "Payment", null, Request.Scheme, Request.Host.Value) ?? ""
+            : _vnPayOptions.ReturnUrl.Trim();
         var result = _vnPayService.CreatePaymentUrl(new VnPayPaymentRequest
         {
             BookingCode = bookingCode,
