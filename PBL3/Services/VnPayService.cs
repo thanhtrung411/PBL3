@@ -4,6 +4,7 @@ using PBL3.Data;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 using System.Globalization;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -13,11 +14,19 @@ public class VnPayService : IVnPayService
 {
     private readonly ApplicationDbContext _context;
     private readonly VnPayOptions _options;
+    private readonly ILogger<VnPayService> _logger;
+    private readonly IWebHostEnvironment _environment;
 
-    public VnPayService(ApplicationDbContext context, IOptions<VnPayOptions> options)
+    public VnPayService(
+        ApplicationDbContext context,
+        IOptions<VnPayOptions> options,
+        ILogger<VnPayService> logger,
+        IWebHostEnvironment environment)
     {
         _context = context;
         _options = options.Value;
+        _logger = logger;
+        _environment = environment;
     }
 
     public PaymentStartResult CreatePaymentUrl(VnPayPaymentRequest request)
@@ -27,9 +36,11 @@ public class VnPayService : IVnPayService
             return Fail("Cổng thanh toán VNPay hiện chưa được bật.");
         }
 
+        var tmnCode = NormalizeSecretValue(_options.TmnCode);
+        var hashSecret = NormalizeSecretValue(_options.HashSecret);
         if (string.IsNullOrWhiteSpace(_options.PaymentUrl) ||
-            string.IsNullOrWhiteSpace(_options.TmnCode) ||
-            string.IsNullOrWhiteSpace(_options.HashSecret))
+            string.IsNullOrWhiteSpace(tmnCode) ||
+            string.IsNullOrWhiteSpace(hashSecret))
         {
             return Fail("Thiếu cấu hình VNPay. Vui lòng cấu hình Payment:VnPay:TmnCode và Payment:VnPay:HashSecret.");
         }
@@ -39,31 +50,39 @@ public class VnPayService : IVnPayService
             return Fail("Số tiền thanh toán không hợp lệ.");
         }
 
-        var now = DateTime.Now;
-        var parameters = new SortedDictionary<string, string>(StringComparer.Ordinal)
+        var now = GetVietnamTime();
+        var parameters = new SortedList<string, string>(new VnPayCompare())
         {
             ["vnp_Version"] = _options.Version,
             ["vnp_Command"] = _options.Command,
-            ["vnp_TmnCode"] = _options.TmnCode,
+            ["vnp_TmnCode"] = tmnCode,
             ["vnp_Amount"] = ((long)(request.Amount * 100)).ToString(CultureInfo.InvariantCulture),
-            ["vnp_CreateDate"] = now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture),
+            ["vnp_CreateDate"] = FormatVnPayDate(now),
             ["vnp_CurrCode"] = _options.CurrencyCode,
             ["vnp_IpAddr"] = string.IsNullOrWhiteSpace(request.IpAddress) ? "127.0.0.1" : request.IpAddress,
             ["vnp_Locale"] = _options.Locale,
             ["vnp_OrderInfo"] = string.IsNullOrWhiteSpace(request.OrderInfo) ? $"Thanh toan dat phong {request.BookingCode}" : request.OrderInfo,
-            ["vnp_OrderType"] = _options.OrderType,
+            ["vnp_OrderType"] = string.IsNullOrWhiteSpace(_options.OrderType) ? "other" : _options.OrderType.Trim(),
             ["vnp_ReturnUrl"] = request.ReturnUrl,
             ["vnp_TxnRef"] = request.BookingCode.Trim()
         };
 
         if (_options.ExpireMinutes > 0)
         {
-            parameters["vnp_ExpireDate"] = now.AddMinutes(_options.ExpireMinutes).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            parameters["vnp_ExpireDate"] = FormatVnPayDate(now.AddMinutes(_options.ExpireMinutes));
         }
 
-        var query = BuildQuery(parameters, encodeValues: true);
-        var hashData = BuildQuery(parameters, encodeValues: true);
-        var secureHash = HmacSha512(_options.HashSecret, hashData);
+        var (query, hashData) = BuildRequestQuery(parameters);
+        var secureHash = HmacSha512(hashSecret, hashData);
+        _logger.LogInformation(
+            "VNPay request created. TxnRef={TxnRef}; TmnCode={TmnCode}; Amount={Amount}; ReturnUrl={ReturnUrl}; HashData={HashData}",
+            request.BookingCode,
+            tmnCode,
+            request.Amount,
+            request.ReturnUrl,
+            hashData);
+        WriteDebugLog(request, tmnCode, hashSecret, hashData, secureHash);
+
         return new PaymentStartResult
         {
             Success = true,
@@ -82,10 +101,11 @@ public class VnPayService : IVnPayService
         var receivedHash = query.TryGetValue("vnp_SecureHash", out var hashValues)
             ? hashValues.ToString()
             : string.Empty;
-        var hashData = BuildQuery(new SortedDictionary<string, string>(data, StringComparer.Ordinal), encodeValues: true);
-        var expectedHash = string.IsNullOrWhiteSpace(_options.HashSecret)
+        var hashData = BuildResponseHashData(new SortedList<string, string>(data, new VnPayCompare()));
+        var hashSecret = NormalizeSecretValue(_options.HashSecret);
+        var expectedHash = string.IsNullOrWhiteSpace(hashSecret)
             ? string.Empty
-            : HmacSha512(_options.HashSecret, hashData);
+            : HmacSha512(hashSecret, hashData);
         var isValid = !string.IsNullOrWhiteSpace(receivedHash) &&
                       CryptographicOperations.FixedTimeEquals(
                           Encoding.UTF8.GetBytes(receivedHash.ToUpperInvariant()),
@@ -106,6 +126,8 @@ public class VnPayService : IVnPayService
         {
             IsValidSignature = isValid,
             Success = success,
+            IpnResponseCode = isValid ? "00" : "97",
+            IpnMessage = isValid ? "Confirm success" : "Invalid signature",
             BookingCode = data.GetValueOrDefault("vnp_TxnRef", "").Trim(),
             ResponseCode = responseCode,
             TransactionStatus = transactionStatus,
@@ -122,6 +144,8 @@ public class VnPayService : IVnPayService
         if (!result.IsValidSignature || string.IsNullOrWhiteSpace(result.BookingCode))
         {
             result.Message = "Chữ ký thanh toán không hợp lệ.";
+            result.IpnResponseCode = result.IsValidSignature ? "01" : "97";
+            result.IpnMessage = result.IsValidSignature ? "Order not found" : "Invalid signature";
             return result;
         }
 
@@ -131,15 +155,36 @@ public class VnPayService : IVnPayService
         if (invoice == null)
         {
             result.Message = "Không tìm thấy hóa đơn tương ứng.";
+            result.IpnResponseCode = "01";
+            result.IpnMessage = "Order not found";
             return result;
         }
 
-        if (result.Success && invoice.TrangThai != DomainValues.HoaDonTrangThai.DaThanhToan)
+        if (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
+            invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy)
+        {
+            result.Success = false;
+            result.Message = "Đơn đặt phòng đã quá hạn thanh toán và đã được hủy.";
+            result.IpnResponseCode = "02";
+            result.IpnMessage = "Order already processed";
+            return result;
+        }
+
+        if (result.Success && invoice.TrangThai == DomainValues.HoaDonTrangThai.DaThanhToan)
+        {
+            result.IpnResponseCode = "02";
+            result.IpnMessage = "Order already confirmed";
+            return result;
+        }
+
+        if (result.Success)
         {
             if (invoice.TongThanhToan > 0 && result.Amount != invoice.TongThanhToan)
             {
                 result.Success = false;
                 result.Message = "Số tiền thanh toán không khớp với hóa đơn.";
+                result.IpnResponseCode = "04";
+                result.IpnMessage = "Invalid amount";
                 return result;
             }
 
@@ -152,6 +197,9 @@ public class VnPayService : IVnPayService
             await _context.SaveChangesAsync();
         }
 
+        result.IpnResponseCode = "00";
+        result.IpnMessage = "Confirm success";
+
         return result;
     }
 
@@ -160,11 +208,51 @@ public class VnPayService : IVnPayService
         return new PaymentStartResult { Success = false, ErrorMessage = message };
     }
 
-    private static string BuildQuery(SortedDictionary<string, string> parameters, bool encodeValues)
+    private static (string Query, string HashData) BuildRequestQuery(SortedList<string, string> parameters)
     {
-        return string.Join("&", parameters
-            .Where(x => !string.IsNullOrWhiteSpace(x.Value))
-            .Select(x => $"{Uri.EscapeDataString(x.Key)}={(encodeValues ? Uri.EscapeDataString(x.Value) : x.Value)}"));
+        var data = new StringBuilder();
+        foreach (var parameter in parameters)
+        {
+            if (!string.IsNullOrEmpty(parameter.Value))
+            {
+                data.Append(WebUtility.UrlEncode(parameter.Key));
+                data.Append('=');
+                data.Append(WebUtility.UrlEncode(parameter.Value));
+                data.Append('&');
+            }
+        }
+
+        var queryString = data.ToString();
+        var hashData = queryString.Length > 0
+            ? queryString.Remove(queryString.Length - 1, 1)
+            : queryString;
+
+        return (queryString, hashData);
+    }
+
+    private static string BuildResponseHashData(SortedList<string, string> parameters)
+    {
+        parameters.Remove("vnp_SecureHashType");
+        parameters.Remove("vnp_SecureHash");
+
+        var data = new StringBuilder();
+        foreach (var parameter in parameters)
+        {
+            if (!string.IsNullOrEmpty(parameter.Value))
+            {
+                data.Append(WebUtility.UrlEncode(parameter.Key));
+                data.Append('=');
+                data.Append(WebUtility.UrlEncode(parameter.Value));
+                data.Append('&');
+            }
+        }
+
+        if (data.Length > 0)
+        {
+            data.Remove(data.Length - 1, 1);
+        }
+
+        return data.ToString();
     }
 
     private static string HmacSha512(string key, string input)
@@ -173,6 +261,83 @@ public class VnPayService : IVnPayService
         var inputBytes = Encoding.UTF8.GetBytes(input);
         using var hmac = new HMACSHA512(keyBytes);
         return Convert.ToHexString(hmac.ComputeHash(inputBytes)).ToLowerInvariant();
+    }
+
+    private static string NormalizeSecretValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return new string(value
+            .Where(c => !char.IsWhiteSpace(c) && c != '\u200b' && c != '\ufeff')
+            .ToArray());
+    }
+
+    private void WriteDebugLog(
+        VnPayPaymentRequest request,
+        string tmnCode,
+        string hashSecret,
+        string hashData,
+        string secureHash)
+    {
+        try
+        {
+            var webRootPath = _environment.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRootPath))
+            {
+                webRootPath = Path.Combine(_environment.ContentRootPath, "wwwroot");
+            }
+
+            Directory.CreateDirectory(webRootPath);
+            var debugPath = Path.Combine(webRootPath, "vnpay-debug.log");
+            var hashSecretFingerprint = Sha256(hashSecret)[..16];
+            var lines = new[]
+            {
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] VNPay request",
+                $"BookingCode={request.BookingCode}",
+                $"Amount={request.Amount.ToString(CultureInfo.InvariantCulture)}",
+                $"TmnCode={tmnCode}",
+                $"HashSecretLength={hashSecret.Length}",
+                $"HashSecretSha256Prefix={hashSecretFingerprint}",
+                $"ReturnUrl={request.ReturnUrl}",
+                $"HashData={hashData}",
+                $"SecureHash={secureHash}",
+                ""
+            };
+
+            File.AppendAllLines(debugPath, lines);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not write VNPay debug log.");
+        }
+    }
+
+    private static string Sha256(string input)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    private static DateTime GetVietnamTime()
+    {
+        try
+        {
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+        }
+        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+        }
+    }
+
+    private static string FormatVnPayDate(DateTime value)
+    {
+        return value.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
     }
 
     private static string AppendNote(string? current, string next)
@@ -184,5 +349,29 @@ public class VnPayService : IVnPayService
 
         var combined = $"{current}; {next}";
         return combined.Length <= 255 ? combined : combined[..255];
+    }
+
+    private sealed class VnPayCompare : IComparer<string>
+    {
+        public int Compare(string? x, string? y)
+        {
+            if (x == y)
+            {
+                return 0;
+            }
+
+            if (x == null)
+            {
+                return -1;
+            }
+
+            if (y == null)
+            {
+                return 1;
+            }
+
+            var comparer = CompareInfo.GetCompareInfo("en-US");
+            return comparer.Compare(x, y, CompareOptions.Ordinal);
+        }
     }
 }

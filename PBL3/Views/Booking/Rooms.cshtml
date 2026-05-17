@@ -7,6 +7,14 @@
     var checkIn = Model.CheckIn.ToString("yyyy-MM-dd");
     var checkOut = Model.CheckOut.ToString("yyyy-MM-dd");
     var selectedGuests = Model.Guests.ToString();
+    var selectedRooms = Model.NumberOfRooms.ToString();
+    var selectedRoomType = Model.RoomTypeId;
+    var roomTypeOptions = Model.RoomTypeOptions;
+    var requestedRooms = Math.Max(Model.NumberOfRooms, 1);
+    var recommendedRoomCount = Model.RecommendedRooms.Sum(x => x.Rooms);
+    var initialAdults = Math.Clamp(Model.Guests, 1, 80);
+    var initialChildren = 0;
+    var initialRooms = Math.Clamp(Model.NumberOfRooms, 1, 20);
 }
 
 <style>
@@ -103,6 +111,107 @@
     .booking-rooms .form-control[aria-invalid="true"] {
         border-color: var(--hotel-danger);
         box-shadow: 0 0 0 0.2rem rgba(180, 35, 24, 0.1);
+    }
+
+    .booking-rooms .rooms-guest-selector {
+        position: relative;
+    }
+
+    .booking-rooms .guest-summary-button {
+        width: 100%;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid var(--hotel-border);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--hotel-ink);
+        font-weight: 700;
+        text-align: left;
+    }
+
+    .booking-rooms .guest-summary-button span {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .booking-rooms .guest-picker-panel {
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        z-index: 20;
+        display: none;
+        width: min(360px, calc(100vw - 32px));
+        padding: 20px 24px 18px;
+        border: 1px solid rgba(17, 17, 17, 0.1);
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+    }
+
+    .booking-rooms .rooms-guest-selector.is-open .guest-picker-panel {
+        display: block;
+    }
+
+    .booking-rooms .guest-counter-row {
+        display: grid;
+        grid-template-columns: minmax(92px, 1fr) 142px;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 7px;
+    }
+
+    .booking-rooms .guest-counter-label {
+        color: var(--hotel-ink);
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .booking-rooms .guest-counter-control {
+        display: grid;
+        grid-template-columns: 42px 1fr 42px;
+        align-items: center;
+        min-height: 44px;
+        overflow: hidden;
+        border: 1px solid #aeb4bc;
+        border-radius: 4px;
+    }
+
+    .booking-rooms .guest-stepper {
+        min-height: 42px;
+        border: 0;
+        background: transparent;
+        color: #0d6efd;
+        font-size: 24px;
+        line-height: 1;
+    }
+
+    .booking-rooms .guest-stepper:disabled {
+        color: #b8b8b8;
+    }
+
+    .booking-rooms .guest-count-value {
+        color: var(--hotel-ink);
+        font-size: 17px;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .booking-rooms .guest-picker-done {
+        width: 100%;
+        min-height: 46px;
+        margin-top: 14px;
+        border: 1px solid #0d6efd;
+        border-radius: 4px;
+        background: #ffffff;
+        color: #0d6efd;
+        font-size: 16px;
+        font-weight: 800;
     }
 
     .booking-rooms .btn-hotel {
@@ -391,6 +500,11 @@
             display: inline-flex;
             margin-top: 6px;
         }
+
+        .booking-rooms .guest-picker-panel {
+            right: auto;
+            left: 0;
+        }
     }
 
     @@media (max-width: 575.98px) {
@@ -423,6 +537,17 @@
             width: 100%;
             justify-content: center;
         }
+
+        .booking-rooms .guest-picker-panel {
+            position: fixed;
+            top: auto;
+            right: 14px;
+            bottom: 18px;
+            left: 14px;
+            width: auto;
+            max-height: calc(100vh - 36px);
+            overflow-y: auto;
+        }
     }
 </style>
 
@@ -441,15 +566,25 @@
             </div>
 
             <form action="/Booking/Rooms" method="GET" class="row g-3 align-items-end" id="roomsSearchForm">
-                <div class="col-lg-3 col-md-6">
+                <div class="col-xl-2 col-lg-3 col-md-6">
                     <label for="checkInDate" class="form-label">Nhận phòng</label>
                     <input type="date" id="checkInDate" name="checkIn" class="form-control" value="@checkIn" required>
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-xl-2 col-lg-3 col-md-6">
                     <label for="checkOutDate" class="form-label">Trả phòng</label>
                     <input type="date" id="checkOutDate" name="checkOut" class="form-control" value="@checkOut" required>
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-xl-3 col-lg-3 col-md-6">
+                    <label for="roomType" class="form-label">Loại phòng</label>
+                    <select class="form-select" id="roomType" name="roomType">
+                        <option value="">Tất cả loại phòng</option>
+                        @foreach (var roomType in roomTypeOptions)
+                        {
+                            <option value="@roomType.RoomTypeId" selected="@(selectedRoomType == roomType.RoomTypeId)">@roomType.RoomName</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-xl-2 col-lg-3 col-md-6">
                     <label for="guests" class="form-label">Số người</label>
                     <select class="form-select" id="guests" name="guests">
                         @if (selectedGuests == "1")
@@ -489,7 +624,16 @@
                         }
                     </select>
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-xl-2 col-lg-3 col-md-6">
+                    <label for="rooms" class="form-label">Số phòng</label>
+                    <select class="form-select" id="rooms" name="rooms">
+                        @for (var roomCount = 1; roomCount <= 20; roomCount++)
+                        {
+                            <option value="@roomCount" selected="@(selectedRooms == roomCount.ToString())">@roomCount phòng</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-xl-2 col-lg-12 col-md-6">
                     <button type="submit" class="btn btn-hotel w-100 py-2" id="roomsSearchButton">
                         <i class="fa fa-search default-icon" aria-hidden="true"></i>
                         <i class="fa fa-spinner fa-spin loading-icon" aria-hidden="true"></i>
@@ -517,6 +661,49 @@
         <strong>Phòng gợi ý cho kỳ nghỉ của bạn</strong>
         <span><i class="fa fa-bed" aria-hidden="true"></i>Hiển thị @Model.Results.Count lựa chọn phù hợp</span>
     </div>
+
+    @if (Model.Results.Any())
+    {
+        <form action="@Url.Action("Checkout", "Booking")" method="get" class="search-card card mb-4 border-0" id="comboCheckoutForm">
+            <input type="hidden" name="checkIn" value="@Model.CheckIn.ToString("yyyy-MM-dd")">
+            <input type="hidden" name="checkOut" value="@Model.CheckOut.ToString("yyyy-MM-dd")">
+            <input type="hidden" name="guests" value="@Model.Guests">
+            <input type="hidden" name="rooms" id="comboRoomsInput" value="@recommendedRoomCount">
+            <input type="hidden" name="roomSelection" id="comboSelectionInput" value="@Model.RoomSelection">
+            <div class="card-body p-4 d-flex flex-wrap justify-content-between gap-3 align-items-center">
+                <div>
+                    <h2 class="h5 fw-bold mb-1">TÃ¹y chá»‰nh combo phÃ²ng</h2>
+                    <p class="text-muted mb-0" id="comboSummary">Chá»n sá»‘ phÃ²ng tá»«ng loáº¡i Ä‘á»ƒ Ä‘á»§ sá»©c chá»©a.</p>
+                </div>
+                <button type="submit" class="btn btn-room px-4" id="comboSubmitButton">Tiáº¿p tá»¥c combo Ä‘Ã£ chá»n</button>
+            </div>
+        </form>
+    }
+
+    @if (Model.RecommendedRooms.Any() && !string.IsNullOrWhiteSpace(Model.RoomSelection))
+    {
+        <section class="search-card card mb-4 border-0">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+                    <div>
+                        <h2 class="h5 fw-bold mb-2">Combo tiết kiệm nhất</h2>
+                        @foreach (var item in Model.RecommendedRooms)
+                        {
+                            <p class="text-muted mb-1">@item.RoomName: @item.Rooms phòng · @item.Guests khách</p>
+                        }
+                        <p class="fw-bold mb-0">@Model.RecommendedRooms.Sum(x => x.LineTotalPerNight).ToString("N0")đ / đêm</p>
+                    </div>
+                    <a href="@Url.Action("Checkout", "Booking", new {
+                        checkIn = Model.CheckIn.ToString("yyyy-MM-dd"),
+                        checkOut = Model.CheckOut.ToString("yyyy-MM-dd"),
+                        guests = Model.Guests,
+                        rooms = recommendedRoomCount,
+                        roomSelection = Model.RoomSelection
+                    })" class="btn btn-room px-4">Chọn combo</a>
+                </div>
+            </div>
+        </section>
+    }
 
     <div class="row g-4 loading-results mb-4" aria-hidden="true">
         <div class="col-lg-4 col-md-6">
@@ -552,10 +739,14 @@
     <div class="row g-4" id="roomResults" aria-live="polite">
         @foreach (var room in Model.Results)
         {
+            var roomsToBook = Math.Min(requestedRooms, Math.Max(room.AvailableRooms, 1));
+            var roomActionText = roomsToBook == requestedRooms
+                ? "Chọn phòng"
+                : $"Chọn {roomsToBook} phòng";
             <div class="col-lg-4 col-md-6 room-result">
                 <article class="room-card card h-100 border-0">
                     <div class="room-media">
-                        <img src="@room.ImageUrl" class="card-img-top" alt="Ảnh phòng @room.RoomName" loading="lazy" onerror="this.src='/images/deluxe-room.jpg';">
+                        <img src="@room.ImageUrl" class="card-img-top" alt="Ảnh phòng @room.RoomName" loading="lazy" onerror="this.src='/images/booking_hero.jpg';">
                         <span class="room-badge">Còn @room.AvailableRooms phòng</span>
                     </div>
                     <div class="card-body d-flex flex-column p-4">
@@ -565,6 +756,10 @@
                             <span aria-hidden="true">&bull;</span>
                             <i class="fa fa-calendar-days me-2 ms-1" aria-hidden="true"></i>@Model.CheckIn.ToString("dd/MM") - @Model.CheckOut.ToString("dd/MM")
                         </p>
+                        @if (room.AvailableRooms < requestedRooms)
+                        {
+                            <p class="small text-muted mb-3">Loại này chỉ còn @room.AvailableRooms phòng, có thể ghép thêm với loại khác.</p>
+                        }
                         <ul class="list-unstyled small mb-4">
                             <li class="room-feature mb-2"><i class="fa fa-wifi room-feature-icon" aria-hidden="true"></i><span>Wifi tốc độ cao miễn phí</span></li>
                             <li class="room-feature mb-2"><i class="fa fa-mug-saucer room-feature-icon" aria-hidden="true"></i><span>Bữa sáng và tiện nghi theo hạng phòng</span></li>
@@ -574,12 +769,15 @@
                             <div>
                                 <span class="price">@room.PricePerNight.ToString("N0")đ</span><br>
                                 <span class="small price-note">/ đêm (VNPay hoặc thanh toán tại khách sạn)</span>
+                                <label class="form-label small mt-3 mb-1" for="comboRooms_@room.RoomTypeId">Số phòng trong combo</label>
+                                <input class="form-control combo-room-count" id="comboRooms_@room.RoomTypeId" type="number" min="0" max="@room.AvailableRooms" value="@room.RecommendedRooms" data-room-type="@room.RoomTypeId" data-capacity="@room.MaxGuests" data-price="@room.PricePerNight.ToString(System.Globalization.CultureInfo.InvariantCulture)">
                             </div>
                             <a href="@Url.Action("Checkout", "Booking", new {
                                 roomId = room.RoomTypeId,
                                 checkIn = Model.CheckIn.ToString("yyyy-MM-dd"),
                                 checkOut = Model.CheckOut.ToString("yyyy-MM-dd"),
-                                guests = Model.Guests
+                                guests = Model.Guests,
+                                rooms = roomsToBook
                             })" class="btn btn-room px-4">Chọn phòng</a>
                         </div>
                     </div>
@@ -600,6 +798,136 @@
         const roomResults = document.querySelectorAll('.room-result');
         const checkInInput = document.getElementById('checkInDate');
         const checkOutInput = document.getElementById('checkOutDate');
+        const comboForm = document.getElementById('comboCheckoutForm');
+        const comboSummary = document.getElementById('comboSummary');
+        const comboSubmitButton = document.getElementById('comboSubmitButton');
+        const comboSelectionInput = document.getElementById('comboSelectionInput');
+        const comboRoomsInput = document.getElementById('comboRoomsInput');
+        const comboRoomInputs = document.querySelectorAll('.combo-room-count');
+        const requiredGuests = Number('@Model.Guests');
+        const searchGuestSelect = document.getElementById('guests');
+        const searchRoomSelect = document.getElementById('rooms');
+        let roomsGuestState = {
+            adults: Math.max(1, Number('@initialAdults')),
+            children: Number('@initialChildren'),
+            rooms: Math.max(1, Number('@initialRooms'))
+        };
+
+        function setupRoomsGuestPicker() {
+            if (!searchGuestSelect || !searchRoomSelect || document.getElementById('roomsGuestSelector')) return;
+
+            searchGuestSelect.closest('[class*="col-"]')?.classList.add('d-none');
+            searchRoomSelect.closest('[class*="col-"]')?.classList.add('d-none');
+            searchGuestSelect.disabled = true;
+            searchRoomSelect.disabled = true;
+
+            const guestInput = document.createElement('input');
+            guestInput.type = 'hidden';
+            guestInput.name = 'guests';
+            guestInput.id = 'roomsGuestHiddenInput';
+
+            const roomsInput = document.createElement('input');
+            roomsInput.type = 'hidden';
+            roomsInput.name = 'rooms';
+            roomsInput.id = 'roomsCountHiddenInput';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'col-xl-3 col-lg-6 col-md-6 rooms-guest-selector';
+            wrapper.id = 'roomsGuestSelector';
+            wrapper.innerHTML = `
+                <label for="roomsGuestSummaryButton" class="form-label">S\u1ed1 ng\u01b0\u1eddi</label>
+                <button class="guest-summary-button" id="roomsGuestSummaryButton" type="button" aria-expanded="false" aria-controls="roomsGuestPickerPanel">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    <span id="roomsGuestSummaryText"></span>
+                    <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                </button>
+                <div class="guest-picker-panel" id="roomsGuestPickerPanel">
+                    <div class="guest-counter-row">
+                        <div class="guest-counter-label">Ng\u01b0\u1eddi l\u1edbn</div>
+                        <div class="guest-counter-control">
+                            <button class="guest-stepper" type="button" data-counter="adults" data-delta="-1">-</button>
+                            <span class="guest-count-value" data-count-for="adults"></span>
+                            <button class="guest-stepper" type="button" data-counter="adults" data-delta="1">+</button>
+                        </div>
+                    </div>
+                    <div class="guest-counter-row">
+                        <div class="guest-counter-label">Tr\u1ebb em</div>
+                        <div class="guest-counter-control">
+                            <button class="guest-stepper" type="button" data-counter="children" data-delta="-1">-</button>
+                            <span class="guest-count-value" data-count-for="children"></span>
+                            <button class="guest-stepper" type="button" data-counter="children" data-delta="1">+</button>
+                        </div>
+                    </div>
+                    <div class="guest-counter-row">
+                        <div class="guest-counter-label">Ph\u00f2ng</div>
+                        <div class="guest-counter-control">
+                            <button class="guest-stepper" type="button" data-counter="rooms" data-delta="-1">-</button>
+                            <span class="guest-count-value" data-count-for="rooms"></span>
+                            <button class="guest-stepper" type="button" data-counter="rooms" data-delta="1">+</button>
+                        </div>
+                    </div>
+                    <button class="guest-picker-done" id="roomsGuestPickerDone" type="button">Xong</button>
+                </div>`;
+
+            wrapper.appendChild(guestInput);
+            wrapper.appendChild(roomsInput);
+            searchRoomSelect.closest('[class*="col-"]')?.after(wrapper);
+
+            const summaryButton = document.getElementById('roomsGuestSummaryButton');
+            const doneButton = document.getElementById('roomsGuestPickerDone');
+            const limits = {
+                adults: { min: 1, max: 80 },
+                children: { min: 0, max: 80 },
+                rooms: { min: 1, max: 20 },
+                totalGuests: 80
+            };
+
+            function updatePicker() {
+                const totalGuests = roomsGuestState.adults + roomsGuestState.children;
+                const childrenText = roomsGuestState.children > 0 ? ` \u00b7 ${roomsGuestState.children} tr\u1ebb em` : '';
+                document.getElementById('roomsGuestSummaryText').textContent =
+                    `${roomsGuestState.adults} ng\u01b0\u1eddi l\u1edbn${childrenText} \u00b7 ${roomsGuestState.rooms} ph\u00f2ng`;
+                guestInput.value = String(totalGuests);
+                roomsInput.value = String(roomsGuestState.rooms);
+                wrapper.querySelectorAll('[data-count-for]').forEach((item) => {
+                    item.textContent = roomsGuestState[item.dataset.countFor];
+                });
+                wrapper.querySelectorAll('.guest-stepper').forEach((button) => {
+                    const name = button.dataset.counter;
+                    const delta = Number(button.dataset.delta);
+                    const value = roomsGuestState[name];
+                    let disabled = delta < 0 ? value <= limits[name].min : value >= limits[name].max;
+                    if ((name === 'adults' || name === 'children') && delta > 0) {
+                        disabled = disabled || totalGuests >= limits.totalGuests;
+                    }
+                    button.disabled = disabled;
+                });
+            }
+
+            summaryButton?.addEventListener('click', () => {
+                wrapper.classList.toggle('is-open');
+                summaryButton.setAttribute('aria-expanded', String(wrapper.classList.contains('is-open')));
+            });
+            doneButton?.addEventListener('click', () => wrapper.classList.remove('is-open'));
+            wrapper.querySelectorAll('.guest-stepper').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const name = button.dataset.counter;
+                    const limit = limits[name];
+                    roomsGuestState[name] = Math.min(limit.max, Math.max(limit.min, roomsGuestState[name] + Number(button.dataset.delta)));
+                    updatePicker();
+                });
+            });
+            document.addEventListener('click', (event) => {
+                if (!wrapper.contains(event.target)) wrapper.classList.remove('is-open');
+            });
+            updatePicker();
+        }
+
+        setupRoomsGuestPicker();
+        comboForm?.querySelector('h2') && (comboForm.querySelector('h2').textContent = 'T\u00f9y ch\u1ec9nh combo ph\u00f2ng');
+        if (comboSubmitButton) {
+            comboSubmitButton.textContent = 'Ti\u1ebfp t\u1ee5c combo \u0111\u00e3 ch\u1ecdn';
+        }
 
         function showError(message) {
             if (errorText) {
@@ -629,6 +957,51 @@
         if (roomResults.length === 0) {
             emptyState.classList.add('is-visible');
         }
+
+        function updateComboSelection() {
+            let rooms = 0;
+            let capacity = 0;
+            let nightlyTotal = 0;
+            const selection = [];
+
+            comboRoomInputs.forEach((input) => {
+                const max = Number(input.max || 0);
+                let count = Math.max(0, Math.min(max, Number(input.value || 0)));
+                input.value = String(count);
+                if (count <= 0) return;
+
+                rooms += count;
+                capacity += count * Number(input.dataset.capacity || 0);
+                nightlyTotal += count * Number(input.dataset.price || 0);
+                selection.push(`${input.dataset.roomType}:${count}`);
+            });
+
+            if (comboSelectionInput) comboSelectionInput.value = selection.join(',');
+            if (comboRoomsInput) comboRoomsInput.value = String(rooms);
+            if (comboSummary) {
+                comboSummary.textContent = rooms === 0
+                    ? 'Ch\u1ecdn s\u1ed1 ph\u00f2ng t\u1eebng lo\u1ea1i \u0111\u1ec3 \u0111\u1ee7 s\u1ee9c ch\u1ee9a.'
+                    : `${rooms} ph\u00f2ng \u00b7 ${capacity >= requiredGuests ? '\u0111\u00e1p \u1ee9ng' : 'ch\u01b0a \u0111\u1ee7'} ${requiredGuests} kh\u00e1ch \u00b7 ${nightlyTotal.toLocaleString('vi-VN')}\u0111 / \u0111\u00eam`;
+            }
+            if (comboSubmitButton) {
+                comboSubmitButton.disabled = rooms <= 0 || capacity < requiredGuests;
+            }
+        }
+
+        comboRoomInputs.forEach((input) => {
+            input.addEventListener('input', updateComboSelection);
+            input.addEventListener('change', updateComboSelection);
+        });
+
+        comboForm?.addEventListener('submit', function (event) {
+            updateComboSelection();
+            if (comboSubmitButton?.disabled) {
+                event.preventDefault();
+                showError('Combo ph\u00f2ng ch\u01b0a \u0111\u1ee7 s\u1ee9c ch\u1ee9a cho s\u1ed1 kh\u00e1ch.');
+            }
+        });
+
+        updateComboSelection();
 
         form?.addEventListener('submit', function (event) {
             clearError();

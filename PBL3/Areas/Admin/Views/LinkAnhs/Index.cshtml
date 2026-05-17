@@ -1,0 +1,54 @@
+@model IEnumerable<PBL3.Models.LinkAnh>
+
+@{
+    ViewData["Title"] = "Danh sách link ảnh";
+}
+
+<div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Danh sách link ảnh</h1>
+        <p class="text-muted mb-0">Quản lý ảnh đại diện và gallery theo mã đối tượng.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">Thêm link ảnh</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Mã ảnh</th>
+                <th>Đối tượng</th>
+                <th>Ảnh</th>
+                <th>Thông tin</th>
+                <th>Thứ tự</th>
+                <th>Đại diện</th>
+                <th>Trạng thái</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="fw-semibold">@item.MaAnh</td>
+                <td>@item.DoiTuong</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="@item.UrlAnh" alt="@item.ThongTin" style="width: 72px; height: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb;" onerror="this.style.display='none';" />
+                        <span class="text-break small">@item.UrlAnh</span>
+                    </div>
+                </td>
+                <td>@item.ThongTin</td>
+                <td>@item.ThuTu</td>
+                <td>@(item.LaAnhDaiDien ? "Có" : "Không")</td>
+                <td>@item.TrangThai</td>
+                <td class="text-nowrap">
+                    <a asp-action="Edit" asp-route-id="@item.MaAnh">Sửa</a> |
+                    <a asp-action="Details" asp-route-id="@item.MaAnh">Chi tiết</a> |
+                    <a asp-action="Delete" asp-route-id="@item.MaAnh">Xóa</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
