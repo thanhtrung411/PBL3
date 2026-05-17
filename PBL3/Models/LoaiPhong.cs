@@ -27,5 +27,8 @@ public partial class LoaiPhong
     public virtual ICollection<BangGiaPhong> BangGiaPhongs { get; set; } = new List<BangGiaPhong>();
 
     [InverseProperty("MaLoaiPhongNavigation")]
+    public virtual ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; } = new List<ChiTietHoaDon>();
+
+    [InverseProperty("MaLoaiPhongNavigation")]
     public virtual ICollection<Phong> Phongs { get; set; } = new List<Phong>();
 }

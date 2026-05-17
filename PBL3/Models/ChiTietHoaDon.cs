@@ -9,6 +9,7 @@ namespace PBL3.Models;
 [Table("ChiTietHoaDon")]
 [Index("MaDv", Name = "IX_CTHD_MaDV")]
 [Index("MaHoaDon", Name = "IX_CTHD_MaHoaDon")]
+[Index("MaLoaiPhong", Name = "IX_CTHD_MaLoaiPhong")]
 [Index("MaPhong", Name = "IX_CTHD_MaPhong")]
 [Index("NgayApDung", Name = "IX_CTHD_NgayApDung")]
 public partial class ChiTietHoaDon
@@ -29,6 +30,10 @@ public partial class ChiTietHoaDon
     [StringLength(10)]
     [Unicode(false)]
     public string? MaPhong { get; set; }
+
+    [StringLength(10)]
+    [Unicode(false)]
+    public string? MaLoaiPhong { get; set; }
 
     [Column("MaDV")]
     [StringLength(10)]
@@ -71,6 +76,10 @@ public partial class ChiTietHoaDon
     [ForeignKey("MaHoaDon")]
     [InverseProperty("ChiTietHoaDons")]
     public virtual HoaDon MaHoaDonNavigation { get; set; } = null!;
+
+    [ForeignKey("MaLoaiPhong")]
+    [InverseProperty("ChiTietHoaDons")]
+    public virtual LoaiPhong? MaLoaiPhongNavigation { get; set; }
 
     [ForeignKey("MaPhong")]
     [InverseProperty("ChiTietHoaDons")]

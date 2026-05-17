@@ -7,9 +7,20 @@ public class RoomSearchViewModel
     public DateTime CheckIn { get; set; } = DateTime.Today;
     public DateTime CheckOut { get; set; } = DateTime.Today.AddDays(1);
     public int Guests { get; set; } = 2;
+    public int NumberOfRooms { get; set; } = 1;
     public string? RoomTypeId { get; set; }
     public string? ErrorMessage { get; set; }
+    public string? RoomSelection { get; set; }
+    public bool HasRecommendedCombo => RecommendedRooms.Any();
+    public List<RoomTypeOptionViewModel> RoomTypeOptions { get; set; } = new();
+    public List<BookingRoomSelectionViewModel> RecommendedRooms { get; set; } = new();
     public List<PublicRoomOptionViewModel> Results { get; set; } = new();
+}
+
+public class RoomTypeOptionViewModel
+{
+    public string RoomTypeId { get; set; } = "";
+    public string RoomName { get; set; } = "";
 }
 
 public class PublicRoomOptionViewModel
@@ -21,6 +32,20 @@ public class PublicRoomOptionViewModel
     public int MaxGuests { get; set; }
     public decimal PricePerNight { get; set; }
     public int AvailableRooms { get; set; }
+    public int RecommendedRooms { get; set; }
+}
+
+public class BookingRoomSelectionViewModel
+{
+    public string RoomTypeId { get; set; } = "";
+    public string RoomName { get; set; } = "";
+    public string ImageUrl { get; set; } = "";
+    public int Rooms { get; set; }
+    public int Guests { get; set; }
+    public int MaxGuestsPerRoom { get; set; }
+    public int AvailableRooms { get; set; }
+    public decimal PricePerNight { get; set; }
+    public decimal LineTotalPerNight => PricePerNight * Rooms;
 }
 
 public class BookingLookupViewModel
