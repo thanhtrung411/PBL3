@@ -46,4 +46,11 @@ public static class DomainValues
     {
         public const string DangLam = "Đang làm";
     }
+
+    public static class LinkAnhTrangThai
+    {
+        public const string HoatDong = "Hoạt động";
+        public const string An = "Ẩn";
+        public const string NgungSuDung = "Ngừng sử dụng";
+    }
 }

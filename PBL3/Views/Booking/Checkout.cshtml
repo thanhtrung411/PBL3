@@ -314,6 +314,8 @@
                     <input type="hidden" name="CheckIn" value="@Model.CheckIn.ToString("yyyy-MM-dd")" />
                     <input type="hidden" name="CheckOut" value="@Model.CheckOut.ToString("yyyy-MM-dd")" />
                     <input type="hidden" name="Guests" value="@Model.Guests" />
+                    <input type="hidden" name="NumberOfRooms" value="@Model.NumberOfRooms" />
+                    <input type="hidden" name="RoomSelection" value="@Model.RoomSelection" />
                     <input type="hidden" name="TotalAmount" value="@Model.RoomTotal" />
 
                     <div class="checkout-error mb-4 p-3 @(TempData["Error"] != null ? "is-visible" : "")" id="checkoutError" role="alert" aria-live="polite" tabindex="-1">
@@ -424,10 +426,23 @@
                                     <div class="d-flex justify-content-between gap-3 mb-3 border-bottom pb-3">
                                         <div class="min-w-0">
                                             <h3 class="h6 fw-bold mb-1">@Model.RoomName</h3>
-                                            <small class="text-muted">1 Phòng x @Model.NumberOfNights Đêm · @Model.Guests khách</small>
+                                            <small class="text-muted">@Model.NumberOfRooms Phòng x @Model.NumberOfNights Đêm · @Model.Guests khách</small>
                                         </div>
-                                        <img src="@Model.ImageUrl" alt="Ảnh @Model.RoomName" class="summary-room-image rounded" loading="lazy">
+                                        <img src="@Model.ImageUrl" alt="Ảnh @Model.RoomName" class="summary-room-image rounded" loading="lazy" onerror="this.src='/images/booking_hero.jpg';">
                                     </div>
+
+                                    @if (Model.RoomLines.Any())
+                                    {
+                                        <div class="mb-3 border-bottom pb-3">
+                                            @foreach (var line in Model.RoomLines)
+                                            {
+                                                <div class="d-flex justify-content-between gap-3 mb-2">
+                                                    <span class="text-muted">@line.RoomName x @line.Rooms phòng</span>
+                                                    <span class="fw-semibold">@line.LineTotal(Model.NumberOfNights).ToString("N0")đ</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
 
                                     <div class="row mb-3 border-bottom pb-3">
                                         <div class="col-6">
@@ -443,7 +458,7 @@
                                     </div>
 
                                     <div class="summary-row mb-3 border-bottom pb-3">
-                                        <span class="text-muted">Giá phòng (@Model.NumberOfNights đêm)</span>
+                                        <span class="text-muted">Giá phòng (@Model.NumberOfRooms phòng x @Model.NumberOfNights đêm)</span>
                                         <span>@Model.RoomTotal.ToString("N0")đ</span>
                                     </div>
 

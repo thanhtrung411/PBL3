@@ -8,14 +8,19 @@ namespace PBL3.Models
         public string RoomName { get; set; } = "";
         public string ImageUrl { get; set; } = "";
         public decimal PricePerNight { get; set; }
+        public string RoomSelection { get; set; } = "";
+        public List<CheckoutRoomLineViewModel> RoomLines { get; set; } = new();
 
         public DateTime CheckIn { get; set; }
         public DateTime CheckOut { get; set; }
         public int Guests { get; set; } = 2;
+        public int NumberOfRooms { get; set; } = 1;
 
         public int NumberOfNights => (CheckOut - CheckIn).Days > 0 ? (CheckOut - CheckIn).Days : 1;
 
-        public decimal RoomTotal => PricePerNight * NumberOfNights;
+        public decimal RoomTotal => RoomLines.Count > 0
+            ? RoomLines.Sum(x => x.PricePerNight * x.Rooms * NumberOfNights)
+            : PricePerNight * NumberOfNights * Math.Max(NumberOfRooms, 1);
         public decimal ServiceFee => 0;
         public decimal VatFee => 0;
         public decimal GrandTotal => RoomTotal;
@@ -53,5 +58,17 @@ namespace PBL3.Models
     {
         public const string VnPay = "VNPAY";
         public const string PayAtHotel = "PAY_AT_HOTEL";
+    }
+
+    public class CheckoutRoomLineViewModel
+    {
+        public string RoomTypeId { get; set; } = "";
+        public string RoomName { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
+        public int Rooms { get; set; }
+        public int Guests { get; set; }
+        public int MaxGuestsPerRoom { get; set; }
+        public decimal PricePerNight { get; set; }
+        public decimal LineTotal(int nights) => PricePerNight * Rooms * Math.Max(nights, 1);
     }
 }
