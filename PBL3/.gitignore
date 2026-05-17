@@ -1,0 +1,24 @@
+bin/
+obj/
+artifacts/
+publish/
+*.zip
+.vs/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Production.json
+
+# Runtime keys and uploaded/generated local data
+App_Data/DataProtectionKeys/
+wwwroot/vnpay-debug.log
+wwwroot/write-test.txt
+wwwroot/images/link-anh/*
+!wwwroot/images/link-anh/.gitkeep
+
+# Local database scripts/dumps
+*.sql
+*.bak
