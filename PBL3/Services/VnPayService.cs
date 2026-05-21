@@ -16,17 +16,20 @@ public class VnPayService : IVnPayService
     private readonly VnPayOptions _options;
     private readonly ILogger<VnPayService> _logger;
     private readonly IWebHostEnvironment _environment;
+    private readonly IBookingEmailService _bookingEmailService;
 
     public VnPayService(
         ApplicationDbContext context,
         IOptions<VnPayOptions> options,
         ILogger<VnPayService> logger,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IBookingEmailService bookingEmailService)
     {
         _context = context;
         _options = options.Value;
         _logger = logger;
         _environment = environment;
+        _bookingEmailService = bookingEmailService;
     }
 
     public PaymentStartResult CreatePaymentUrl(VnPayPaymentRequest request)
@@ -195,12 +198,28 @@ public class VnPayService : IVnPayService
             invoice.TrangThai = DomainValues.HoaDonTrangThai.DaThanhToan;
             invoice.GhiChu = AppendNote(invoice.GhiChu, $"VNPay: {result.TransactionNo}; Bank: {result.BankCode}");
             await _context.SaveChangesAsync();
+            await SendPaymentSuccessEmailAsync(result);
         }
 
         result.IpnResponseCode = "00";
         result.IpnMessage = "Confirm success";
 
         return result;
+    }
+
+    private async Task SendPaymentSuccessEmailAsync(PaymentCallbackResult result)
+    {
+        try
+        {
+            await _bookingEmailService.SendPaymentSuccessEmailAsync(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Payment was confirmed but the success email could not be sent. BookingCode={BookingCode}",
+                result.BookingCode);
+        }
     }
 
     private static PaymentStartResult Fail(string message)

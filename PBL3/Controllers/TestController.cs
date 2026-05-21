@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using PBL3.Services.Interfaces;
 using System.Threading.Tasks;
 
@@ -9,18 +12,24 @@ namespace PBL3.Controllers
     /// Controller test để kiểm tra kết nối database
     /// Tạm thời dùng để debug
     /// </summary>
-    [AllowAnonymous]
+    [Authorize]
     public class TestController : Controller
     {
         private readonly ILoaiPhongService _loaiPhongService;
         private readonly IBangGiaPhongService _bangGiaService;
+        private readonly IWebHostEnvironment _environment;
+        private readonly ILogger<TestController> _logger;
 
         public TestController(
             ILoaiPhongService loaiPhongService,
-            IBangGiaPhongService bangGiaService)
+            IBangGiaPhongService bangGiaService,
+            IWebHostEnvironment environment,
+            ILogger<TestController> logger)
         {
             _loaiPhongService = loaiPhongService;
             _bangGiaService = bangGiaService;
+            _environment = environment;
+            _logger = logger;
         }
 
         /// <summary>
@@ -30,6 +39,11 @@ namespace PBL3.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllRoomTypes()
         {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
             try
             {
                 var loaiPhongs = await _loaiPhongService.GetAllLoaiPhongsAsync();
@@ -48,7 +62,12 @@ namespace PBL3.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new { success = false, error = ex.Message });
+                _logger.LogWarning(ex, "Failed to load room types from debug endpoint.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    success = false,
+                    message = "Khong the tai du lieu kiem tra. Vui long thu lai sau."
+                });
             }
         }
 
@@ -59,6 +78,11 @@ namespace PBL3.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCurrentPrice(string roomId)
         {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
             try
             {
                 var price = await _bangGiaService.LayGiaPhongHienTaiAsync(roomId);
@@ -73,7 +97,12 @@ namespace PBL3.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new { success = false, error = ex.Message });
+                _logger.LogWarning(ex, "Failed to load room price from debug endpoint. RoomId={RoomId}", roomId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    success = false,
+                    message = "Khong the tai du lieu kiem tra. Vui long thu lai sau."
+                });
             }
         }
 
@@ -84,6 +113,11 @@ namespace PBL3.Controllers
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
             try
             {
                 var loaiPhongs = await _loaiPhongService.GetAllLoaiPhongsAsync();
@@ -91,9 +125,15 @@ namespace PBL3.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.Error = ex.Message;
+                _logger.LogWarning(ex, "Failed to load debug dashboard.");
+                ViewBag.Error = "Khong the tai du lieu kiem tra. Vui long thu lai sau.";
                 return View();
             }
+        }
+
+        private bool IsDebugRouteEnabled()
+        {
+            return _environment.IsDevelopment();
         }
     }
 }
