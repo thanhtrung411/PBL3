@@ -25,7 +25,7 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
     public async Task<int> CancelExpiredOnlinePaymentsAsync(CancellationToken cancellationToken = default)
     {
         var expireMinutes = Math.Clamp(_options.ExpireMinutes, 1, 1440);
-        var cutoff = DateTime.Now.AddMinutes(-expireMinutes);
+        var cutoff = DateTime.UtcNow.AddMinutes(-expireMinutes);
 
         var expiredBookings = await _context.DatPhongs
             .Include(x => x.HoaDon)

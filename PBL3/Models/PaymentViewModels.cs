@@ -45,6 +45,7 @@ public class PaymentCallbackResult
     public string TransactionStatus { get; set; } = "";
     public string? TransactionNo { get; set; }
     public string? BankCode { get; set; }
+    public DateTime? PayDateUtc { get; set; }
     public decimal Amount { get; set; }
     public string Message { get; set; } = "";
 }

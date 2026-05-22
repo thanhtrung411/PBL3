@@ -178,13 +178,32 @@ public class BookingEmailService : IBookingEmailService
 
     private static string FormatDateTime(DateTime? value)
     {
-        return value.HasValue
-            ? value.Value.ToString("dd/MM/yyyy HH:mm", VietnamCulture)
-            : "N/A";
+        if (!value.HasValue)
+        {
+            return "N/A";
+        }
+
+        var utcValue = value.Value.Kind == DateTimeKind.Utc
+            ? value.Value
+            : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
+        var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(utcValue, GetVietnamTimeZone());
+        return vietnamTime.ToString("dd/MM/yyyy HH:mm", VietnamCulture);
     }
 
     private static string Html(string value)
     {
         return WebUtility.HtmlEncode(value);
+    }
+
+    private static TimeZoneInfo GetVietnamTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        }
+        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+        }
     }
 }

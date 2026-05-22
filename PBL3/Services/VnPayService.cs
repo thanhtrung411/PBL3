@@ -124,6 +124,9 @@ public class VnPayService : IVnPayService
         var responseCode = data.GetValueOrDefault("vnp_ResponseCode", "");
         var transactionStatus = data.GetValueOrDefault("vnp_TransactionStatus", "");
         var success = isValid && responseCode == "00" && transactionStatus == "00";
+        var payDateUtc = data.TryGetValue("vnp_PayDate", out var payDateText)
+            ? ParseVnPayDateToUtc(payDateText)
+            : null;
 
         return new PaymentCallbackResult
         {
@@ -136,6 +139,7 @@ public class VnPayService : IVnPayService
             TransactionStatus = transactionStatus,
             TransactionNo = data.GetValueOrDefault("vnp_TransactionNo"),
             BankCode = data.GetValueOrDefault("vnp_BankCode"),
+            PayDateUtc = payDateUtc,
             Amount = amount,
             Message = success ? "Thanh toán thành công." : "Thanh toán không thành công hoặc đã bị hủy."
         };
@@ -163,14 +167,22 @@ public class VnPayService : IVnPayService
             return result;
         }
 
-        if (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
-            invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy)
+        if ((invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
+             invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy) &&
+            !CanRecoverExpiredBooking(result, invoice))
         {
             result.Success = false;
             result.Message = "Đơn đặt phòng đã quá hạn thanh toán và đã được hủy.";
             result.IpnResponseCode = "02";
             result.IpnMessage = "Order already processed";
             return result;
+        }
+
+        if (result.Success &&
+            (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
+             invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy))
+        {
+            invoice.MaDatPhongNavigation.TrangThai = DomainValues.DatPhongTrangThai.GiuCho;
         }
 
         if (result.Success && invoice.TrangThai == DomainValues.HoaDonTrangThai.DaThanhToan)
@@ -193,7 +205,7 @@ public class VnPayService : IVnPayService
 
             invoice.SoTienDaThanhToan = invoice.TongThanhToan;
             invoice.TienDatCoc = invoice.TongThanhToan;
-            invoice.NgayThanhToanCuoi = DateTime.Now;
+            invoice.NgayThanhToanCuoi = result.PayDateUtc ?? DateTime.UtcNow;
             invoice.PhuongThucThanhToan = DomainValues.PhuongThucThanhToan.Qr;
             invoice.TrangThai = DomainValues.HoaDonTrangThai.DaThanhToan;
             invoice.GhiChu = AppendNote(invoice.GhiChu, $"VNPay: {result.TransactionNo}; Bank: {result.BankCode}");
@@ -220,6 +232,28 @@ public class VnPayService : IVnPayService
                 "Payment was confirmed but the success email could not be sent. BookingCode={BookingCode}",
                 result.BookingCode);
         }
+    }
+
+    private bool CanRecoverExpiredBooking(PaymentCallbackResult result, HoaDon invoice)
+    {
+        if (!result.Success || !result.PayDateUtc.HasValue)
+        {
+            return false;
+        }
+
+        var expireMinutes = Math.Clamp(_options.ExpireMinutes, 1, 1440);
+        var bookingCreatedUtc = NormalizeStoredUtc(invoice.MaDatPhongNavigation.NgayDat);
+        return result.PayDateUtc.Value <= bookingCreatedUtc.AddMinutes(expireMinutes);
+    }
+
+    private static DateTime NormalizeStoredUtc(DateTime value)
+    {
+        if (value.Kind == DateTimeKind.Utc)
+        {
+            return value;
+        }
+
+        return DateTime.SpecifyKind(value, DateTimeKind.Utc);
     }
 
     private static PaymentStartResult Fail(string message)
@@ -342,21 +376,41 @@ public class VnPayService : IVnPayService
 
     private static DateTime GetVietnamTime()
     {
-        try
-        {
-            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
-        }
-        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
-        {
-            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
-            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
-        }
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetVietnamTimeZone());
     }
 
     private static string FormatVnPayDate(DateTime value)
     {
         return value.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+    }
+
+    private static DateTime? ParseVnPayDateToUtc(string value)
+    {
+        if (!DateTime.TryParseExact(
+                value,
+                "yyyyMMddHHmmss",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out var vietnamTime))
+        {
+            return null;
+        }
+
+        var unspecifiedVietnamTime = DateTime.SpecifyKind(vietnamTime, DateTimeKind.Unspecified);
+        var timeZone = GetVietnamTimeZone();
+        return TimeZoneInfo.ConvertTimeToUtc(unspecifiedVietnamTime, timeZone);
+    }
+
+    private static TimeZoneInfo GetVietnamTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        }
+        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+        }
     }
 
     private static string AppendNote(string? current, string next)
