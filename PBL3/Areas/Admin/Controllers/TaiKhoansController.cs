@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PBL3.Models;
@@ -11,12 +12,18 @@ namespace PBL3.Areas.Admin.Controllers
         private readonly ITaiKhoanService _taiKhoanService;
         private readonly INhanVienService _nhanVienService;
         private readonly IVaiTroService _vaiTroService;
+        private readonly IPasswordHasher<TaiKhoan> _passwordHasher;
 
-        public TaiKhoansController(ITaiKhoanService taiKhoanService, INhanVienService nhanVienService, IVaiTroService vaiTroService)
+        public TaiKhoansController(
+            ITaiKhoanService taiKhoanService,
+            INhanVienService nhanVienService,
+            IVaiTroService vaiTroService,
+            IPasswordHasher<TaiKhoan> passwordHasher)
         {
             _taiKhoanService = taiKhoanService;
             _nhanVienService = nhanVienService;
             _vaiTroService = vaiTroService;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<IActionResult> Index()
@@ -65,6 +72,7 @@ namespace PBL3.Areas.Admin.Controllers
                 }
                 else
                 {
+                    taiKhoan.MatKhau = _passwordHasher.HashPassword(taiKhoan, taiKhoan.MatKhau);
                     var createResult = await _taiKhoanService.CreateAsync(taiKhoan);
                     if (createResult)
                     {
@@ -86,6 +94,7 @@ namespace PBL3.Areas.Admin.Controllers
             var taiKhoan = await _taiKhoanService.GetByIdAsync(id);
             if (taiKhoan == null) return NotFound();
 
+            taiKhoan.MatKhau = "";
             ViewData["MaNv"] = new SelectList(await _nhanVienService.GetAllAsync(), "MaNv", "HoTen", taiKhoan.MaNv);
             ViewData["MaVaiTro"] = new SelectList(await _vaiTroService.GetAllAsync(), "MaVaiTro", "TenVaiTro", taiKhoan.MaVaiTro);
             return View(taiKhoan);
@@ -99,6 +108,12 @@ namespace PBL3.Areas.Admin.Controllers
 
             ModelState.Remove("MaNvNavigation");
             ModelState.Remove("MaVaiTroNavigation");
+            var submittedPassword = taiKhoan.MatKhau;
+            var isChangingPassword = !string.IsNullOrWhiteSpace(submittedPassword);
+            if (!isChangingPassword)
+            {
+                ModelState.Remove(nameof(TaiKhoan.MatKhau));
+            }
 
             if (ModelState.IsValid)
             {
@@ -112,6 +127,16 @@ namespace PBL3.Areas.Admin.Controllers
                 }
                 else
                 {
+                    var existingAccount = await _taiKhoanService.GetByIdAsync(taiKhoan.MaTk);
+                    if (existingAccount == null)
+                    {
+                        return NotFound();
+                    }
+
+                    taiKhoan.MatKhau = isChangingPassword
+                        ? _passwordHasher.HashPassword(taiKhoan, submittedPassword)
+                        : existingAccount.MatKhau;
+
                     var updateResult = await _taiKhoanService.UpdateAsync(taiKhoan);
                     if (updateResult)
                     {
@@ -123,6 +148,7 @@ namespace PBL3.Areas.Admin.Controllers
             }
             ViewData["MaNv"] = new SelectList(await _nhanVienService.GetAllAsync(), "MaNv", "HoTen", taiKhoan.MaNv);
             ViewData["MaVaiTro"] = new SelectList(await _vaiTroService.GetAllAsync(), "MaVaiTro", "TenVaiTro", taiKhoan.MaVaiTro);
+            taiKhoan.MatKhau = "";
             return View(taiKhoan);
         }
 

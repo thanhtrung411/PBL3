@@ -418,7 +418,7 @@ public class PublicBookingService : IPublicBookingService
                 TenKhSnapshot = model.CustomerName.Trim(),
                 CccdSnapshot = model.Cccd.Trim(),
                 SdtSnapshot = model.PhoneNumber.Trim(),
-                NgayDat = DateTime.Now,
+                NgayDat = DateTime.UtcNow,
                 NgayNhanPhong = checkInDate,
                 NgayTraPhong = checkOutDate,
                 TrangThai = DomainValues.DatPhongTrangThai.GiuCho,
@@ -564,7 +564,7 @@ public class PublicBookingService : IPublicBookingService
     {
         var cccd = model.Cccd.Trim();
         var phoneNumber = model.PhoneNumber.Trim();
-        var cutoff = DateTime.Now.AddMinutes(-Math.Clamp(_vnPayOptions.ExpireMinutes, 1, 1440));
+        var cutoff = DateTime.UtcNow.AddMinutes(-Math.Clamp(_vnPayOptions.ExpireMinutes, 1, 1440));
         var expectedSelection = roomLines
             .GroupBy(x => NormalizeCode(x.RoomTypeId), StringComparer.OrdinalIgnoreCase)
             .ToDictionary(x => x.Key, x => x.Sum(line => line.Rooms), StringComparer.OrdinalIgnoreCase);
