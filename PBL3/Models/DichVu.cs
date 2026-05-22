@@ -32,6 +32,9 @@ public partial class DichVu
     [StringLength(255)]
     public string? GhiChu { get; set; }
 
+    [StringLength(50)]
+    public string? LoaiDichVu { get; set; }
+
     [InverseProperty("MaDvNavigation")]
     public virtual ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; } = new List<ChiTietHoaDon>();
 }
