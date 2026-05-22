@@ -1,0 +1,81 @@
+﻿@model PBL3.Models.DichVu
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Thêm dịch vụ mới";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4 mb-0 text-dark fw-bold">Thêm Dịch Vụ Mới</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary px-4">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+</div>
+
+<div class="card-custom p-4 border">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="MaDv" class="form-label fw-bold">Mã dịch vụ</label>
+            <input asp-for="MaDv" class="form-control" placeholder="Nhập mã dịch vụ (VD: DV01)" required />
+            <span asp-validation-for="MaDv" class="text-danger"></span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6 mb-3">
+                <label asp-for="TenDv" class="form-label fw-bold">Tên dịch vụ <span class="text-danger">*</span></label>
+                <input asp-for="TenDv" class="form-control" placeholder="Nhập tên dịch vụ" required />
+                <span asp-validation-for="TenDv" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="DonViTinh" class="form-label fw-bold">Đơn vị tính <span class="text-danger">*</span></label>
+                <input asp-for="DonViTinh" class="form-control" placeholder="VD: người, phút, giờ, ngày, lần..." required />
+                <span asp-validation-for="DonViTinh" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="LoaiDichVu" class="form-label fw-bold">Loại dịch vụ <span class="text-danger">*</span></label>
+                <select asp-for="LoaiDichVu" class="form-select" required>
+                    <option value="Giải trí">Giải trí</option>
+                    <option value="Vận chuyển">Vận chuyển</option>
+                    <option value="Tiện ích">Tiện ích</option>
+                    <option value="Ăn uống">Ăn uống</option>
+                </select>
+                <span asp-validation-for="LoaiDichVu" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="DonGia" class="form-label fw-bold">Số tiền (VNĐ) <span class="text-danger">*</span></label>
+                <input asp-for="DonGia" type="number" class="form-control" placeholder="VD: 500000" min="0" required />
+                <span asp-validation-for="DonGia" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="TrangThai" class="form-label fw-bold">Trạng thái <span class="text-danger">*</span></label>
+                <select asp-for="TrangThai" class="form-select" required>
+                    <option value="Hoạt động">Hoạt động</option>
+                    <option value="Tạm ngưng">Tạm ngưng</option>
+                    <option value="Ngừng cung cấp">Ngừng cung cấp</option>
+                </select>
+                <span asp-validation-for="TrangThai" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-12 mb-4">
+                <label asp-for="GhiChu" class="form-label fw-bold">Mô tả</label>
+                <textarea asp-for="GhiChu" class="form-control" rows="4" placeholder="Nhập mô tả chi tiết dịch vụ..."></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-3 border-top pt-4">
+            <button type="reset" class="btn btn-light border px-4">Làm mới</button>
+            <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save"></i> Lưu dịch vụ</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
