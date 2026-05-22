@@ -143,43 +143,65 @@ public class BookingEmailService : IBookingEmailService
             """;
         }
 
-        return $"""
+        return $$"""
         <!doctype html>
         <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                @media only screen and (max-width: 640px) {
+                    .email-shell { padding: 0 !important; }
+                    .email-card { border-radius: 0 !important; }
+                    .email-header { border-radius: 0 !important; padding: 24px 18px !important; }
+                    .email-header h1 { font-size: 24px !important; }
+                    .email-body { padding: 20px 16px !important; }
+                    .stack-column { display: block !important; width: 100% !important; padding-right: 0 !important; }
+                    .qr-column { display: block !important; width: 100% !important; padding-top: 18px !important; }
+                    .summary-column { display: block !important; width: 100% !important; }
+                    .summary-spacer { display: none !important; }
+                    .invoice-table th, .invoice-table td { font-size: 12px !important; padding: 9px 6px !important; }
+                    .info-label { display: block !important; width: auto !important; margin-bottom: 2px !important; }
+                    .qr-image { width: 150px !important; height: 150px !important; }
+                }
+            </style>
+        </head>
         <body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1f2937;line-height:1.5">
-            <div style="max-width:760px;margin:0 auto;padding:24px">
-                <div style="background:#101820;border-radius:18px 18px 0 0;padding:28px;color:#ffffff">
+            <div class="email-shell" style="max-width:760px;margin:0 auto;padding:24px">
+                <div class="email-header" style="background:#101820;border-radius:18px 18px 0 0;padding:28px;color:#ffffff">
                     <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#d4af37;font-weight:700">Venus Hotel</div>
                     <h1 style="margin:8px 0 6px;font-size:28px;line-height:1.2">Hóa đơn thanh toán thành công</h1>
-                    <div style="display:inline-block;background:#e8f7ee;color:#137a3a;border-radius:999px;padding:7px 13px;font-weight:700;font-size:13px">ĐÃ THANH TOÁN</div>
+                    <div style="display:inline-block;color:#137a3a;font-weight:700;font-size:13px">
+                        <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;background:#16a34a;color:#ffffff;border-radius:50%;margin-right:7px;font-size:12px">✓</span>
+                        <span>Already paid</span>
+                    </div>
                 </div>
 
-                <div style="background:#ffffff;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 18px 18px;padding:26px">
-                    <p style="margin:0 0 18px;font-size:16px">Xin chào <strong>{Html(booking.TenKhSnapshot)}</strong>, Venus Hotel xác nhận giao dịch VNPay của quý khách đã thành công. Thông tin đặt phòng và hóa đơn nằm bên dưới.</p>
+                <div class="email-card email-body" style="background:#ffffff;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 18px 18px;padding:26px">
+                    <p style="margin:0 0 18px;font-size:16px">Xin chào <strong>{{Html(booking.TenKhSnapshot)}}</strong>, Venus Hotel xác nhận giao dịch VNPay của quý khách đã thành công. Thông tin đặt phòng và hóa đơn nằm bên dưới.</p>
 
                     <table style="width:100%;border-collapse:collapse;margin:18px 0">
                         <tr>
-                            <td style="vertical-align:top;width:58%;padding-right:18px">
+                            <td class="stack-column" style="vertical-align:top;width:58%;padding-right:18px">
                                 <h2 style="font-size:18px;margin:0 0 10px;color:#111827">Thông tin đặt phòng</h2>
-                                {BuildInfoRow("Mã đặt phòng", booking.MaDatPhong)}
-                                {BuildInfoRow("Mã hóa đơn", invoice.MaHoaDon)}
-                                {BuildInfoRow("Họ tên", booking.TenKhSnapshot)}
-                                {BuildInfoRow("Số điện thoại", booking.SdtSnapshot ?? "N/A")}
-                                {BuildInfoRow("CCCD/CMND", MaskIdentityNumber(booking.CccdSnapshot))}
-                                {BuildInfoRow("Ngày nhận phòng", booking.NgayNhanPhong.ToString("dd/MM/yyyy", VietnamCulture))}
-                                {BuildInfoRow("Ngày trả phòng", booking.NgayTraPhong.ToString("dd/MM/yyyy", VietnamCulture))}
-                                {BuildInfoRow("Số đêm", GetNights(booking).ToString(CultureInfo.InvariantCulture))}
+                                {{BuildInfoRow("Mã đặt phòng", booking.MaDatPhong)}}
+                                {{BuildInfoRow("Mã hóa đơn", invoice.MaHoaDon)}}
+                                {{BuildInfoRow("Họ tên", booking.TenKhSnapshot)}}
+                                {{BuildInfoRow("Số điện thoại", booking.SdtSnapshot ?? "N/A")}}
+                                {{BuildInfoRow("CCCD/CMND", MaskIdentityNumber(booking.CccdSnapshot))}}
+                                {{BuildInfoRow("Ngày nhận phòng", booking.NgayNhanPhong.ToString("dd/MM/yyyy", VietnamCulture))}}
+                                {{BuildInfoRow("Ngày trả phòng", booking.NgayTraPhong.ToString("dd/MM/yyyy", VietnamCulture))}}
+                                {{BuildInfoRow("Số đêm", GetNights(booking).ToString(CultureInfo.InvariantCulture))}}
                             </td>
-                            <td style="vertical-align:top;width:42%;text-align:center;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:18px">
+                            <td class="qr-column" style="vertical-align:top;width:42%;text-align:center;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:18px">
                                 <div style="font-size:13px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px">Mã QR check-in</div>
-                                <img src="cid:booking-qr" width="180" height="180" alt="QR đặt phòng {Html(booking.MaDatPhong)}" style="display:block;margin:0 auto 10px;border:8px solid #ffffff;border-radius:12px" />
+                                <img class="qr-image" src="cid:booking-qr" width="180" height="180" alt="QR đặt phòng {{Html(booking.MaDatPhong)}}" style="display:block;margin:0 auto 10px;border:8px solid #ffffff;border-radius:12px" />
                                 <div style="font-size:13px;color:#64748b">Quét mã này tại quầy lễ tân để đối chiếu đặt phòng.</div>
                             </td>
                         </tr>
                     </table>
 
                     <h2 style="font-size:18px;margin:22px 0 10px;color:#111827">Chi tiết hóa đơn</h2>
-                    <table style="border-collapse:collapse;width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+                    <table class="invoice-table" style="border-collapse:collapse;width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
                         <thead>
                             <tr style="background:#f8fafc">
                                 <th style="padding:12px 10px;text-align:left;color:#475569;font-size:13px">Nội dung</th>
@@ -189,34 +211,34 @@ public class BookingEmailService : IBookingEmailService
                             </tr>
                         </thead>
                         <tbody>
-                            {invoiceRowsHtml}
+                            {{invoiceRowsHtml}}
                         </tbody>
                     </table>
 
                     <table style="width:100%;border-collapse:collapse;margin:18px 0 0">
                         <tr>
-                            <td style="width:48%;vertical-align:top;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:16px;color:#7c2d12">
+                            <td class="summary-column" style="width:48%;vertical-align:top;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:16px;color:#7c2d12">
                                 <strong>Lưu ý khi nhận phòng</strong><br />
                                 Khi đến khách sạn, quý khách vui lòng mang theo giấy tờ tùy thân như CCCD/CMND/Hộ chiếu để làm thủ tục nhận phòng.
                             </td>
-                            <td style="width:4%"></td>
-                            <td style="width:48%;vertical-align:top">
+                            <td class="summary-spacer" style="width:4%"></td>
+                            <td class="summary-column" style="width:48%;vertical-align:top">
                                 <table style="width:100%;border-collapse:collapse">
-                                    {BuildMoneyRow("Tổng tiền phòng", invoice.TongTienPhong)}
-                                    {BuildMoneyRow("Tổng tiền dịch vụ", invoice.TongTienDichVu)}
-                                    {BuildMoneyRow("Giảm giá", invoice.TienGiamGiaPhong)}
-                                    {BuildMoneyRow("Tổng thanh toán", invoice.TongThanhToan, true)}
-                                    {BuildMoneyRow("Đã thanh toán", invoice.SoTienDaThanhToan, true)}
+                                    {{BuildMoneyRow("Tổng tiền phòng", invoice.TongTienPhong)}}
+                                    {{BuildMoneyRow("Tổng tiền dịch vụ", invoice.TongTienDichVu)}}
+                                    {{BuildMoneyRow("Giảm giá", invoice.TienGiamGiaPhong)}}
+                                    {{BuildMoneyRow("Tổng thanh toán", invoice.TongThanhToan, true)}}
+                                    {{BuildMoneyRow("Đã thanh toán", invoice.SoTienDaThanhToan, true)}}
                                 </table>
                             </td>
                         </tr>
                     </table>
 
                     <h2 style="font-size:18px;margin:22px 0 10px;color:#111827">Thông tin giao dịch</h2>
-                    {BuildInfoRow("Phương thức", "VNPay")}
-                    {BuildInfoRow("Mã giao dịch VNPay", paymentResult.TransactionNo ?? "N/A")}
-                    {BuildInfoRow("Ngân hàng", paymentResult.BankCode ?? "N/A")}
-                    {BuildInfoRow("Thời gian thanh toán", FormatDateTime(invoice.NgayThanhToanCuoi))}
+                    {{BuildInfoRow("Phương thức", "VNPay")}}
+                    {{BuildInfoRow("Mã giao dịch VNPay", paymentResult.TransactionNo ?? "N/A")}}
+                    {{BuildInfoRow("Ngân hàng", paymentResult.BankCode ?? "N/A")}}
+                    {{BuildInfoRow("Thời gian thanh toán", FormatDateTime(invoice.NgayThanhToanCuoi))}}
 
                     <p style="margin:22px 0 0;color:#64748b;font-size:14px">Cảm ơn quý khách đã đặt phòng tại Venus Hotel.</p>
                 </div>
@@ -230,7 +252,7 @@ public class BookingEmailService : IBookingEmailService
     {
         return $"""
         <div style="border-bottom:1px solid #edf2f7;padding:8px 0">
-            <span style="display:inline-block;width:145px;color:#64748b">{Html(label)}</span>
+            <span class="info-label" style="display:inline-block;width:145px;color:#64748b">{Html(label)}</span>
             <strong style="color:#111827">{Html(value)}</strong>
         </div>
         """;
