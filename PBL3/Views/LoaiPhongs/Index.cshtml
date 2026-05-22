@@ -2,49 +2,78 @@
 
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý loại phòng";
 }
 
-<h1>Index</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-1 fw-bold">Quản lý loại phòng</h3>
+        <p class="text-muted mb-0">Theo dõi và quản lý thông tin các hạng phòng</p>
+    </div>
+    <button class="btn btn-dark px-4" data-bs-toggle="modal" data-bs-target="#addRoomModal"><i class="bi bi-plus"></i> Thêm loại phòng mới</button>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.TenLoaiPhong)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.SoNguoiToiDa)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.MoTa)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.TenLoaiPhong)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.SoNguoiToiDa)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.MoTa)
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.MaLoaiPhong">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.MaLoaiPhong">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.MaLoaiPhong">Delete</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-
+<div class="bg-white shadow-sm" style="border-radius: 12px; border: 1px solid #f3f4f6; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 table-hover">
+            <thead style="background-color: #f9fafb;">
+                <tr>
+                    <th class="border-bottom-0 py-3 ps-4 text-muted" style="font-size: 16px; font-weight: 600;">
+                        @Html.DisplayNameFor(model => model.TenLoaiPhong)
+                    </th>
+                    <th class="border-bottom-0 py-3 text-muted" style="font-size: 16px; font-weight: 600;">
+                        @Html.DisplayNameFor(model => model.SoNguoiToiDa)
+                    </th>
+                    <th class="border-bottom-0 py-3 text-muted" style="font-size: 16px; font-weight: 600;">
+                        @Html.DisplayNameFor(model => model.MoTa)
+                    </th>
+                    <th class="border-bottom-0 py-3 pe-4 text-muted" style="font-size: 14px; font-weight: 600; width: 250px;">
+                        <div class="d-flex justify-content-end">
+                            <div style="width: 220px;" class="text-start">Thao tác</div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody style="border-top: 1px solid #e5e7eb;">
+                @foreach (var item in Model)
+                {
+                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td class="py-3 ps-4 text-dark" style="font-weight: 600; font-size: 16px;">
+                            @Html.DisplayFor(modelItem => item.TenLoaiPhong)
+                        </td>
+                        <td class="py-3" style="font-size: 16px; color: #4b5563;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-person text-muted"></i>
+                                @Html.DisplayFor(modelItem => item.SoNguoiToiDa) người
+                            </div>
+                        </td>
+                        <td class="py-3" style="font-size: 16px; color: #4b5563; max-width: 300px;">
+                            @Html.DisplayFor(modelItem => item.MoTa)
+                        </td>
+                        <td class="py-3 pe-4">
+                            <div class="d-flex justify-content-end">
+                                <div class="d-flex gap-2" style="width: 220px;">
+                                    <a asp-action="Details" asp-route-id="@item.MaLoaiPhong"
+                                       class="btn btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100"
+                                       style="background-color: #e0f2fe; color: #0284c7; border-radius: 6px; font-size: 13px; font-weight: 500;">
+                                        <i class="bi bi-eye"></i> Xem
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.MaLoaiPhong"
+                                       class="btn btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100"
+                                       style="background-color: #f3f4f6; color: #4b5563; border-radius: 6px; font-size: 13px; font-weight: 500;">
+                                        <i class="bi bi-pencil-square"></i> Sửa
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.MaLoaiPhong"
+                                       class="btn btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100"
+                                       style="background-color: #fee2e2; color: #ef4444; border-radius: 6px; font-size: 13px; font-weight: 500;">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
