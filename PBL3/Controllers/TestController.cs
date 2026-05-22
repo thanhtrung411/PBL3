@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PBL3.Services.Interfaces;
+using PBL3.Services.Receptionist;
 using System.Threading.Tasks;
 
 namespace PBL3.Controllers
@@ -17,17 +18,20 @@ namespace PBL3.Controllers
     {
         private readonly ILoaiPhongService _loaiPhongService;
         private readonly IBangGiaPhongService _bangGiaService;
+        private readonly IReceptionistCheckInService _receptionistCheckInService;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<TestController> _logger;
 
         public TestController(
             ILoaiPhongService loaiPhongService,
             IBangGiaPhongService bangGiaService,
+            IReceptionistCheckInService receptionistCheckInService,
             IWebHostEnvironment environment,
             ILogger<TestController> logger)
         {
             _loaiPhongService = loaiPhongService;
             _bangGiaService = bangGiaService;
+            _receptionistCheckInService = receptionistCheckInService;
             _environment = environment;
             _logger = logger;
         }
@@ -129,6 +133,57 @@ namespace PBL3.Controllers
                 ViewBag.Error = "Khong the tai du lieu kiem tra. Vui long thu lai sau.";
                 return View();
             }
+        }
+
+        [HttpGet]
+        public IActionResult Receptionist()
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReceptionistLookup(string code, CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.LookupBookingAsync(code, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReceptionistRooms(string bookingCode, CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.GetRoomSelectionAsync(bookingCode, cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReceptionistCheckIn(
+            [FromBody] ReceptionistCheckInRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.CheckInAsync(
+                request ?? new ReceptionistCheckInRequest(),
+                cancellationToken);
+            return Ok(result);
         }
 
         private bool IsDebugRouteEnabled()
