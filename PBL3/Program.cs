@@ -1,11 +1,18 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Security.Claims;
+using System.Text;
 using PBL3.Services;
 using PBL3.Services.Interfaces;
 using PBL3.Data;
 using PBL3.Models;
+
+const string AdminPolicyName = "AdminOnly";
 
 LoadDotEnv(AppContext.BaseDirectory);
 LoadDotEnv(Directory.GetCurrentDirectory());
@@ -39,14 +46,27 @@ builder.Services
     {
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     });
 
+var adminRoleKeys = GetAdminRoleKeys(builder.Configuration);
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AdminPolicyName, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+            context.User.FindAll(ClaimTypes.Role)
+                .Any(claim => adminRoleKeys.Contains(NormalizeRoleKey(claim.Value))));
+    });
+});
+
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AuthorizeFilter());
+    options.Conventions.Add(new AdminAuthorizationConvention(AdminPolicyName));
 });
 
 var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtectionKeys");
@@ -57,6 +77,7 @@ builder.Services
     .SetApplicationName("PBL3");
 
 builder.Services.Configure<VnPayOptions>(builder.Configuration.GetSection("Payment:VnPay"));
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
 
 //Add services for DI
 builder.Services.AddScoped<ILoaiPhongService, LoaiPhongService>();
@@ -71,6 +92,7 @@ builder.Services.AddScoped<IKhachHangService, KhachHangService>();
 builder.Services.AddScoped<IDichVuService, DichVuService>();
 builder.Services.AddScoped<IMaGiamGiaService, MaGiamGiaService>();
 builder.Services.AddScoped<ITaiKhoanService, TaiKhoanService>();
+builder.Services.AddScoped<IPasswordHasher<TaiKhoan>, PasswordHasher<TaiKhoan>>();
 builder.Services.AddScoped<IBangGiaPhongService, BangGiaPhongService>();
 builder.Services.AddScoped<ILinkAnhService, LinkAnhService>();
 builder.Services.AddScoped<IDatPhongService, DatPhongService>();
@@ -78,6 +100,9 @@ builder.Services.AddScoped<IHoaDonService, HoaDonService>();
 builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
 builder.Services.AddScoped<IPublicBookingService, PublicBookingService>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
+builder.Services.AddScoped<IReceptionistCheckInService, ReceptionistCheckInService>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<IBookingEmailService, BookingEmailService>();
 builder.Services.AddScoped<IExpiredBookingCleanupService, ExpiredBookingCleanupService>();
 builder.Services.AddHostedService<ExpiredBookingCleanupHostedService>();
 
@@ -103,12 +128,14 @@ app.MapStaticAssets();
 app.MapControllerRoute(
     name: "admin-dashboard",
     pattern: "Admin/{action=Index}/{id?}",
-    defaults: new { controller = "Home" });
+    defaults: new { controller = "Home" })
+    .RequireAuthorization(AdminPolicyName);
 
 app.MapAreaControllerRoute(
     name: "source-crud",
     areaName: "Admin",
-    pattern: "Source/{controller=Admin}/{action=Index}/{id?}");
+    pattern: "Source/{controller=Admin}/{action=Index}/{id?}")
+    .RequireAuthorization(AdminPolicyName);
 
 app.MapControllerRoute(
     name: "default",
@@ -117,6 +144,53 @@ app.MapControllerRoute(
 
 app.Run();
 
+static HashSet<string> GetAdminRoleKeys(IConfiguration configuration)
+{
+    var configuredRoles = configuration
+        .GetSection("Authorization:AdminRoles")
+        .Get<string[]>();
+    var roles = configuredRoles is { Length: > 0 }
+        ? configuredRoles
+        : new[]
+        {
+            "Admin",
+            "Administrator",
+            "Quan tri",
+            "Quan tri vien",
+            "Quản trị",
+            "Quản trị viên"
+        };
+
+    return roles
+        .Select(NormalizeRoleKey)
+        .Where(role => role.Length > 0)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+}
+
+static string NormalizeRoleKey(string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        return string.Empty;
+    }
+
+    var normalized = value.Trim().Normalize(NormalizationForm.FormD);
+    var builder = new StringBuilder(normalized.Length);
+    foreach (var character in normalized)
+    {
+        var category = CharUnicodeInfo.GetUnicodeCategory(character);
+        if (category != UnicodeCategory.NonSpacingMark)
+        {
+            builder.Append(character);
+        }
+    }
+
+    return builder
+        .ToString()
+        .Normalize(NormalizationForm.FormC)
+        .ToLowerInvariant();
+}
+
 static async Task WarmUpDatabaseAsync(IServiceProvider services)
 {
     using var scope = services.CreateScope();
@@ -124,12 +198,14 @@ static async Task WarmUpDatabaseAsync(IServiceProvider services)
         .GetRequiredService<ILoggerFactory>()
         .CreateLogger("DatabaseWarmUp");
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<TaiKhoan>>();
 
     try
     {
         using var warmUpTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         await context.Database.CanConnectAsync(warmUpTimeout.Token);
         await context.LoaiPhongs.AsNoTracking().AnyAsync(warmUpTimeout.Token);
+        await MigratePlainTextPasswordsAsync(context, passwordHasher, logger, warmUpTimeout.Token);
     }
     catch (OperationCanceledException)
     {
@@ -139,6 +215,30 @@ static async Task WarmUpDatabaseAsync(IServiceProvider services)
     {
         logger.LogWarning(ex, "Database warm-up failed. The first database request may be slower.");
     }
+}
+
+static async Task MigratePlainTextPasswordsAsync(
+    ApplicationDbContext context,
+    IPasswordHasher<TaiKhoan> passwordHasher,
+    ILogger logger,
+    CancellationToken cancellationToken)
+{
+    var accounts = await context.TaiKhoans
+        .Where(account => account.MatKhau != "" &&
+                          !account.MatKhau.StartsWith("AQAAAA"))
+        .ToListAsync(cancellationToken);
+    if (accounts.Count == 0)
+    {
+        return;
+    }
+
+    foreach (var account in accounts)
+    {
+        account.MatKhau = passwordHasher.HashPassword(account, account.MatKhau);
+    }
+
+    await context.SaveChangesAsync(cancellationToken);
+    logger.LogInformation("Migrated {Count} plain-text account passwords to password hashes.", accounts.Count);
 }
 
 static void LoadDotEnv(string directory)
@@ -177,5 +277,43 @@ static void LoadDotEnv(string directory)
         }
 
         Environment.SetEnvironmentVariable(key, value);
+    }
+}
+
+sealed class AdminAuthorizationConvention : IControllerModelConvention
+{
+    private static readonly HashSet<string> RootAdminControllers = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "BookingManagement",
+        "Customer",
+        "Facility",
+        "Home",
+        "Invoice",
+        "LoaiPhongs",
+        "Promotion",
+        "Report",
+        "Room",
+        "Service"
+    };
+
+    private readonly string _policyName;
+
+    public AdminAuthorizationConvention(string policyName)
+    {
+        _policyName = policyName;
+    }
+
+    public void Apply(ControllerModel controller)
+    {
+        var controllerNamespace = controller.ControllerType.Namespace ?? string.Empty;
+        var isSourceCrudController = controllerNamespace.StartsWith(
+            "PBL3.Areas.Admin.Controllers",
+            StringComparison.Ordinal);
+        var isRootAdminController = RootAdminControllers.Contains(controller.ControllerName);
+
+        if (isSourceCrudController || isRootAdminController)
+        {
+            controller.Filters.Add(new AuthorizeFilter(_policyName));
+        }
     }
 }

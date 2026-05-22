@@ -97,6 +97,7 @@ public partial class ApplicationDbContext : DbContext
         {
             entity.Property(e => e.MaDv).IsFixedLength();
             entity.Property(e => e.TrangThai).HasDefaultValue("Hoạt động");
+            entity.Property(e => e.LoaiDichVu).HasMaxLength(50);
         });
 
         modelBuilder.Entity<HoaDon>(entity =>

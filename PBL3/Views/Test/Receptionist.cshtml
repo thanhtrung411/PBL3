@@ -1,0 +1,251 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Receptionist Demo";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Receptionist Demo - Venus Hotel</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/receptionist-demo.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="reception-shell">
+        <aside class="reception-sidebar">
+            <div class="brand-block">
+                <span class="brand-mark">VH</span>
+                <div>
+                    <strong>Venus Hotel</strong>
+                    <small>Reception Desk</small>
+                </div>
+            </div>
+
+            <nav class="feature-nav" aria-label="Chức năng lễ tân">
+                <button type="button" class="feature-nav-item active">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span>Check-in</span>
+                </button>
+                <button type="button" class="feature-nav-item" disabled>
+                    <i class="bi bi-calendar2-check"></i>
+                    <span>Khách đến hôm nay</span>
+                </button>
+                <button type="button" class="feature-nav-item" disabled>
+                    <i class="bi bi-door-open"></i>
+                    <span>Sơ đồ phòng</span>
+                </button>
+                <button type="button" class="feature-nav-item" disabled>
+                    <i class="bi bi-search"></i>
+                    <span>Tra cứu</span>
+                </button>
+            </nav>
+        </aside>
+
+        <main class="reception-main">
+            <header class="reception-header">
+                <div>
+                    <p class="eyebrow">Front desk</p>
+                    <h1>Check-in khách đặt phòng</h1>
+                </div>
+                <div class="header-status">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Development demo</span>
+                </div>
+            </header>
+
+            <section class="workflow-strip" aria-label="Tiến trình check-in">
+                <button type="button" class="workflow-step active" data-step-indicator="scan">
+                    <span>1</span>
+                    <strong>Quét mã</strong>
+                </button>
+                <button type="button" class="workflow-step" data-step-indicator="details">
+                    <span>2</span>
+                    <strong>Thông tin</strong>
+                </button>
+                <button type="button" class="workflow-step" data-step-indicator="rooms">
+                    <span>3</span>
+                    <strong>Chọn phòng</strong>
+                </button>
+                <button type="button" class="workflow-step" data-step-indicator="confirm">
+                    <span>4</span>
+                    <strong>Xác nhận</strong>
+                </button>
+                <button type="button" class="workflow-step" data-step-indicator="done">
+                    <span>5</span>
+                    <strong>Hoàn tất</strong>
+                </button>
+            </section>
+
+            <div class="alert-area" id="alertArea" aria-live="polite"></div>
+
+            <section class="reception-panel active" data-step-panel="scan">
+                <div class="scan-grid">
+                    <div class="tool-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">QR code</p>
+                                <h2>Quét mã đặt phòng</h2>
+                            </div>
+                            <i class="bi bi-camera"></i>
+                        </div>
+                        <div class="scanner-frame">
+                            <div id="qrReader" class="qr-reader"></div>
+                            <div class="scanner-placeholder" id="scannerPlaceholder">
+                                <i class="bi bi-qr-code"></i>
+                                <span>Camera sẽ hiển thị tại đây</span>
+                            </div>
+                        </div>
+                        <div class="action-row">
+                            <button type="button" class="btn btn-dark" id="startScannerBtn">
+                                <i class="bi bi-camera-video"></i>
+                                Mở camera
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="stopScannerBtn" disabled>
+                                <i class="bi bi-camera-video-off"></i>
+                                Tắt camera
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tool-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Manual</p>
+                                <h2>Nhập mã thủ công</h2>
+                            </div>
+                            <i class="bi bi-keyboard"></i>
+                        </div>
+                        <form id="manualLookupForm" class="manual-form">
+                            <label for="bookingCodeInput">Mã đặt phòng hoặc nội dung QR</label>
+                            <input id="bookingCodeInput" class="form-control form-control-lg" autocomplete="off" placeholder='DP00000019 hoặc {"booking":"DP00000019"}' />
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-search"></i>
+                                Kiểm tra
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section class="reception-panel" data-step-panel="details">
+                <div class="section-grid">
+                    <div class="tool-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Guest profile</p>
+                                <h2>Thông tin khách</h2>
+                            </div>
+                            <i class="bi bi-person-vcard"></i>
+                        </div>
+                        <div id="guestDetails" class="details-list"></div>
+                    </div>
+
+                    <div class="tool-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Booking</p>
+                                <h2>Thông tin đặt phòng</h2>
+                            </div>
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                        <div id="bookingDetails" class="details-list"></div>
+                        <div id="roomRequirements" class="requirement-list"></div>
+                    </div>
+                </div>
+                <div class="footer-actions">
+                    <button type="button" class="btn btn-outline-secondary" data-back-step="scan">
+                        <i class="bi bi-arrow-left"></i>
+                        Quay lại
+                    </button>
+                    <button type="button" class="btn btn-primary" id="continueToRoomsBtn">
+                        Tiếp tục chọn phòng
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <section class="reception-panel" data-step-panel="rooms">
+                <div class="tool-panel">
+                    <div class="panel-heading room-heading">
+                        <div>
+                            <p class="eyebrow">Room assignment</p>
+                            <h2>Chọn phòng theo loại đã đặt</h2>
+                        </div>
+                        <div class="legend">
+                            <span><i class="legend-dot available"></i>Trống</span>
+                            <span><i class="legend-dot selected"></i>Đang chọn</span>
+                            <span><i class="legend-dot blocked"></i>Không khả dụng</span>
+                        </div>
+                    </div>
+                    <div id="roomGroups" class="room-groups"></div>
+                </div>
+                <div class="footer-actions">
+                    <button type="button" class="btn btn-outline-secondary" data-back-step="details">
+                        <i class="bi bi-arrow-left"></i>
+                        Quay lại
+                    </button>
+                    <button type="button" class="btn btn-primary" id="continueToConfirmBtn" disabled>
+                        Kiểm tra lại
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <section class="reception-panel" data-step-panel="confirm">
+                <div class="section-grid">
+                    <div class="tool-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Final check</p>
+                                <h2>Xác nhận trước check-in</h2>
+                            </div>
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                        <div id="confirmDetails" class="confirm-list"></div>
+                    </div>
+                    <div class="tool-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Selected rooms</p>
+                                <h2>Phòng sẽ giao khách</h2>
+                            </div>
+                            <i class="bi bi-door-open"></i>
+                        </div>
+                        <div id="confirmRooms" class="selected-room-list"></div>
+                    </div>
+                </div>
+                <div class="footer-actions">
+                    <button type="button" class="btn btn-outline-secondary" data-back-step="rooms">
+                        <i class="bi bi-arrow-left"></i>
+                        Chọn lại phòng
+                    </button>
+                    <button type="button" class="btn btn-success" id="confirmCheckInBtn">
+                        <i class="bi bi-check2-circle"></i>
+                        Xác nhận check-in
+                    </button>
+                </div>
+            </section>
+
+            <section class="reception-panel" data-step-panel="done">
+                <div class="success-panel">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <h2>Check-in thành công</h2>
+                    <p id="successMessage">Khách đã được nhận phòng.</p>
+                    <div id="assignedRooms" class="selected-room-list compact"></div>
+                    <button type="button" class="btn btn-dark" id="newCheckInBtn">
+                        <i class="bi bi-plus-circle"></i>
+                        Check-in lượt mới
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" referrerpolicy="no-referrer"></script>
+    <script src="~/js/receptionist-demo.js" asp-append-version="true"></script>
+</body>
+</html>

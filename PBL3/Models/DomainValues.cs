@@ -5,6 +5,7 @@ public static class DomainValues
     public static class DatPhongTrangThai
     {
         public const string GiuCho = "GIU_CHO";
+        public const string DaNhanPhong = "DA_NHAN_PHONG";
         public const string TraPhong = "TRA_PHONG";
         public const string DaHuy = "DA_HUY";
     }
@@ -34,6 +35,14 @@ public static class DomainValues
     public static class ChiTietHoaDonTrangThai
     {
         public const string HieuLuc = "HIEU_LUC";
+    }
+
+    public static class PhongTrangThai
+    {
+        public const string Trong = "Trống";
+        public const string DangSuDung = "Đang sử dụng";
+        public const string BaoTri = "Bảo trì";
+        public const string NgungSuDung = "Ngưng sử dụng";
     }
 
     public static class MaGiamGiaLoai

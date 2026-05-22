@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PBL3.Data;
 using PBL3.Models;
@@ -8,10 +9,14 @@ namespace PBL3.Services
     public class TaiKhoanService : ITaiKhoanService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IPasswordHasher<TaiKhoan> _passwordHasher;
 
-        public TaiKhoanService(ApplicationDbContext context)
+        public TaiKhoanService(
+            ApplicationDbContext context,
+            IPasswordHasher<TaiKhoan> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<List<TaiKhoan>> GetAllAsync()
@@ -62,6 +67,7 @@ namespace PBL3.Services
             if (await KiemTraTrungTenDangNhapAsync(taiKhoan.TenDangNhap)) return false;
             if (await KiemTraNVDaCoTaiKhoanAsync(taiKhoan.MaNv)) return false;
 
+            EnsurePasswordHash(taiKhoan);
             _context.Add(taiKhoan);
             await _context.SaveChangesAsync();
             return true;
@@ -72,6 +78,7 @@ namespace PBL3.Services
             if (await KiemTraTrungTenDangNhapAsync(taiKhoan.TenDangNhap, taiKhoan.MaTk)) return false;
             if (await KiemTraNVDaCoTaiKhoanAsync(taiKhoan.MaNv, taiKhoan.MaTk)) return false;
 
+            EnsurePasswordHash(taiKhoan);
             _context.Update(taiKhoan);
             await _context.SaveChangesAsync();
             return true;
@@ -93,6 +100,21 @@ namespace PBL3.Services
                 _context.ChangeTracker.Clear();
                 return false;
             }
+        }
+
+        private void EnsurePasswordHash(TaiKhoan taiKhoan)
+        {
+            if (string.IsNullOrWhiteSpace(taiKhoan.MatKhau) || IsPasswordHash(taiKhoan.MatKhau))
+            {
+                return;
+            }
+
+            taiKhoan.MatKhau = _passwordHasher.HashPassword(taiKhoan, taiKhoan.MatKhau);
+        }
+
+        private static bool IsPasswordHash(string password)
+        {
+            return password.StartsWith("AQAAAA", StringComparison.Ordinal);
         }
     }
 }
