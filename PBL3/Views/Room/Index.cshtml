@@ -502,7 +502,7 @@
             <div class="modal-body">
                 <form id="bookRoomForm">
                     <input type="hidden" id="bookRoomNumber" name="roomNumber" />
-                    
+
                     <div class="row">
                         <div class="col-md-12 mb-3">
                             <h6 class="fw-bold border-bottom pb-2">Thông tin khách hàng</h6>
@@ -531,15 +531,19 @@
                                 <option value="Khác">Khác</option>
                             </select>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="guestEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="guestEmail" placeholder="example@email.com">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="guestAddress" class="form-label">Địa chỉ thường trú</label>
+                            <input type="text" class="form-control" id="guestAddress" placeholder="Nhập địa chỉ thường trú">
+                        </div>
 
                         <div class="col-md-12 mb-3 mt-2">
                             <h6 class="fw-bold border-bottom pb-2">Thông tin đặt phòng</h6>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Số phòng</label>
-                            <input type="text" class="form-control bg-light" id="displayRoomNumber" readonly>
-                        </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label for="guestCount" class="form-label">Số lượng khách</label>
                             <input type="number" class="form-control" id="guestCount" value="1" min="1">
                         </div>
@@ -577,48 +581,79 @@
 
 <!-- Add Room Modal -->
 <div class="modal fade" id="addRoomModal" tabindex="-1" aria-labelledby="addRoomModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addRoomModalLabel">Thêm phòng mới</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
+            <!-- Header -->
+            <div class="modal-header border-0 px-4 pt-4 pb-2">
+                <div>
+                    <h5 class="modal-title fw-bold fs-5" id="addRoomModalLabel">
+                        <i class="bi bi-plus-circle-fill text-primary me-2"></i>Thêm phòng mới
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">Nhập thông tin phòng cần thêm vào hệ thống</p>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <!-- Body -->
+            <div class="modal-body px-4 py-3">
                 <form id="addRoomForm">
-                    <div class="mb-3">
-                        <label for="roomNo" class="form-label">Số phòng</label>
-                        <input type="text" class="form-control" id="roomNo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="roomType" class="form-label">Loại Phòng</label>
-                        <select class="form-select" id="roomType" required>
-                            <option value="Standard">Standard</option>
-                            <option value="Deluxe">Deluxe</option>
-                            <option value="Suit">Suit</option>
-                            <option value="Presidential">Presidential</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="roomPrice" class="form-label">Giá (VNĐ)</label>
-                        <input type="number" class="form-control" id="roomPrice" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="roomCapacity" class="form-label">Sức chứa (Người)</label>
-                        <input type="number" class="form-control" id="roomCapacity" value="2" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="roomDesc" class="form-label">Mô tả</label>
-                        <textarea class="form-control" id="roomDesc" rows="2"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="roomFacilities" class="form-label">Tiện nghi</label>
-                        <input type="text" class="form-control" id="roomFacilities" placeholder="Wifi, TV, Điều hòa...">
+                    <div class="row g-3">
+                        <!-- Số phòng -->
+                        <div class="col-md-6">
+                            <label for="roomNo" class="form-label fw-semibold text-dark">Số phòng <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="roomNo" required placeholder="VD: 501"
+                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
+                        </div>
+                        <!-- Loại phòng -->
+                        <div class="col-md-6">
+                            <label for="roomType" class="form-label fw-semibold text-dark">Loại phòng <span class="text-danger">*</span></label>
+                            <select class="form-select" id="roomType" required
+                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
+                                <option value="Standard">Standard</option>
+                                <option value="Deluxe">Deluxe</option>
+                                <option value="Suit">Suit</option>
+                                <option value="Presidential">Presidential</option>
+                            </select>
+                        </div>
+                        <!-- Tầng -->
+                        <div class="col-md-6">
+                            <label for="roomFloor" class="form-label fw-semibold text-dark">Tầng <span class="text-danger">*</span></label>
+                            <select class="form-select" id="roomFloor" required
+                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
+                                <option value="1">Tầng 1</option>
+                                <option value="2">Tầng 2</option>
+                                <option value="3">Tầng 3</option>
+                                <option value="4">Tầng 4</option>
+                                <option value="5">Tầng 5</option>
+                            </select>
+                        </div>
+                        <!-- Trạng thái -->
+                        <div class="col-md-6">
+                            <label for="roomStatus" class="form-label fw-semibold text-dark">Trạng thái <span class="text-danger">*</span></label>
+                            <select class="form-select" id="roomStatus" required
+                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
+                                <option value="Trống" selected>Trống</option>
+                                <option value="Bảo trì">Bảo trì</option>
+                            </select>
+                        </div>
+                        <!-- Ghi chú -->
+                        <div class="col-12">
+                            <label for="roomNote" class="form-label fw-semibold text-dark">Ghi chú</label>
+                            <textarea class="form-control" id="roomNote" rows="3" placeholder="Nhập ghi chú về phòng (nếu có)..."
+                                      style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; resize: vertical; transition: all 0.2s;"></textarea>
+                        </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
-                <button type="button" class="btn btn-dark" id="btnSubmitAddRoom">Lưu phòng</button>
+            <!-- Footer -->
+            <div class="modal-footer border-0 px-4 pb-4 pt-2">
+                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal"
+                        style="border-radius: 0.5rem; font-weight: 500;">
+                    Huỷ
+                </button>
+                <button type="button" class="btn btn-dark px-4" id="btnSubmitAddRoom"
+                        style="border-radius: 0.5rem; font-weight: 500;">
+                    <i class="bi bi-check-lg me-1"></i>Lưu phòng
+                </button>
             </div>
         </div>
     </div>
@@ -831,7 +866,27 @@
         });
 
         // =============================================
-        // ADD NEW ROOM
+        // ADD NEW ROOM - Form focus styles
+        // =============================================
+        $('#addRoomForm .form-control, #addRoomForm .form-select').on('focus', function () {
+        $(this).css({
+        'border-color': '#3b82f6',
+        'box-shadow': '0 0 0 3px rgba(59, 130, 246, 0.15)'
+        });
+        }).on('blur', function () {
+        $(this).css({
+        'border-color': '#e5e7eb',
+        'box-shadow': 'none'
+        });
+        });
+
+        // Reset form on modal close
+        $('#addRoomModal').on('hidden.bs.modal', function () {
+        $('#addRoomForm')[0].reset();
+        });
+
+        // =============================================
+        // ADD NEW ROOM - Save handler
         // =============================================
         $('#btnSubmitAddRoom').click(function() {
         var form = $('#addRoomForm')[0];
@@ -840,9 +895,15 @@
         return;
         }
 
-        Swal.fire('Thành công!', 'Đã lưu phòng mới vào cơ sở dữ liệu. Trạng thái mặc định: Trống.', 'success').then(() => {
         bootstrap.Modal.getInstance(document.getElementById('addRoomModal')).hide();
-        location.reload(); // Simple reload to show new room
+        Swal.fire({
+        title: 'Thành công!',
+        text: 'Đã lưu phòng mới vào hệ thống.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+        }).then(() => {
+        location.reload();
         });
         });
 
@@ -853,13 +914,12 @@
         e.preventDefault();
         var roomNumber = $(this).data('room');
         $('#bookRoomNumber').val(roomNumber);
-        $('#displayRoomNumber').val(roomNumber); // Display read-only
         $('#bookRoomForm')[0].reset();
-                
+
         // Set default dates
         var today = new Date().toISOString().split('T')[0];
         $('#checkInDate').val(today);
-                
+
         $('#bookRoomModalLabel').text('Đặt phòng ' + roomNumber);
         var bookModal = new bootstrap.Modal(document.getElementById('bookRoomModal'));
         bookModal.show();
@@ -874,7 +934,7 @@
 
         var roomNumber = $('#bookRoomNumber').val();
         var guestName = $('#guestName').val();
-                
+
         $.ajax({
         url: '@Url.Action("BookRoom", "Room")',
         type: 'POST',
@@ -883,7 +943,7 @@
         if (res.success) {
         bootstrap.Modal.getInstance(document.getElementById('bookRoomModal')).hide();
         var card = $('#room-card-' + roomNumber);
-                            
+
         if (status === 'occupied') {
         card.find('.status-container').html('<span class="badge-status badge-occupied">Có khách</span>');
         card.find('.action-container').html(`<button class="btn btn-dark w-100 btn-checkout" data-room="${roomNumber}" data-guest="${guestName}" data-checkout="...">Trả phòng</button>`);
@@ -910,7 +970,6 @@
         });
     </script>
 }
-
 
 
 
