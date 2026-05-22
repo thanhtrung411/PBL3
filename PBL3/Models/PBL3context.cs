@@ -144,6 +144,7 @@ namespace PBL3.Models
                 entity.Property(e => e.TrangThai)
                     .HasMaxLength(20)
                     .HasDefaultValue("Hoạt động");
+                entity.Property(e => e.LoaiDichVu).HasMaxLength(50);
             });
 
             modelBuilder.Entity<HoaDon>(entity =>

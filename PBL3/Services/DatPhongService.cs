@@ -75,7 +75,7 @@ namespace PBL3.Services
                 datPhong.SdtSnapshot = khachHang.SoDienThoai;
             }
 
-            datPhong.NgayDat = DateTime.Now;
+            datPhong.NgayDat = DateTime.UtcNow;
             if (string.IsNullOrEmpty(datPhong.TrangThai))
             {
                 datPhong.TrangThai = DomainValues.DatPhongTrangThai.GiuCho;

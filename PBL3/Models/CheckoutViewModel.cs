@@ -43,6 +43,8 @@ namespace PBL3.Models
         [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Email không hợp lệ.")]
         [System.ComponentModel.DataAnnotations.StringLength(100)]
         public string Email { get; set; } = "";
+        [System.ComponentModel.DataAnnotations.StringLength(255)]
+        public string Address { get; set; } = "";
 
         [System.ComponentModel.DataAnnotations.StringLength(255)]
         public string? Note { get; set; }
