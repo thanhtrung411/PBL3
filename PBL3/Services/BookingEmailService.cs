@@ -1,9 +1,11 @@
 using System.Globalization;
 using System.Net;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using PBL3.Data;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
+using QRCoder;
 
 namespace PBL3.Services;
 
@@ -55,8 +57,10 @@ public class BookingEmailService : IBookingEmailService
                 return;
             }
 
-            var subject = $"Xac nhan thanh toan thanh cong - {booking.MaDatPhong}";
-            var textBody = BuildTextBody(invoice, paymentResult);
+            var qrPayload = BuildQrPayload(booking.MaDatPhong);
+            var qrImage = GenerateQrPng(qrPayload);
+            var subject = $"Hóa đơn thanh toán thành công - {booking.MaDatPhong}";
+            var textBody = BuildTextBody(invoice, paymentResult, qrPayload);
             var htmlBody = BuildHtmlBody(invoice, paymentResult);
 
             await _emailSender.SendAsync(
@@ -64,6 +68,7 @@ public class BookingEmailService : IBookingEmailService
                 subject,
                 htmlBody,
                 textBody,
+                new[] { new EmailInlineImage("booking-qr", "image/png", qrImage) },
                 cancellationToken);
         }
         catch (Exception ex)
@@ -75,52 +80,65 @@ public class BookingEmailService : IBookingEmailService
         }
     }
 
-    private static string BuildTextBody(HoaDon invoice, PaymentCallbackResult paymentResult)
+    private static string BuildTextBody(HoaDon invoice, PaymentCallbackResult paymentResult, string qrPayload)
     {
         var booking = invoice.MaDatPhongNavigation;
-        var roomLines = GetRoomLines(invoice).ToList();
-        var rooms = roomLines.Count == 0
-            ? "- Thong tin phong dang duoc cap nhat"
-            : string.Join(Environment.NewLine, roomLines.Select(line =>
-                $"- {line.NoiDung} | So dem: {line.SoLuong} | Don gia: {FormatMoney(line.DonGia)} | Thanh tien: {FormatMoney(line.ThanhTien)}"));
+        var invoiceLines = GetInvoiceLines(invoice).ToList();
+        var lines = invoiceLines.Count == 0
+            ? "- Thông tin hóa đơn đang được cập nhật"
+            : string.Join(Environment.NewLine, invoiceLines.Select(line =>
+                $"- {line.NoiDung} | Số đêm/SL: {line.SoLuong} | Đơn giá: {FormatMoney(line.DonGia)} | Thành tiền: {FormatMoney(line.ThanhTien)}"));
 
         return $"""
-        Xin chao {booking.TenKhSnapshot},
+        Xin chào {booking.TenKhSnapshot},
 
-        Venus Hotel xac nhan thanh toan VNPay cua quy khach da thanh cong.
+        Venus Hotel xác nhận thanh toán VNPay của quý khách đã thành công.
 
-        Ma dat phong: {booking.MaDatPhong}
-        Ngay nhan phong: {booking.NgayNhanPhong:dd/MM/yyyy}
-        Ngay tra phong: {booking.NgayTraPhong:dd/MM/yyyy}
-        Tong tien da thanh toan: {FormatMoney(invoice.SoTienDaThanhToan)}
-        Ma giao dich VNPay: {paymentResult.TransactionNo ?? "N/A"}
-        Ngan hang: {paymentResult.BankCode ?? "N/A"}
-        Thoi gian thanh toan: {FormatDateTime(invoice.NgayThanhToanCuoi)}
+        Mã đặt phòng: {booking.MaDatPhong}
+        Mã hóa đơn: {invoice.MaHoaDon}
+        Họ tên: {booking.TenKhSnapshot}
+        Số điện thoại: {booking.SdtSnapshot ?? "N/A"}
+        CCCD/CMND: {MaskIdentityNumber(booking.CccdSnapshot)}
+        Ngày nhận phòng: {booking.NgayNhanPhong:dd/MM/yyyy}
+        Ngày trả phòng: {booking.NgayTraPhong:dd/MM/yyyy}
+        Số đêm: {GetNights(booking)}
+        Tổng tiền phòng: {FormatMoney(invoice.TongTienPhong)}
+        Tổng tiền dịch vụ: {FormatMoney(invoice.TongTienDichVu)}
+        Giảm giá: {FormatMoney(invoice.TienGiamGiaPhong)}
+        Tổng thanh toán: {FormatMoney(invoice.TongThanhToan)}
+        Tổng tiền đã thanh toán: {FormatMoney(invoice.SoTienDaThanhToan)}
+        Mã giao dịch VNPay: {paymentResult.TransactionNo ?? "N/A"}
+        Ngân hàng: {paymentResult.BankCode ?? "N/A"}
+        Thời gian thanh toán: {FormatDateTime(invoice.NgayThanhToanCuoi)}
 
-        Thong tin phong:
-        {rooms}
+        Chi tiết hóa đơn:
+        {lines}
 
-        Cam on quy khach da dat phong tai Venus Hotel.
+        Mã QR check-in chứa dữ liệu: {qrPayload}
+
+        Khi đến khách sạn, quý khách vui lòng mang theo giấy tờ tùy thân như CCCD/CMND/Hộ chiếu để làm thủ tục nhận phòng.
+
+        Cảm ơn quý khách đã đặt phòng tại Venus Hotel.
         """;
     }
 
     private static string BuildHtmlBody(HoaDon invoice, PaymentCallbackResult paymentResult)
     {
         var booking = invoice.MaDatPhongNavigation;
-        var roomRows = GetRoomLines(invoice).Select(line => $"""
+        var invoiceRows = GetInvoiceLines(invoice).Select(line => $"""
             <tr>
-                <td>{Html(line.NoiDung)}</td>
-                <td style="text-align:right">{line.SoLuong}</td>
-                <td style="text-align:right">{Html(FormatMoney(line.DonGia))}</td>
-                <td style="text-align:right">{Html(FormatMoney(line.ThanhTien))}</td>
+                <td style="padding:12px 10px;border-bottom:1px solid #edf2f7;color:#111827">{Html(line.NoiDung)}</td>
+                <td style="padding:12px 10px;border-bottom:1px solid #edf2f7;text-align:right;color:#111827">{line.SoLuong}</td>
+                <td style="padding:12px 10px;border-bottom:1px solid #edf2f7;text-align:right;color:#111827">{Html(FormatMoney(line.DonGia))}</td>
+                <td style="padding:12px 10px;border-bottom:1px solid #edf2f7;text-align:right;color:#111827;font-weight:700">{Html(FormatMoney(line.ThanhTien))}</td>
             </tr>
             """);
-        var roomsHtml = string.Join(Environment.NewLine, roomRows);
-        if (string.IsNullOrWhiteSpace(roomsHtml))
+        var invoiceRowsHtml = string.Join(Environment.NewLine, invoiceRows);
+        if (string.IsNullOrWhiteSpace(invoiceRowsHtml))
         {
-            roomsHtml = """
+            invoiceRowsHtml = """
             <tr>
-                <td colspan="4">Thong tin phong dang duoc cap nhat</td>
+                <td colspan="4" style="padding:12px 10px;border-bottom:1px solid #edf2f7">Thông tin hóa đơn đang được cập nhật</td>
             </tr>
             """;
         }
@@ -128,49 +146,148 @@ public class BookingEmailService : IBookingEmailService
         return $"""
         <!doctype html>
         <html>
-        <body style="font-family:Arial,sans-serif;color:#1f2937;line-height:1.5">
-            <h2>Thanh toan VNPay thanh cong</h2>
-            <p>Xin chao {Html(booking.TenKhSnapshot)},</p>
-            <p>Venus Hotel xac nhan thanh toan VNPay cua quy khach da thanh cong.</p>
+        <body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1f2937;line-height:1.5">
+            <div style="max-width:760px;margin:0 auto;padding:24px">
+                <div style="background:#101820;border-radius:18px 18px 0 0;padding:28px;color:#ffffff">
+                    <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#d4af37;font-weight:700">Venus Hotel</div>
+                    <h1 style="margin:8px 0 6px;font-size:28px;line-height:1.2">Hóa đơn thanh toán thành công</h1>
+                    <div style="display:inline-block;background:#e8f7ee;color:#137a3a;border-radius:999px;padding:7px 13px;font-weight:700;font-size:13px">ĐÃ THANH TOÁN</div>
+                </div>
 
-            <table style="border-collapse:collapse;margin:16px 0">
-                <tr><td><strong>Ma dat phong</strong></td><td style="padding-left:16px">{Html(booking.MaDatPhong)}</td></tr>
-                <tr><td><strong>Ngay nhan phong</strong></td><td style="padding-left:16px">{booking.NgayNhanPhong:dd/MM/yyyy}</td></tr>
-                <tr><td><strong>Ngay tra phong</strong></td><td style="padding-left:16px">{booking.NgayTraPhong:dd/MM/yyyy}</td></tr>
-                <tr><td><strong>Tong tien da thanh toan</strong></td><td style="padding-left:16px">{Html(FormatMoney(invoice.SoTienDaThanhToan))}</td></tr>
-                <tr><td><strong>Ma giao dich VNPay</strong></td><td style="padding-left:16px">{Html(paymentResult.TransactionNo ?? "N/A")}</td></tr>
-                <tr><td><strong>Ngan hang</strong></td><td style="padding-left:16px">{Html(paymentResult.BankCode ?? "N/A")}</td></tr>
-                <tr><td><strong>Thoi gian thanh toan</strong></td><td style="padding-left:16px">{Html(FormatDateTime(invoice.NgayThanhToanCuoi))}</td></tr>
-            </table>
+                <div style="background:#ffffff;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 18px 18px;padding:26px">
+                    <p style="margin:0 0 18px;font-size:16px">Xin chào <strong>{Html(booking.TenKhSnapshot)}</strong>, Venus Hotel xác nhận giao dịch VNPay của quý khách đã thành công. Thông tin đặt phòng và hóa đơn nằm bên dưới.</p>
 
-            <h3>Thong tin phong</h3>
-            <table style="border-collapse:collapse;width:100%" border="1" cellpadding="8">
-                <thead>
-                    <tr>
-                        <th style="text-align:left">Noi dung</th>
-                        <th style="text-align:right">So dem</th>
-                        <th style="text-align:right">Don gia</th>
-                        <th style="text-align:right">Thanh tien</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {roomsHtml}
-                </tbody>
-            </table>
+                    <table style="width:100%;border-collapse:collapse;margin:18px 0">
+                        <tr>
+                            <td style="vertical-align:top;width:58%;padding-right:18px">
+                                <h2 style="font-size:18px;margin:0 0 10px;color:#111827">Thông tin đặt phòng</h2>
+                                {BuildInfoRow("Mã đặt phòng", booking.MaDatPhong)}
+                                {BuildInfoRow("Mã hóa đơn", invoice.MaHoaDon)}
+                                {BuildInfoRow("Họ tên", booking.TenKhSnapshot)}
+                                {BuildInfoRow("Số điện thoại", booking.SdtSnapshot ?? "N/A")}
+                                {BuildInfoRow("CCCD/CMND", MaskIdentityNumber(booking.CccdSnapshot))}
+                                {BuildInfoRow("Ngày nhận phòng", booking.NgayNhanPhong.ToString("dd/MM/yyyy", VietnamCulture))}
+                                {BuildInfoRow("Ngày trả phòng", booking.NgayTraPhong.ToString("dd/MM/yyyy", VietnamCulture))}
+                                {BuildInfoRow("Số đêm", GetNights(booking).ToString(CultureInfo.InvariantCulture))}
+                            </td>
+                            <td style="vertical-align:top;width:42%;text-align:center;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:18px">
+                                <div style="font-size:13px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:10px">Mã QR check-in</div>
+                                <img src="cid:booking-qr" width="180" height="180" alt="QR đặt phòng {Html(booking.MaDatPhong)}" style="display:block;margin:0 auto 10px;border:8px solid #ffffff;border-radius:12px" />
+                                <div style="font-size:13px;color:#64748b">Quét mã này tại quầy lễ tân để đối chiếu đặt phòng.</div>
+                            </td>
+                        </tr>
+                    </table>
 
-            <p>Cam on quy khach da dat phong tai Venus Hotel.</p>
+                    <h2 style="font-size:18px;margin:22px 0 10px;color:#111827">Chi tiết hóa đơn</h2>
+                    <table style="border-collapse:collapse;width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+                        <thead>
+                            <tr style="background:#f8fafc">
+                                <th style="padding:12px 10px;text-align:left;color:#475569;font-size:13px">Nội dung</th>
+                                <th style="padding:12px 10px;text-align:right;color:#475569;font-size:13px">Số đêm/SL</th>
+                                <th style="padding:12px 10px;text-align:right;color:#475569;font-size:13px">Đơn giá</th>
+                                <th style="padding:12px 10px;text-align:right;color:#475569;font-size:13px">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {invoiceRowsHtml}
+                        </tbody>
+                    </table>
+
+                    <table style="width:100%;border-collapse:collapse;margin:18px 0 0">
+                        <tr>
+                            <td style="width:48%;vertical-align:top;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:16px;color:#7c2d12">
+                                <strong>Lưu ý khi nhận phòng</strong><br />
+                                Khi đến khách sạn, quý khách vui lòng mang theo giấy tờ tùy thân như CCCD/CMND/Hộ chiếu để làm thủ tục nhận phòng.
+                            </td>
+                            <td style="width:4%"></td>
+                            <td style="width:48%;vertical-align:top">
+                                <table style="width:100%;border-collapse:collapse">
+                                    {BuildMoneyRow("Tổng tiền phòng", invoice.TongTienPhong)}
+                                    {BuildMoneyRow("Tổng tiền dịch vụ", invoice.TongTienDichVu)}
+                                    {BuildMoneyRow("Giảm giá", invoice.TienGiamGiaPhong)}
+                                    {BuildMoneyRow("Tổng thanh toán", invoice.TongThanhToan, true)}
+                                    {BuildMoneyRow("Đã thanh toán", invoice.SoTienDaThanhToan, true)}
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h2 style="font-size:18px;margin:22px 0 10px;color:#111827">Thông tin giao dịch</h2>
+                    {BuildInfoRow("Phương thức", "VNPay")}
+                    {BuildInfoRow("Mã giao dịch VNPay", paymentResult.TransactionNo ?? "N/A")}
+                    {BuildInfoRow("Ngân hàng", paymentResult.BankCode ?? "N/A")}
+                    {BuildInfoRow("Thời gian thanh toán", FormatDateTime(invoice.NgayThanhToanCuoi))}
+
+                    <p style="margin:22px 0 0;color:#64748b;font-size:14px">Cảm ơn quý khách đã đặt phòng tại Venus Hotel.</p>
+                </div>
+            </div>
         </body>
         </html>
         """;
     }
 
-    private static IEnumerable<ChiTietHoaDon> GetRoomLines(HoaDon invoice)
+    private static string BuildInfoRow(string label, string value)
     {
-        return invoice.ChiTietHoaDons
-            .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong)
-            .OrderBy(x => x.MaCthd);
+        return $"""
+        <div style="border-bottom:1px solid #edf2f7;padding:8px 0">
+            <span style="display:inline-block;width:145px;color:#64748b">{Html(label)}</span>
+            <strong style="color:#111827">{Html(value)}</strong>
+        </div>
+        """;
     }
 
+    private static string BuildMoneyRow(string label, decimal value, bool emphasized = false)
+    {
+        var fontSize = emphasized ? "18px" : "14px";
+        var weight = emphasized ? "800" : "600";
+        return $"""
+        <tr>
+            <td style="padding:7px 0;color:#64748b">{Html(label)}</td>
+            <td style="padding:7px 0;text-align:right;font-size:{fontSize};font-weight:{weight};color:#111827">{Html(FormatMoney(value))}</td>
+        </tr>
+        """;
+    }
+
+    private static IEnumerable<ChiTietHoaDon> GetInvoiceLines(HoaDon invoice)
+    {
+        return invoice.ChiTietHoaDons
+            .OrderBy(x => x.LoaiMuc)
+            .ThenBy(x => x.MaCthd);
+    }
+
+    private static string BuildQrPayload(string bookingCode)
+    {
+        return JsonSerializer.Serialize(new { booking = bookingCode.Trim() });
+    }
+
+    private static byte[] GenerateQrPng(string payload)
+    {
+        using var generator = new QRCodeGenerator();
+        using var qrData = generator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(qrData);
+        return qrCode.GetGraphic(10);
+    }
+
+    private static int GetNights(DatPhong booking)
+    {
+        return Math.Max(booking.NgayTraPhong.DayNumber - booking.NgayNhanPhong.DayNumber, 1);
+    }
+
+    private static string MaskIdentityNumber(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "N/A";
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length <= 4)
+        {
+            return trimmed;
+        }
+
+        return new string('*', trimmed.Length - 4) + trimmed[^4..];
+    }
     private static string FormatMoney(decimal value)
     {
         return string.Format(VietnamCulture, "{0:N0} VND", value);

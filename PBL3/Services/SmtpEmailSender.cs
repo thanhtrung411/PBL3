@@ -24,6 +24,7 @@ public class SmtpEmailSender : IEmailSender
         string subject,
         string htmlBody,
         string textBody,
+        IReadOnlyCollection<EmailInlineImage>? inlineImages = null,
         CancellationToken cancellationToken = default)
     {
         if (!_options.Enabled)
@@ -53,7 +54,20 @@ public class SmtpEmailSender : IEmailSender
         };
         message.To.Add(new MailAddress(toEmail));
         message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(textBody, null, "text/plain"));
-        message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(htmlBody, null, "text/html"));
+
+        var htmlView = AlternateView.CreateAlternateViewFromString(htmlBody, null, "text/html");
+        foreach (var inlineImage in inlineImages ?? Array.Empty<EmailInlineImage>())
+        {
+            var stream = new MemoryStream(inlineImage.Content);
+            var resource = new LinkedResource(stream, inlineImage.ContentType)
+            {
+                ContentId = inlineImage.ContentId,
+                TransferEncoding = System.Net.Mime.TransferEncoding.Base64
+            };
+            htmlView.LinkedResources.Add(resource);
+        }
+
+        message.AlternateViews.Add(htmlView);
 
 #pragma warning disable SYSLIB0014
         using var client = new SmtpClient(_options.Host, _options.Port)
