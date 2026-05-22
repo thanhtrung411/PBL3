@@ -1,214 +1,15 @@
-﻿@* @{
+﻿@{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý dịch vụ";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3 class="mb-1 fw-bold">Quản lý dịch vụ</h3>
-        <p class="text-muted mb-0">Theo dõi thông tin và hiệu suất của các dịch vụ</p>
-    </div>
-    <button class="btn btn-dark px-4"><i class="bi bi-plus"></i> Tạo phiếu dịch vụ</button>
-</div>
-
-<!-- Stats -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card-custom py-3 text-center border">
-            <div class="text-muted small mb-2">Tổng phiếu dịch vụ</div>
-            <div class="fw-bold fs-3">500 phiếu</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom py-3 text-center border">
-            <div class="text-muted small mb-2">Chờ duyệt</div>
-            <div class="fw-bold fs-3">3 phiếu</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom py-3 text-center border">
-            <div class="text-muted small mb-2">Đang sử dụng</div>
-            <div class="fw-bold fs-3">12 phiếu</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom py-3 text-center border">
-            <div class="text-muted small mb-2">Doanh thu hôm nay</div>
-            <div class="d-flex justify-content-center align-items-baseline gap-2">
-                <div class="fw-bold fs-3">1,200,000</div>
-                <div class="text-success small fw-bold">+8% so với hôm qua</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="d-flex justify-content-between mb-4">
-    <div class="input-group" style="width: 350px;">
-        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-        <input type="text" class="form-control bg-white border-start-0" placeholder="Tìm kiếm dịch vụ">
-    </div>
-    <div class="d-flex gap-2">
-        <select class="form-select bg-light text-muted"><option>Loại</option></select>
-        <select class="form-select bg-light text-muted"><option>Trạng thái</option></select>
-    </div>
-</div>
-
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="card-custom p-3 border">
-            <div class="fw-bold text-dark mb-1">Spa & Massage</div>
-            <div class="text-muted small mb-2">Dịch vụ thư giãn toàn thân cao cấp</div>
-            <div class="fw-bold text-dark mb-2">500.000 đ<span class="text-muted fw-normal">/ 60 phút</span></div>
-            <div class="mb-3"><span class="text-success small"><i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i> Đang hoạt động</span></div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm px-3 flex-grow-1 border">Chi tiết</button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-icon-only border"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card-custom p-3 border">
-            <div class="fw-bold text-dark mb-1">Nhà hàng</div>
-            <div class="text-muted small mb-2">Phục vụ đa dạng phong cách món Âu - Á</div>
-            <div class="fw-bold text-dark mb-2">300.000 đ<span class="text-muted fw-normal">/ người</span></div>
-            <div class="mb-3"><span class="text-success small"><i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i> Đang hoạt động</span></div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm px-3 flex-grow-1 border">Chi tiết</button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-icon-only border"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card-custom p-3 border">
-            <div class="fw-bold text-dark mb-1">Wifi cao cấp</div>
-            <div class="text-muted small mb-2">Wifi tốc độ cao không giới hạn</div>
-            <div class="fw-bold text-dark mb-2">50.000 đ<span class="text-muted fw-normal">/ ngày</span></div>
-            <div class="mb-3"><span class="text-success small"><i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i> Đang hoạt động</span></div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm px-3 flex-grow-1 border">Chi tiết</button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-icon-only border"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card-custom p-3 border">
-            <div class="fw-bold text-dark mb-1">Phòng gym</div>
-            <div class="text-muted small mb-2">Phòng gym đầy đủ trang thiết bị hiện đại</div>
-            <div class="fw-bold text-dark mb-2">150.000 đ<span class="text-muted fw-normal">/ ngày</span></div>
-            <div class="mb-3"><span class="text-success small"><i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i> Đang hoạt động</span></div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm px-3 flex-grow-1 border">Chi tiết</button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-icon-only border"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card-custom p-3 border">
-            <div class="fw-bold text-dark mb-1">Giặt ủi</div>
-            <div class="text-muted small mb-2">Dịch vụ giặt ủi lấy nhanh ngay trong ngày</div>
-            <div class="fw-bold text-dark mb-2">50.000 đ<span class="text-muted fw-normal">/ kg</span></div>
-            <div class="mb-3"><span class="text-success small"><i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i> Đang hoạt động</span></div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm px-3 flex-grow-1 border">Chi tiết</button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-icon-only border"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card-custom p-3 border">
-            <div class="fw-bold text-dark mb-1">Room service</div>
-            <div class="text-muted small mb-2">Dịch vụ gửi đồ tận phòng 24/7</div>
-            <div class="fw-bold text-dark mb-2">—</div>
-            <div class="mb-3"><span class="text-success small"><i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i> Đang hoạt động</span></div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm px-3 flex-grow-1 border">Chi tiết</button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-icon-only border"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card-custom p-0 overflow-hidden border mt-4">
-    <div class="p-3 bg-light border-bottom fw-bold text-dark d-flex align-items-center">
-        <i class="bi bi-grid-fill text-primary me-2"></i> Danh sách dịch vụ
-    </div>
-    <div class="table-responsive p-3">
-        <table class="table-custom mb-0 w-100">
-            <thead class="bg-light">
-                <tr>
-                    <th>Mã dịch vụ</th>
-                    <th>Khách hàng</th>
-                    <th>Phòng</th>
-                    <th>Tên dịch vụ</th>
-                    <th>Số lần</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="fw-bold">BK001</td>
-                    <td>
-                        <div>Nguyễn Văn A</div>
-                        <small class="text-muted">0912453482</small>
-                    </td>
-                    <td>301</td>
-                    <td>Spa & Massage</td>
-                    <td>3</td>
-                    <td>1,500,000đ</td>
-                    <td><span class="badge-status badge-maintenance">Chờ xác nhận</span></td>
-                    <td>
-                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="fw-bold">BK002</td>
-                    <td>
-                        <div>Trần Thị B</div>
-                        <small class="text-muted">0905642357</small>
-                    </td>
-                    <td>102</td>
-                    <td>Nhà hàng</td>
-                    <td>1</td>
-                    <td>300,000đ</td>
-                    <td><span class="badge-status badge-empty">Đã thanh toán</span></td>
-                    <td>
-                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-icon-only"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-icon-only text-danger"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
- *@
-
-
-
-
-
-@{
-    Layout = "_AdminLayout";
-    ViewData["Title"] = "Quản lý dịch vụ";
-}
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="input-group" style="max-width: 400px;">
+    <div class="input-group flex-grow-1 me-3">
         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
         <input type="text" id="searchInput" class="form-control bg-white border-start-0"
                placeholder="Tìm kiếm dịch vụ...">
     </div>
-    <button class="btn btn-primary px-4"><i class="bi bi-plus"></i> Thêm dịch vụ mới</button>
+    <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#addServiceModal"><i class="bi bi-plus"></i> Thêm dịch vụ mới</button>
 </div>
 
 <div class="d-flex gap-2 mb-4">
@@ -235,13 +36,13 @@
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div class="fw-bold fs-3 text-dark">7</div>
+            <div id="totalServicesCount" class="fw-bold fs-3 text-dark">7</div>
             <div class="text-muted small">Tổng dịch vụ</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div class="fw-bold fs-3 text-success">7</div>
+            <div id="activeServicesCount" class="fw-bold fs-3 text-success">7</div>
             <div class="text-muted small">Đang hoạt động</div>
         </div>
     </div>
@@ -262,7 +63,7 @@
 <!-- Cards -->
 <div class="row g-4" id="serviceList">
     <!-- Card 1 -->
-    <div class="col-md-4 service-item" data-name="Spa & Massage" data-category="Giải trí">
+    <div class="col-md-4 service-item" data-name="Spa & Massage" data-category="Giải trí" data-unit="60 phút" data-price="500000" data-status="active" data-description="Dịch vụ spa và massage thư giãn cao cấp">
         <div class="card-custom p-4 border h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
@@ -281,18 +82,14 @@
                 <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
                 <span class="text-muted small">Đang hoạt động</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
-                    <i class="bi bi-eye"></i> Chi
-                    tiết
-                </button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     </div>
     <!-- Card 2 -->
-    <div class="col-md-4 service-item" data-name="Nhà hàng" data-category="Ăn uống">
+    <div class="col-md-4 service-item" data-name="Nhà hàng" data-category="Ăn uống" data-unit="người" data-price="200000" data-status="active" data-description="Thực đơn đa dạng các món Á - Âu">
         <div class="card-custom p-4 border h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
@@ -311,18 +108,14 @@
                 <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
                 <span class="text-muted small">Đang hoạt động</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
-                    <i class="bi bi-eye"></i> Chi
-                    tiết
-                </button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     </div>
     <!-- Card 3 -->
-    <div class="col-md-4 service-item" data-name="WiFi cao cấp" data-category="Tiện ích">
+    <div class="col-md-4 service-item" data-name="WiFi cao cấp" data-category="Tiện ích" data-unit="ngày" data-price="100000" data-status="active" data-description="Wifi tốc độ cao không giới hạn">
         <div class="card-custom p-4 border h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
@@ -341,18 +134,14 @@
                 <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
                 <span class="text-muted small">Đang hoạt động</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
-                    <i class="bi bi-eye"></i> Chi
-                    tiết
-                </button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     </div>
     <!-- Card 4 -->
-    <div class="col-md-4 service-item" data-name="Phòng gym" data-category="Giải trí">
+    <div class="col-md-4 service-item" data-name="Phòng gym" data-category="Giải trí" data-unit="ngày" data-price="150000" data-status="active" data-description="Phòng tập gym với thiết bị hiện đại">
         <div class="card-custom p-4 border h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
@@ -371,18 +160,14 @@
                 <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
                 <span class="text-muted small">Đang hoạt động</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
-                    <i class="bi bi-eye"></i> Chi
-                    tiết
-                </button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     </div>
     <!-- Card 5 -->
-    <div class="col-md-4 service-item" data-name="Giặt ủi" data-category="Tiện ích">
+    <div class="col-md-4 service-item" data-name="Giặt ủi" data-category="Tiện ích" data-unit="Kg" data-price="50000" data-status="active" data-description="Dịch vụ giặt ủi chuyên nghiệp">
         <div class="card-custom p-4 border h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
@@ -399,18 +184,14 @@
                 <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
                 <span class="text-muted small">Đang hoạt động</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
-                    <i class="bi bi-eye"></i> Chi
-                    tiết
-                </button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     </div>
     <!-- Card 6 -->
-    <div class="col-md-4 service-item" data-name="Đưa đón sân bay" data-category="Vận chuyển">
+    <div class="col-md-4 service-item" data-name="Đưa đón sân bay" data-category="Vận chuyển" data-unit="chuyến" data-price="300000" data-status="active" data-description="Dịch vụ đưa đón sân bay 24/7">
         <div class="card-custom p-4 border h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
@@ -429,18 +210,14 @@
                 <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
                 <span class="text-muted small">Đang hoạt động</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
-                    <i class="bi bi-eye"></i> Chi
-                    tiết
-                </button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     </div>
     <!-- Card 7 -->
-    <div class="col-md-4 service-item" data-name="Bể bơi" data-category="Giải trí">
+    <div class="col-md-4 service-item" data-name="Bể bơi" data-category="Giải trí" data-unit="ngày" data-price="0" data-status="active" data-description="Bể bơi ngoài trời">
         <div class="card-custom p-4 border h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
@@ -457,67 +234,505 @@
                 <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
                 <span class="text-muted small">Đang hoạt động</span>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary flex-grow-1 bg-white rounded-pill">
-                    <i class="bi bi-eye"></i> Chi
-                    tiết
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm dịch vụ mới -->
+<div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border: none; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
+            <!-- Header -->
+            <div class="modal-header border-0 px-4 pt-4 pb-2">
+                <div>
+                    <h5 class="modal-title fw-bold fs-5" id="addServiceModalLabel">
+                        <i class="bi bi-plus-circle-fill text-primary me-2"></i>Thêm dịch vụ mới
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">Điền đầy đủ thông tin để tạo dịch vụ mới</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- Body -->
+            <div class="modal-body px-4 py-3">
+                <form id="addServiceForm">
+                    <div class="row g-3">
+                        <!-- Tên dịch vụ -->
+                        <div class="col-md-6">
+                            <label for="serviceName" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-tag-fill text-primary me-1" style="font-size: 0.8rem;"></i>Tên dịch vụ <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="serviceName" name="serviceName"
+                                   placeholder="VD: Spa & Massage" required
+                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
+                        </div>
+                        <!-- Đơn vị tính -->
+                        <div class="col-md-6">
+                            <label for="serviceUnit" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-rulers text-primary me-1" style="font-size: 0.8rem;"></i>Đơn vị tính <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="serviceUnit" name="serviceUnit"
+                                   placeholder="VD: 60 phút, người, ngày, kg..."
+                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
+                        </div>
+                        <!-- Loại dịch vụ -->
+                        <div class="col-md-6">
+                            <label for="serviceType" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-grid-fill text-primary me-1" style="font-size: 0.8rem;"></i>Loại dịch vụ <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="serviceType" name="serviceType" required
+                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
+                                <option value="" disabled selected>-- Chọn loại dịch vụ --</option>
+                                <option value="Ăn uống">🍽️ Ăn uống</option>
+                                <option value="Giải trí">🎮 Giải trí</option>
+                                <option value="Tiện ích">⚡ Tiện ích</option>
+                                <option value="Vận chuyển">🚗 Vận chuyển</option>
+                            </select>
+                        </div>
+                        <!-- Số tiền -->
+                        <div class="col-md-6">
+                            <label for="servicePrice" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-cash-stack text-primary me-1" style="font-size: 0.8rem;"></i>Số tiền (VNĐ) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group" style="border-radius: 0.5rem; overflow: hidden;">
+                                <input type="number" class="form-control" id="servicePrice" name="servicePrice"
+                                       placeholder="VD: 500000" min="0" required
+                                       style="padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
+                                <span class="input-group-text bg-light text-muted" style="border-color: #e5e7eb; font-size: 0.85rem;">VNĐ</span>
+                            </div>
+                        </div>
+                        <!-- Trạng thái -->
+                        <div class="col-md-6">
+                            <label for="serviceStatus" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-toggle-on text-primary me-1" style="font-size: 0.8rem;"></i>Trạng thái
+                            </label>
+                            <select class="form-select" id="serviceStatus" name="serviceStatus"
+                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
+                                <option value="active" selected>🟢 Đang hoạt động</option>
+                                <option value="inactive">🔴 Ngừng hoạt động</option>
+                            </select>
+                        </div>
+                        <!-- Spacer for alignment -->
+                        <div class="col-md-6"></div>
+                        <!-- Mô tả -->
+                        <div class="col-12">
+                            <label for="serviceDescription" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-chat-left-text-fill text-primary me-1" style="font-size: 0.8rem;"></i>Mô tả
+                            </label>
+                            <textarea class="form-control" id="serviceDescription" name="serviceDescription" rows="3"
+                                      placeholder="Nhập mô tả chi tiết về dịch vụ..."
+                                      style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; resize: vertical; transition: all 0.2s;"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- Footer -->
+            <div class="modal-footer border-0 px-4 pb-4 pt-2">
+                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal"
+                        style="border-radius: 0.5rem; font-weight: 500;">
+                    Hủy
                 </button>
-                <button class="btn btn-icon-only border"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn btn-primary px-4" id="btnSaveService"
+                        style="border-radius: 0.5rem; font-weight: 500;">
+                    <i class="bi bi-check-lg me-1"></i>Lưu dịch vụ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chỉnh sửa dịch vụ -->
+<div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border: none; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
+            <!-- Header -->
+            <div class="modal-header border-0 px-4 pt-4 pb-2">
+                <div>
+                    <h5 class="modal-title fw-bold fs-5" id="editServiceModalLabel">
+                        <i class="bi bi-pencil-square text-primary me-2"></i>Thông tin dịch vụ
+                    </h5>
+                    <p class="text-muted small mb-0 mt-1">Thông tin chi tiết dịch vụ của bạn</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- Body -->
+            <div class="modal-body px-4 py-3">
+                <form id="editServiceForm">
+                    <div class="row g-3">
+                        <!-- Tên dịch vụ -->
+                        <div class="col-md-6">
+                            <label for="editServiceName" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-tag-fill text-primary me-1" style="font-size: 0.8rem;"></i>Tên dịch vụ <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="editServiceName" name="editServiceName"
+                                   placeholder="VD: Spa & Massage" required disabled
+                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
+                        </div>
+                        <!-- Đơn vị tính -->
+                        <div class="col-md-6">
+                            <label for="editServiceUnit" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-rulers text-primary me-1" style="font-size: 0.8rem;"></i>Đơn vị tính <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="editServiceUnit" name="editServiceUnit"
+                                   placeholder="VD: 60 phút, người, ngày, kg..." required disabled
+                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
+                        </div>
+                        <!-- Loại dịch vụ -->
+                        <div class="col-md-6">
+                            <label for="editServiceType" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-grid-fill text-primary me-1" style="font-size: 0.8rem;"></i>Loại dịch vụ <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="editServiceType" name="editServiceType" required disabled
+                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
+                                <option value="" disabled selected>-- Chọn loại dịch vụ --</option>
+                                <option value="Ăn uống">🍽️ Ăn uống</option>
+                                <option value="Giải trí">🎮 Giải trí</option>
+                                <option value="Tiện ích">⚡ Tiện ích</option>
+                                <option value="Vận chuyển">🚗 Vận chuyển</option>
+                            </select>
+                        </div>
+                        <!-- Số tiền -->
+                        <div class="col-md-6">
+                            <label for="editServicePrice" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-cash-stack text-primary me-1" style="font-size: 0.8rem;"></i>Số tiền (VNĐ) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group" style="border-radius: 0.5rem; overflow: hidden;">
+                                <input type="number" class="form-control" id="editServicePrice" name="editServicePrice"
+                                       placeholder="VD: 500000" min="0" required disabled
+                                       style="padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
+                                <span class="input-group-text bg-light text-muted" style="border-color: #e5e7eb; font-size: 0.85rem;">VNĐ</span>
+                            </div>
+                        </div>
+                        <!-- Trạng thái -->
+                        <div class="col-md-6">
+                            <label for="editServiceStatus" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-toggle-on text-primary me-1" style="font-size: 0.8rem;"></i>Trạng thái
+                            </label>
+                            <select class="form-select" id="editServiceStatus" name="editServiceStatus" required disabled
+                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
+                                <option value="active">🟢 Đang hoạt động</option>
+                                <option value="inactive">🔴 Ngừng hoạt động</option>
+                            </select>
+                        </div>
+                        <!-- Spacer for alignment -->
+                        <div class="col-md-6"></div>
+                        <!-- Mô tả -->
+                        <div class="col-12">
+                            <label for="editServiceDescription" class="form-label fw-semibold text-dark">
+                                <i class="bi bi-chat-left-text-fill text-primary me-1" style="font-size: 0.8rem;"></i>Mô tả
+                            </label>
+                            <textarea class="form-control" id="editServiceDescription" name="editServiceDescription" rows="3" disabled
+                                      placeholder="Nhập mô tả chi tiết về dịch vụ..."
+                                      style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; resize: vertical; transition: all 0.2s;"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- Footer -->
+            <div class="modal-footer border-0 px-4 pb-4 pt-2">
+                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal"
+                        style="border-radius: 0.5rem; font-weight: 500;">
+                    Đóng
+                </button>
+                <button type="button" class="btn btn-primary px-4" id="btnUnlockEditService"
+                        style="border-radius: 0.5rem; font-weight: 500;">
+                    Chỉnh sửa
+                </button>
+                <button type="button" class="btn btn-dark px-4" id="btnSaveServiceEdit" disabled
+                        style="border-radius: 0.5rem; font-weight: 500;">
+                    <i class="bi bi-check-lg me-1"></i>Lưu
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function removeVietnameseTones(str) {
-            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-            str = str.replace(/đ/g, "d");
-            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
-            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
-            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
-            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
-            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
-            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
-            str = str.replace(/Đ/g, "D");
-            return str;
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+        str = str.replace(/đ/g, "d");
+        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+        str = str.replace(/Đ/g, "D");
+        return str;
         }
 
         $(document).ready(function () {
-            var activeCategory = 'all';
+        var activeCategory = 'all';
+        var activeCard = null;
 
-            $('.category-btn').click(function () {
-                $('.category-btn').removeClass('btn-primary text-white').addClass('btn-outline-secondary bg-white text-dark');
-                $(this).removeClass('btn-outline-secondary bg-white text-dark').addClass('btn-primary text-white');
-                activeCategory = $(this).data('category');
-                filterServices();
-            });
+        function filterServices() {
+        var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
 
-            function filterServices() {
-                var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
+        $('.service-item').each(function () {
+        var name = removeVietnameseTones($(this).attr('data-name').toLowerCase());
+        var category = $(this).attr('data-category');
 
-                $('.service-item').each(function () {
-                    var name = removeVietnameseTones($(this).data('name').toLowerCase());
-                    var category = $(this).data('category');
+        var matchSearch = name.includes(searchObj);
+        var matchCategory = (activeCategory === 'all' || category === activeCategory);
 
-                    var matchSearch = name.includes(searchObj);
-                    var matchCategory = (activeCategory === 'all' || category === activeCategory);
+        if (matchSearch && matchCategory) {
+        $(this).show();
+        } else {
+        $(this).hide();
+        }
+        });
+        }
 
-                    if (matchSearch && matchCategory) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            }
+        $('.category-btn').click(function () {
+        $('.category-btn').removeClass('btn-primary text-white').addClass('btn-outline-secondary bg-white text-dark');
+        $(this).removeClass('btn-outline-secondary bg-white text-dark').addClass('btn-primary text-white');
+        activeCategory = $(this).data('category');
+        filterServices();
+        });
 
-            $('#searchInput').on('input', filterServices);
+        $('#searchInput').on('input', filterServices);
+
+        // Function to update stats
+        function updateServiceStats() {
+        var total = $('.service-item').length;
+        var active = $('.service-item[data-status="active"]').length;
+        $('#totalServicesCount').text(total);
+        $('#activeServicesCount').text(active);
+        }
+
+        // Open Edit Modal
+        $(document).on('click', '.btn-edit-service', function (e) {
+        e.preventDefault();
+        activeCard = $(this).closest('.service-item');
+
+        $('#editServiceName').val(activeCard.attr('data-name'));
+        $('#editServiceUnit').val(activeCard.attr('data-unit'));
+        $('#editServiceType').val(activeCard.attr('data-category'));
+        $('#editServicePrice').val(activeCard.attr('data-price'));
+        $('#editServiceStatus').val(activeCard.attr('data-status') || 'active');
+        $('#editServiceDescription').val(activeCard.attr('data-description') || '');
+
+        // Reset disabled state
+        $('#editServiceForm input, #editServiceForm select, #editServiceForm textarea').prop('disabled', true);
+        $('#btnSaveServiceEdit').prop('disabled', true);
+        $('#btnUnlockEditService').prop('disabled', false).show();
+
+        var editModal = new bootstrap.Modal(document.getElementById('editServiceModal'));
+        editModal.show();
+        });
+
+        // Unlock Edit Modal fields
+        $('#btnUnlockEditService').click(function () {
+        $('#editServiceForm input, #editServiceForm select, #editServiceForm textarea').prop('disabled', false);
+        $('#btnSaveServiceEdit').prop('disabled', false);
+        $(this).prop('disabled', true);
+        });
+
+        // Save edited service details
+        $('#btnSaveServiceEdit').click(function () {
+        var form = $('#editServiceForm')[0];
+        if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+        }
+
+        var name = $('#editServiceName').val();
+        var unit = $('#editServiceUnit').val();
+        var category = $('#editServiceType').val();
+        var price = $('#editServicePrice').val();
+        var status = $('#editServiceStatus').val();
+        var description = $('#editServiceDescription').val();
+
+        // Update data attributes on the card
+        activeCard.attr('data-name', name);
+        activeCard.attr('data-unit', unit);
+        activeCard.attr('data-category', category);
+        activeCard.attr('data-price', price);
+        activeCard.attr('data-status', status);
+        activeCard.attr('data-description', description);
+
+        // Update card layout
+        activeCard.find('.fw-bold.fs-5.text-dark.mb-1').text(name);
+        activeCard.find('.badge').text(category);
+        activeCard.find('.text-muted.small.mb-3').text(description);
+
+        var iconMap = {
+        'Ăn uống': 'bi-cup-hot',
+        'Giải trí': 'bi-activity',
+        'Tiện ích': 'bi-basket',
+        'Vận chuyển': 'bi-airplane'
+        };
+        var newIconClass = iconMap[category] || 'bi-gear';
+        activeCard.find('.bg-primary i').attr('class', 'bi ' + newIconClass);
+
+        var priceContainer = activeCard.find('.fs-4');
+        if (parseInt(price) === 0) {
+        priceContainer.html('Miễn phí').removeClass('text-dark').addClass('text-success');
+        } else {
+        var formattedPrice = parseInt(price).toLocaleString('vi-VN');
+        priceContainer.html(formattedPrice + ' đ <span class="text-muted fs-6 fw-normal">/ ' + unit + '</span>').removeClass('text-success').addClass('text-dark');
+        }
+
+        var statusContainer = activeCard.find('.mb-4.d-flex.align-items-center');
+        if (status === 'active') {
+        statusContainer.html('<i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i><span class="text-muted small">Đang hoạt động</span>');
+        } else {
+        statusContainer.html('<i class="bi bi-circle-fill text-danger" style="font-size: 8px;"></i><span class="text-muted small">Ngừng hoạt động</span>');
+        }
+
+        // Close Modal
+        bootstrap.Modal.getInstance(document.getElementById('editServiceModal')).hide();
+
+        // Update stats and search filter
+        updateServiceStats();
+        filterServices();
+
+        Swal.fire({
+        title: 'Đã lưu!',
+        text: 'Thông tin dịch vụ đã được lưu thành công.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+        });
+        });
+
+        // Delete Service
+        $(document).on('click', '.btn-delete-service', function (e) {
+        e.preventDefault();
+        var card = $(this).closest('.service-item');
+        var name = card.attr('data-name');
+
+        Swal.fire({
+        title: 'Xác nhận xóa?',
+        text: `Bạn có chắc chắn muốn xóa dịch vụ "${name}" không?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#212529',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xác nhận',
+        cancelButtonText: 'Hủy'
+        }).then((result) => {
+        if (result.isConfirmed) {
+        card.remove();
+        updateServiceStats();
+
+        Swal.fire({
+        title: 'Đã xóa!',
+        text: 'Dịch vụ đã được xóa khỏi danh sách.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+        });
+        }
+        });
+        });
+
+        // Modal form interactions for Add Service
+        $('#addServiceModal').on('shown.bs.modal', function () {
+        $('#serviceName').focus();
+        });
+
+        $('#addServiceModal').on('hidden.bs.modal', function () {
+        $('#addServiceForm')[0].reset();
+        });
+
+        // Form focus styles
+        $('#addServiceForm .form-control, #addServiceForm .form-select, #editServiceForm .form-control, #editServiceForm .form-select').on('focus', function () {
+        $(this).css({
+        'border-color': '#3b82f6',
+        'box-shadow': '0 0 0 3px rgba(59, 130, 246, 0.15)'
+        });
+        }).on('blur', function () {
+        $(this).css({
+        'border-color': '#e5e7eb',
+        'box-shadow': 'none'
+        });
+        });
+
+        // Save button handler for Add Service
+        $('#btnSaveService').click(function () {
+        var form = $('#addServiceForm')[0];
+        if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+        }
+
+        var name = $('#serviceName').val();
+        var unit = $('#serviceUnit').val();
+        var category = $('#serviceType').val();
+        var price = $('#servicePrice').val();
+        var status = $('#serviceStatus').val();
+        var description = $('#serviceDescription').val();
+
+        var iconMap = {
+        'Ăn uống': 'bi-cup-hot',
+        'Giải trí': 'bi-activity',
+        'Tiện ích': 'bi-basket',
+        'Vận chuyển': 'bi-airplane'
+        };
+        var iconClass = iconMap[category] || 'bi-gear';
+        var priceHtml = '';
+        if (parseInt(price) === 0) {
+        priceHtml = '<div class="fw-bold fs-4 text-success mb-3">Miễn phí</div>';
+        } else {
+        var formattedPrice = parseInt(price).toLocaleString('vi-VN');
+        priceHtml = '<div class="fw-bold fs-4 text-dark mb-3">' + formattedPrice + ' đ <span class="text-muted fs-6 fw-normal">/ ' + unit + '</span></div>';
+        }
+
+        var statusHtml = '';
+        if (status === 'active') {
+        statusHtml = '<i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i><span class="text-muted small">Đang hoạt động</span>';
+        } else {
+        statusHtml = '<i class="bi bi-circle-fill text-danger" style="font-size: 8px;"></i><span class="text-muted small">Ngừng hoạt động</span>';
+        }
+
+        var newCardHtml = `
+        <div class="col-md-4 service-item" data-name="${name}" data-category="${category}" data-unit="${unit}" data-price="${price}" data-status="${status}" data-description="${description}">
+        <div class="card-custom p-4 border h-100">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
+        style="width: 40px; height: 40px;">
+        <i class="bi ${iconClass}"></i>
+        </div>
+        <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
+        style="font-size: 11px;">${category}</span>
+        </div>
+        <div class="fw-bold fs-5 text-dark mb-1">${name}</div>
+        <div class="text-muted small mb-3">${description}</div>
+        ${priceHtml}
+        <div class="mb-4 d-flex align-items-center gap-2">
+        ${statusHtml}
+        </div>
+        <div class="d-flex gap-2 justify-content-end">
+        <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+        <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
+        </div>
+        </div>
+        </div>`;
+
+        $('#serviceList').prepend(newCardHtml);
+        updateServiceStats();
+        filterServices();
+
+        $('#addServiceModal').modal('hide');
+        Swal.fire({
+        title: 'Đã thêm!',
+        text: 'Dịch vụ mới đã được tạo thành công.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+        });
+        });
         });
     </script>
 }

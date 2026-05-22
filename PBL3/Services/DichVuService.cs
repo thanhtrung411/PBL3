@@ -48,11 +48,19 @@ namespace PBL3.Services
 
         public async Task<bool> CreateAsync(DichVu dichVu)
         {
-            dichVu.MaDv = dichVu.MaDv.Trim();
+            if (string.IsNullOrWhiteSpace(dichVu.MaDv))
+            {
+                dichVu.MaDv = await GenerateNextMaDvAsync();
+            }
+            else
+            {
+                dichVu.MaDv = dichVu.MaDv.Trim();
+            }
             dichVu.TenDv = dichVu.TenDv.Trim();
             dichVu.DonViTinh = dichVu.DonViTinh.Trim();
             dichVu.TrangThai = dichVu.TrangThai.Trim();
             dichVu.GhiChu = dichVu.GhiChu?.Trim();
+            dichVu.LoaiDichVu = dichVu.LoaiDichVu?.Trim();
 
             if (await KiemTraTrungMaAsync(dichVu.MaDv))
             {
@@ -76,6 +84,7 @@ namespace PBL3.Services
             dichVu.DonViTinh = dichVu.DonViTinh.Trim();
             dichVu.TrangThai = dichVu.TrangThai.Trim();
             dichVu.GhiChu = dichVu.GhiChu?.Trim();
+            dichVu.LoaiDichVu = dichVu.LoaiDichVu?.Trim();
 
             if (await KiemTraTrungTenAsync(dichVu.TenDv, dichVu.MaDv))
             {
@@ -85,6 +94,28 @@ namespace PBL3.Services
             _context.DichVus.Update(dichVu);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<string> GenerateNextMaDvAsync()
+        {
+            var existingIds = await _context.DichVus
+                .Select(x => x.MaDv)
+                .ToListAsync();
+
+            int maxNumber = 0;
+            foreach (var id in existingIds)
+            {
+                var trimmed = id.Trim();
+                if (trimmed.StartsWith("DV", StringComparison.OrdinalIgnoreCase) &&
+                    int.TryParse(trimmed.Substring(2), out int num))
+                {
+                    if (num > maxNumber)
+                    {
+                        maxNumber = num;
+                    }
+                }
+            }
+            return $"DV{(maxNumber + 1):D2}";
         }
 
         public async Task<bool> DeleteAsync(string maDv)
