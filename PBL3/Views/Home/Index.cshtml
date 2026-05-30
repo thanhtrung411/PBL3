@@ -1,7 +1,10 @@
-﻿@{
+@using System.Text.Json
+@model PBL3.Models.AdminDashboardViewModel
+@{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Tổng quan";
 }
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h3 class="mb-1 fw-bold">Tổng quan</h3>
@@ -9,16 +12,15 @@
     </div>
 </div>
 
-<!-- Stat Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="card-custom">
             <div class="d-flex justify-content-between align-items-start">
                 <div class="card-title-sm">Tổng phòng <i class="bi bi-door-closed ms-2 text-muted"></i></div>
             </div>
-            <div class="card-value">120</div>
+            <div class="card-value">@Model.TotalRooms</div>
             <div class="card-title-sm">Tổng số phòng</div>
-            <div class="card-subtext">+2 từ tháng trước</div>
+            <div class="card-subtext">@Model.OperationalRooms phòng đang hoạt động</div>
         </div>
     </div>
     <div class="col-md-3">
@@ -34,9 +36,9 @@
     <div class="col-md-3">
         <div class="card-custom">
             <div class="card-title-sm">Doanh thu hôm nay <i class="bi bi-currency-dollar ms-2 text-muted"></i></div>
-            <div class="card-value">24,500,000đ</div>
-            <div class="card-title-sm">Tính đến 14:30</div>
-            <div class="card-subtext">+8% so với hôm qua</div>
+            <div class="card-value">@Model.TodayRevenue.ToString("N0")đ</div>
+            <div class="card-title-sm">Tính đến @Model.GeneratedAt.ToString("HH:mm")</div>
+            <div class="card-subtext">Từ hóa đơn đã thanh toán hôm nay</div>
         </div>
     </div>
     <div class="col-md-3">
@@ -44,14 +46,13 @@
             <div class="d-flex justify-content-between align-items-start">
                 <div class="card-title-sm">Tỷ lệ lấp đầy <i class="bi bi-graph-up ms-2 text-muted"></i></div>
             </div>
-            <div class="card-value">87%</div>
-            <div class="card-title-sm">&nbsp;</div>
-            <div class="card-subtext">+3% so với tháng trước</div>
+            <div class="card-value">@Model.OccupancyRate.ToString("0.#")%</div>
+            <div class="card-title-sm">@Model.OccupiedRooms / @Model.OperationalRooms phòng</div>
+            <div class="card-subtext">Tính theo phòng đang sử dụng</div>
         </div>
     </div>
 </div>
 
-<!-- Charts -->
 <div class="row g-4 mb-4">
     <div class="col-md-7">
         <div class="card-custom">
@@ -65,16 +66,16 @@
             <div class="d-flex justify-content-center">
                 <canvas id="statusChart" style="max-height: 250px; max-width: 250px;"></canvas>
             </div>
-            <div class="d-flex justify-content-center gap-3 mt-3">
-                <span style="font-size: 0.8rem;"><i class="bi bi-circle-fill text-primary"></i> Đã đặt: 70</span>
-                <span style="font-size: 0.8rem;"><i class="bi bi-circle-fill text-warning"></i> Bảo trì: 10</span>
-                <span style="font-size: 0.8rem;"><i class="bi bi-circle-fill text-success"></i> Trống: 20</span>
+            <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
+                @foreach (var status in Model.RoomStatuses)
+                {
+                    <span style="font-size: 0.8rem;"><i class="bi bi-circle-fill @status.LegendClass"></i> @status.Label: @status.Count</span>
+                }
             </div>
         </div>
     </div>
 </div>
 
-<!-- Tables Area -->
 <div class="row g-4">
     <div class="col-12">
         <div class="card-custom">
@@ -93,66 +94,32 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="fw-bold">BK001</td>
-                            <td>
-                                <div>Nguyễn Văn A</div>
-                                <small class="text-muted">0912453482</small>
-                            </td>
-                            <td>301</td>
-                            <td>2024-11-15</td>
-                            <td>3</td>
-                            <td><span class="badge-status badge-booked">Đã xác nhận</span></td>
-                            <td>
-                                <button class="btn-icon-only"><i class="bi bi-eye"></i></button>
-                                <button class="btn-icon-only"><i class="bi bi-pencil"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">BK002</td>
-                            <td>
-                                <div>Trần Thị B</div>
-                                <small class="text-muted">0905642357</small>
-                            </td>
-                            <td>102</td>
-                            <td>2024-11-15</td>
-                            <td>1</td>
-                            <td><span class="badge-status badge-empty">Đã nhận phòng</span></td>
-                            <td>
-                                <button class="btn-icon-only"><i class="bi bi-eye"></i></button>
-                                <button class="btn-icon-only"><i class="bi bi-pencil"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">BK003</td>
-                            <td>
-                                <div>Lê Văn C</div>
-                                <small class="text-muted">0932365421</small>
-                            </td>
-                            <td>202</td>
-                            <td>2024-11-15</td>
-                            <td>5</td>
-                            <td><span class="badge-status badge-maintenance">Chờ xác nhận</span></td>
-                            <td>
-                                <button class="btn-icon-only"><i class="bi bi-eye"></i></button>
-                                <button class="btn-icon-only"><i class="bi bi-pencil"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">BK004</td>
-                            <td>
-                                <div>Phạm Thị D</div>
-                                <small class="text-muted">0387214482</small>
-                            </td>
-                            <td>204</td>
-                            <td>2024-11-15</td>
-                            <td>2</td>
-                            <td><span class="badge-status badge-occupied">Đã trễ hẹn</span></td>
-                            <td>
-                                <button class="btn-icon-only"><i class="bi bi-eye"></i></button>
-                                <button class="btn-icon-only"><i class="bi bi-pencil"></i></button>
-                            </td>
-                        </tr>
+                        @if (Model.RecentBookings.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Chưa có dữ liệu đặt phòng</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var booking in Model.RecentBookings)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@booking.BookingCode</td>
+                                    <td>
+                                        <div>@booking.CustomerName</div>
+                                        <small class="text-muted">@booking.CustomerPhone</small>
+                                    </td>
+                                    <td>@booking.RoomSummary</td>
+                                    <td>@booking.CheckInDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@booking.Nights</td>
+                                    <td><span class="badge-status @booking.StatusClass">@booking.StatusLabel</span></td>
+                                    <td>
+                                        <a class="btn-icon-only" asp-controller="BookingManagement" asp-action="Index" title="Xem đặt phòng"><i class="bi bi-eye"></i></a>
+                                    </td>
+                                </tr>
+                            }
+                        }
                     </tbody>
                 </table>
             </div>
@@ -162,15 +129,21 @@
 
 @section Scripts {
     <script>
-        // Revenue Chart (Bar)
+        const revenueLabels = @Html.Raw(JsonSerializer.Serialize(Model.MonthlyRevenueLabels));
+        const revenueValues = @Html.Raw(JsonSerializer.Serialize(Model.MonthlyRevenueValues));
+        const statusLabels = @Html.Raw(JsonSerializer.Serialize(Model.RoomStatuses.Select(x => x.Label)));
+        const statusValues = @Html.Raw(JsonSerializer.Serialize(Model.RoomStatuses.Select(x => x.Count)));
+        const statusColors = @Html.Raw(JsonSerializer.Serialize(Model.RoomStatuses.Select(x => x.Color)));
+        const formatCurrency = value => new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+
         const ctxRev = document.getElementById('revenueChart').getContext('2d');
         new Chart(ctxRev, {
             type: 'bar',
             data: {
-                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+                labels: revenueLabels,
                 datasets: [{
                     label: 'Doanh thu',
-                    data: [4.5, 6, 5.8, 5, 5.5, 6],
+                    data: revenueValues,
                     backgroundColor: '#4e73df',
                     borderRadius: 4
                 }]
@@ -179,23 +152,32 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: context => formatCurrency(context.parsed.y)
+                        }
+                    }
                 },
                 scales: {
-                    y: { beginAtZero: true, max: 7 }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => formatCurrency(value)
+                        }
+                    }
                 }
             }
         });
 
-        // Status Chart (Doughnut)
         const ctxStatus = document.getElementById('statusChart').getContext('2d');
         new Chart(ctxStatus, {
             type: 'doughnut',
             data: {
-                labels: ['Đã đặt', 'Trống', 'Bảo trì'],
+                labels: statusLabels,
                 datasets: [{
-                    data: [70, 20, 10],
-                    backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e'],
+                    data: statusValues,
+                    backgroundColor: statusColors,
                     borderWidth: 0,
                     cutout: '75%'
                 }]

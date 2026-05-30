@@ -1,14 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
 using PBL3.Models;
+using PBL3.Services.Interfaces;
 using System.Diagnostics;
 
 namespace PBL3.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly IAdminDashboardService _adminDashboardService;
+
+        public HomeController(IAdminDashboardService adminDashboardService)
         {
-            return View();
+            _adminDashboardService = adminDashboardService;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var model = await _adminDashboardService.GetOverviewAsync(HttpContext.RequestAborted);
+            return View(model);
         }
 
         public IActionResult Privacy()

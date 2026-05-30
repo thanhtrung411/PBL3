@@ -11,6 +11,7 @@ public class RoomSearchViewModel
     public string? RoomTypeId { get; set; }
     public string? ErrorMessage { get; set; }
     public string? RoomSelection { get; set; }
+    public bool HasSearched { get; set; }
     public bool HasRecommendedCombo => RecommendedRooms.Any();
     public List<RoomTypeOptionViewModel> RoomTypeOptions { get; set; } = new();
     public List<BookingRoomSelectionViewModel> RecommendedRooms { get; set; } = new();

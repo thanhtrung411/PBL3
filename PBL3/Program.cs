@@ -101,6 +101,7 @@ builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
 builder.Services.AddScoped<IPublicBookingService, PublicBookingService>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddScoped<IReceptionistCheckInService, ReceptionistCheckInService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IBookingEmailService, BookingEmailService>();
 builder.Services.AddScoped<IExpiredBookingCleanupService, ExpiredBookingCleanupService>();
@@ -151,19 +152,11 @@ static HashSet<string> GetAdminRoleKeys(IConfiguration configuration)
         .Get<string[]>();
     var roles = configuredRoles is { Length: > 0 }
         ? configuredRoles
-        : new[]
-        {
-            "Admin",
-            "Administrator",
-            "Quan tri",
-            "Quan tri vien",
-            "Quản trị",
-            "Quản trị viên"
-        };
+        : new[] { "Admin", "VT001" };
 
     return roles
         .Select(NormalizeRoleKey)
-        .Where(role => role.Length > 0)
+        .Where(role => role is "admin" or "vt001")
         .ToHashSet(StringComparer.OrdinalIgnoreCase);
 }
 

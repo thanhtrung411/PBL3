@@ -70,8 +70,12 @@
 
     .booking-rooms .search-card {
         position: relative;
-        overflow: hidden;
+        overflow: visible;
         background: #ffffff;
+    }
+
+    .booking-rooms .search-card.has-open-picker {
+        z-index: 1050;
     }
 
     .booking-rooms .search-card::before {
@@ -96,10 +100,29 @@
     .booking-rooms .form-control,
     .booking-rooms .form-select {
         min-height: 50px;
+        padding-right: 2.5rem;
         border-radius: 6px;
         border-color: var(--hotel-border);
         color: var(--hotel-ink);
-        font-weight: 600;
+        font-size: 0.95rem;
+        font-weight: 500;
+        line-height: 1.35;
+    }
+
+    .booking-rooms .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-position: right 0.85rem center;
+        background-size: 18px 18px;
+        background-repeat: no-repeat;
+    }
+
+    .booking-rooms input[type="date"].form-control::-webkit-calendar-picker-indicator {
+        width: 18px;
+        height: 18px;
+        margin-right: -1.45rem;
+        cursor: pointer;
+        opacity: 0.9;
     }
 
     .booking-rooms .form-control:focus,
@@ -120,38 +143,57 @@
     .booking-rooms .guest-summary-button {
         width: 100%;
         min-height: 50px;
-        display: flex;
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr) 18px;
         align-items: center;
-        gap: 10px;
-        padding: 0.375rem 0.75rem;
+        gap: 8px;
+        padding: 0.5rem 0.85rem;
         border: 1px solid var(--hotel-border);
         border-radius: 6px;
         background: #ffffff;
         color: var(--hotel-ink);
-        font-weight: 700;
+        font-size: 0.92rem;
+        font-weight: 500;
         text-align: left;
+    }
+
+    .booking-rooms .guest-summary-button i:first-child {
+        color: var(--hotel-muted);
+        font-size: 1rem;
+        text-align: center;
     }
 
     .booking-rooms .guest-summary-button span {
         min-width: 0;
-        flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        font-weight: 500;
+    }
+
+    .booking-rooms .guest-chevron {
+        color: var(--hotel-ink);
+        font-size: 0.78rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .booking-rooms .rooms-guest-selector.is-open .guest-chevron {
+        transform: rotate(180deg);
     }
 
     .booking-rooms .guest-picker-panel {
         position: absolute;
         top: calc(100% + 10px);
         right: 0;
-        z-index: 20;
+        z-index: 1060;
         display: none;
-        width: min(360px, calc(100vw - 32px));
-        padding: 20px 24px 18px;
+        width: min(320px, calc(100vw - 32px));
+        padding: 18px;
         border: 1px solid rgba(17, 17, 17, 0.1);
         border-radius: 8px;
         background: #ffffff;
-        box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
+        box-shadow: 0 16px 38px rgba(0, 0, 0, 0.16);
     }
 
     .booking-rooms .rooms-guest-selector.is-open .guest-picker-panel {
@@ -160,34 +202,34 @@
 
     .booking-rooms .guest-counter-row {
         display: grid;
-        grid-template-columns: minmax(92px, 1fr) 142px;
+        grid-template-columns: minmax(86px, 1fr) 128px;
         align-items: center;
         gap: 14px;
-        margin-bottom: 7px;
+        margin-bottom: 9px;
     }
 
     .booking-rooms .guest-counter-label {
         color: var(--hotel-ink);
-        font-size: 1rem;
-        font-weight: 700;
+        font-size: 0.9rem;
+        font-weight: 600;
     }
 
     .booking-rooms .guest-counter-control {
         display: grid;
-        grid-template-columns: 42px 1fr 42px;
+        grid-template-columns: 38px 1fr 38px;
         align-items: center;
-        min-height: 44px;
+        min-height: 40px;
         overflow: hidden;
         border: 1px solid #aeb4bc;
         border-radius: 4px;
     }
 
     .booking-rooms .guest-stepper {
-        min-height: 42px;
+        min-height: 38px;
         border: 0;
         background: transparent;
         color: #0d6efd;
-        font-size: 24px;
+        font-size: 20px;
         line-height: 1;
     }
 
@@ -197,21 +239,21 @@
 
     .booking-rooms .guest-count-value {
         color: var(--hotel-ink);
-        font-size: 17px;
-        font-weight: 800;
+        font-size: 0.95rem;
+        font-weight: 700;
         text-align: center;
     }
 
     .booking-rooms .guest-picker-done {
         width: 100%;
-        min-height: 46px;
-        margin-top: 14px;
+        min-height: 42px;
+        margin-top: 12px;
         border: 1px solid #0d6efd;
         border-radius: 4px;
         background: #ffffff;
         color: #0d6efd;
-        font-size: 16px;
-        font-weight: 800;
+        font-size: 0.95rem;
+        font-weight: 700;
     }
 
     .booking-rooms .btn-hotel {
@@ -334,13 +376,30 @@
     }
 
     .booking-rooms .room-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-2px);
         box-shadow: 0 14px 32px rgba(16, 24, 40, 0.1);
+    }
+
+    .booking-rooms .room-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .booking-rooms .room-result {
+        min-width: 0;
+    }
+
+    .booking-rooms .room-card-horizontal {
+        display: grid;
+        grid-template-columns: minmax(230px, 300px) minmax(0, 1fr) minmax(240px, 270px);
+        align-items: stretch;
+        min-height: 210px;
     }
 
     .booking-rooms .room-card img {
         width: 100%;
-        aspect-ratio: 16 / 10;
+        height: 100%;
+        min-height: 210px;
         object-fit: cover;
         background: linear-gradient(135deg, #eeeeee, #f7f7f7);
     }
@@ -352,19 +411,19 @@
 
     .booking-rooms .room-badge {
         position: absolute;
-        left: 16px;
-        top: 16px;
+        left: 14px;
+        top: 14px;
         border-radius: 999px;
         background: rgba(17, 17, 17, 0.88);
         color: #ffffff;
-        font-size: 0.78rem;
+        font-size: 0.74rem;
         font-weight: 800;
-        padding: 7px 11px;
+        padding: 6px 10px;
     }
 
     .booking-rooms .room-title {
         color: var(--hotel-ink);
-        font-weight: 800;
+        font-weight: 750;
         line-height: 1.3;
         overflow-wrap: anywhere;
     }
@@ -372,7 +431,7 @@
     .booking-rooms .room-meta,
     .booking-rooms .room-feature {
         color: var(--hotel-muted);
-        line-height: 1.6;
+        line-height: 1.5;
         overflow-wrap: anywhere;
     }
 
@@ -390,17 +449,246 @@
         flex: 0 0 18px;
     }
 
+    .booking-rooms .room-main {
+        min-width: 0;
+        padding: 24px 28px;
+    }
+
+    .booking-rooms .room-select-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 10px;
+        border-left: 1px solid var(--hotel-border);
+        background: #fbfcfd;
+        padding: 22px 24px;
+    }
+
     .booking-rooms .price {
         color: #b42318;
-        font-size: clamp(1.25rem, 3vw, 1.5rem);
-        font-weight: 800;
+        font-size: clamp(1.2rem, 2.4vw, 1.45rem);
+        font-weight: 750;
         overflow-wrap: anywhere;
     }
 
     .booking-rooms .price-note {
         display: block;
-        margin-top: 2px;
+        margin-top: 0;
         color: var(--hotel-muted);
+        line-height: 1.45;
+    }
+
+    .booking-rooms .room-line-total {
+        min-height: 24px;
+        color: var(--hotel-ink);
+        font-size: 0.9rem;
+        font-weight: 650;
+    }
+
+    .booking-rooms .room-select-panel .form-label {
+        margin-top: 6px;
+        margin-bottom: 0;
+        color: #6b7280;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+    }
+
+    .booking-rooms .room-quantity-control {
+        display: grid;
+        grid-template-columns: 42px minmax(54px, 1fr) 42px;
+        align-items: center;
+        overflow: hidden;
+        border: 1px solid #cfd7e2;
+        border-radius: 8px;
+        background: #ffffff;
+    }
+
+    .booking-rooms .combo-stepper {
+        min-height: 42px;
+        border: 0;
+        background: #ffffff;
+        color: #0d6efd;
+        font-size: 1.2rem;
+        font-weight: 650;
+    }
+
+    .booking-rooms .combo-stepper:disabled {
+        color: #b4bdc8;
+        cursor: not-allowed;
+    }
+
+    .booking-rooms .combo-room-count {
+        min-height: 42px;
+        border: 0;
+        border-right: 1px solid #edf0f4;
+        border-left: 1px solid #edf0f4;
+        border-radius: 0;
+        padding: 0 8px;
+        color: var(--hotel-ink);
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .booking-rooms .room-select-panel .btn-room {
+        display: none;
+    }
+
+    .booking-rooms .booking-summary-bar {
+        position: fixed;
+        right: clamp(12px, 4vw, 40px);
+        bottom: 16px;
+        left: clamp(12px, 4vw, 40px);
+        z-index: 1040;
+        display: block;
+        max-width: 1180px;
+        margin: 0 auto;
+        border: 1px solid rgba(17, 17, 17, 0.12);
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 16px 44px rgba(16, 24, 40, 0.18);
+        padding: 12px 14px;
+        transform: translateY(calc(100% + 28px));
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .booking-rooms .booking-summary-bar .card-body {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        padding: 0 !important;
+    }
+
+    .booking-rooms .booking-summary-bar.is-visible {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .booking-rooms.has-sticky-summary {
+        padding-bottom: 120px !important;
+    }
+
+    .booking-rooms .booking-summary-bar h2,
+    .booking-rooms .booking-summary-bar p,
+    .booking-rooms .summary-copy {
+        min-width: 0;
+        margin: 0;
+    }
+
+    .booking-rooms .booking-summary-bar h2,
+    .booking-rooms .summary-copy strong,
+    .booking-rooms .summary-total strong {
+        display: block;
+        color: var(--hotel-ink);
+        font-weight: 760;
+    }
+
+    .booking-rooms .booking-summary-bar p,
+    .booking-rooms .summary-copy span,
+    .booking-rooms .summary-total span {
+        color: var(--hotel-muted);
+        font-size: 0.86rem;
+        font-weight: 600;
+    }
+
+    .booking-rooms .booking-summary-bar p {
+        margin-top: 3px;
+    }
+
+    .booking-rooms .summary-total {
+        min-width: 180px;
+        text-align: right;
+    }
+
+    .booking-rooms .summary-total strong {
+        color: #b42318;
+        font-size: 1.25rem;
+    }
+
+    .capacity-modal {
+        --hotel-ink: #111111;
+        --hotel-gold: #d4af37;
+        --hotel-muted: #667085;
+        --hotel-border: #e9ecef;
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(17, 17, 17, 0.58);
+    }
+
+    .capacity-modal.is-visible {
+        display: flex;
+    }
+
+    .capacity-dialog {
+        width: min(460px, 100%);
+        border: 1px solid rgba(255, 255, 255, 0.32);
+        border-radius: 10px;
+        background: #ffffff;
+        box-shadow: 0 24px 64px rgba(16, 24, 40, 0.28);
+        overflow: hidden;
+    }
+
+    .capacity-dialog-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 22px 14px;
+    }
+
+    .capacity-icon {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #fff7e0;
+        color: var(--hotel-gold);
+        flex: 0 0 42px;
+        font-size: 1.15rem;
+    }
+
+    .capacity-title {
+        margin: 0;
+        color: var(--hotel-ink);
+        font-size: 1.15rem;
+        font-weight: 780;
+        line-height: 1.3;
+    }
+
+    .capacity-body {
+        padding: 0 22px 20px;
+        color: var(--hotel-muted);
+        font-size: 0.98rem;
+        line-height: 1.55;
+    }
+
+    .capacity-body strong {
+        color: var(--hotel-ink);
+        font-weight: 750;
+    }
+
+    .capacity-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 22px 22px;
+        border-top: 1px solid var(--hotel-border);
+    }
+
+    .capacity-actions .btn {
+        min-height: 44px;
+        border-radius: 7px;
+        font-weight: 750;
     }
 
     .booking-rooms .room-actions {
@@ -480,6 +768,24 @@
         .booking-rooms .search-card .card-body {
             padding: 1.25rem !important;
         }
+
+        .booking-rooms .room-card-horizontal {
+            grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+        }
+
+        .booking-rooms .room-select-panel {
+            grid-column: 1 / -1;
+            border-top: 1px solid var(--hotel-border);
+            border-left: 0;
+        }
+
+        .booking-rooms .booking-summary-bar {
+            max-width: calc(100% - 24px);
+        }
+
+        .booking-rooms .summary-total {
+            text-align: left;
+        }
     }
 
     @@media (max-width: 767.98px) {
@@ -505,6 +811,15 @@
             right: auto;
             left: 0;
         }
+
+        .booking-rooms .booking-summary-bar .card-body {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .booking-rooms .booking-summary-bar .btn {
+            width: 100%;
+        }
     }
 
     @@media (max-width: 575.98px) {
@@ -527,6 +842,20 @@
 
         .booking-rooms .room-card .card-body {
             padding: 1.25rem !important;
+        }
+
+        .booking-rooms .room-card-horizontal {
+            grid-template-columns: 1fr;
+        }
+
+        .booking-rooms .room-card img {
+            min-height: 190px;
+            aspect-ratio: 16 / 9;
+        }
+
+        .booking-rooms .room-main,
+        .booking-rooms .room-select-panel {
+            padding: 18px;
         }
 
         .booking-rooms .state-card {
@@ -664,23 +993,24 @@
 
     @if (Model.Results.Any())
     {
-        <form action="@Url.Action("Checkout", "Booking")" method="get" class="search-card card mb-4 border-0" id="comboCheckoutForm">
+        <form action="@Url.Action("Checkout", "Booking")" method="get" class="booking-summary-bar" id="comboCheckoutForm" aria-live="polite">
             <input type="hidden" name="checkIn" value="@Model.CheckIn.ToString("yyyy-MM-dd")">
             <input type="hidden" name="checkOut" value="@Model.CheckOut.ToString("yyyy-MM-dd")">
             <input type="hidden" name="guests" value="@Model.Guests">
             <input type="hidden" name="rooms" id="comboRoomsInput" value="@recommendedRoomCount">
             <input type="hidden" name="roomSelection" id="comboSelectionInput" value="@Model.RoomSelection">
+            <input type="hidden" name="capacityWarningConfirmed" id="comboCapacityWarningConfirmedInput" value="false">
             <div class="card-body p-4 d-flex flex-wrap justify-content-between gap-3 align-items-center">
                 <div>
                     <h2 class="h5 fw-bold mb-1">TÃ¹y chá»‰nh combo phÃ²ng</h2>
                     <p class="text-muted mb-0" id="comboSummary">Chá»n sá»‘ phÃ²ng tá»«ng loáº¡i Ä‘á»ƒ Ä‘á»§ sá»©c chá»©a.</p>
                 </div>
-                <button type="submit" class="btn btn-room px-4" id="comboSubmitButton">Tiáº¿p tá»¥c combo Ä‘Ã£ chá»n</button>
+                <button type="submit" class="btn btn-hotel px-4" id="comboSubmitButton">Thanh toán</button>
             </div>
         </form>
     }
 
-    @if (Model.RecommendedRooms.Any() && !string.IsNullOrWhiteSpace(Model.RoomSelection))
+    @if (false && Model.HasSearched && Model.RecommendedRooms.Any() && !string.IsNullOrWhiteSpace(Model.RoomSelection))
     {
         <section class="search-card card mb-4 border-0">
             <div class="card-body p-4">
@@ -736,20 +1066,20 @@
         <p class="text-muted mb-0">Hãy thử đổi ngày lưu trú hoặc số lượng khách để xem thêm lựa chọn.</p>
     </div>
 
-    <div class="row g-4" id="roomResults" aria-live="polite">
+    <div class="room-list" id="roomResults" aria-live="polite">
         @foreach (var room in Model.Results)
         {
             var roomsToBook = Math.Min(requestedRooms, Math.Max(room.AvailableRooms, 1));
             var roomActionText = roomsToBook == requestedRooms
                 ? "Chọn phòng"
                 : $"Chọn {roomsToBook} phòng";
-            <div class="col-lg-4 col-md-6 room-result">
-                <article class="room-card card h-100 border-0">
+            <div class="room-result">
+                <article class="room-card room-card-horizontal">
                     <div class="room-media">
                         <img src="@room.ImageUrl" class="card-img-top" alt="Ảnh phòng @room.RoomName" loading="lazy" onerror="this.src='/images/booking_hero.jpg';">
                         <span class="room-badge">Còn @room.AvailableRooms phòng</span>
                     </div>
-                    <div class="card-body d-flex flex-column p-4">
+                    <div class="room-main">
                         <h2 class="room-title h5 mb-2">@room.RoomName</h2>
                         <p class="room-meta small mb-3">
                             <i class="fa fa-user me-2" aria-hidden="true"></i>Tối đa @room.MaxGuests người
@@ -765,12 +1095,18 @@
                             <li class="room-feature mb-2"><i class="fa fa-mug-saucer room-feature-icon" aria-hidden="true"></i><span>Bữa sáng và tiện nghi theo hạng phòng</span></li>
                             <li class="room-feature"><i class="fa fa-circle-info room-feature-icon" aria-hidden="true"></i><span>@room.Description</span></li>
                         </ul>
-                        <div class="room-actions mt-auto">
+                    </div>
+                    <div class="room-select-panel">
                             <div>
                                 <span class="price">@room.PricePerNight.ToString("N0")đ</span><br>
                                 <span class="small price-note">/ đêm (VNPay hoặc thanh toán tại khách sạn)</span>
                                 <label class="form-label small mt-3 mb-1" for="comboRooms_@room.RoomTypeId">Số phòng trong combo</label>
-                                <input class="form-control combo-room-count" id="comboRooms_@room.RoomTypeId" type="number" min="0" max="@room.AvailableRooms" value="@room.RecommendedRooms" data-room-type="@room.RoomTypeId" data-capacity="@room.MaxGuests" data-price="@room.PricePerNight.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                <div class="room-quantity-control">
+                                    <button class="combo-stepper" type="button" data-target="comboRooms_@room.RoomTypeId" data-delta="-1" aria-label="Giảm số phòng @room.RoomName">-</button>
+                                    <input class="combo-room-count" id="comboRooms_@room.RoomTypeId" type="text" inputmode="numeric" min="0" max="@room.AvailableRooms" value="@room.RecommendedRooms" data-room-type="@room.RoomTypeId" data-room-name="@room.RoomName" data-capacity="@room.MaxGuests" data-price="@room.PricePerNight.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                    <button class="combo-stepper" type="button" data-target="comboRooms_@room.RoomTypeId" data-delta="1" aria-label="Tăng số phòng @room.RoomName">+</button>
+                                </div>
+                                <div class="room-line-total" data-line-total-for="@room.RoomTypeId"></div>
                             </div>
                             <a href="@Url.Action("Checkout", "Booking", new {
                                 roomId = room.RoomTypeId,
@@ -780,10 +1116,26 @@
                                 rooms = roomsToBook
                             })" class="btn btn-room px-4">Chọn phòng</a>
                         </div>
-                    </div>
                 </article>
             </div>
         }
+    </div>
+</div>
+
+<div class="capacity-modal" id="capacityWarningModal" role="dialog" aria-modal="true" aria-labelledby="capacityWarningTitle" aria-describedby="capacityWarningText">
+    <div class="capacity-dialog">
+        <div class="capacity-dialog-header">
+            <span class="capacity-icon"><i class="fa fa-triangle-exclamation" aria-hidden="true"></i></span>
+            <h2 class="capacity-title" id="capacityWarningTitle">Sức chứa chưa đủ</h2>
+        </div>
+        <div class="capacity-body">
+            <p class="mb-2" id="capacityWarningText"></p>
+            <p class="mb-0"><strong>Bạn vẫn muốn xác nhận thanh toán?</strong></p>
+        </div>
+        <div class="capacity-actions">
+            <button type="button" class="btn btn-outline-dark px-4" id="capacityCancelButton">Hủy</button>
+            <button type="button" class="btn btn-hotel px-4" id="capacityConfirmButton">Xác nhận</button>
+        </div>
     </div>
 </div>
 
@@ -795,18 +1147,32 @@
         const error = document.getElementById('roomsError');
         const errorText = error?.querySelector('span');
         const emptyState = document.getElementById('roomsEmptyState');
+        const roomResultsPanel = document.getElementById('roomResults');
         const roomResults = document.querySelectorAll('.room-result');
         const checkInInput = document.getElementById('checkInDate');
         const checkOutInput = document.getElementById('checkOutDate');
         const comboForm = document.getElementById('comboCheckoutForm');
+        const comboTitle = comboForm?.querySelector('h2');
         const comboSummary = document.getElementById('comboSummary');
         const comboSubmitButton = document.getElementById('comboSubmitButton');
         const comboSelectionInput = document.getElementById('comboSelectionInput');
         const comboRoomsInput = document.getElementById('comboRoomsInput');
+        const comboCapacityWarningConfirmedInput = document.getElementById('comboCapacityWarningConfirmedInput');
         const comboRoomInputs = document.querySelectorAll('.combo-room-count');
+        const comboStepButtons = document.querySelectorAll('.combo-stepper');
+        const capacityWarningModal = document.getElementById('capacityWarningModal');
+        const capacityWarningText = document.getElementById('capacityWarningText');
+        const capacityConfirmButton = document.getElementById('capacityConfirmButton');
+        const capacityCancelButton = document.getElementById('capacityCancelButton');
         const requiredGuests = Number('@Model.Guests');
+        const stayNights = Math.max(1, Math.ceil((new Date('@checkOut') - new Date('@checkIn')) / 86400000));
+        const bookingRoomsPage = document.querySelector('.booking-rooms');
         const searchGuestSelect = document.getElementById('guests');
         const searchRoomSelect = document.getElementById('rooms');
+        let roomOptionsInView = false;
+        let selectedComboRooms = 0;
+        let selectedComboCapacity = 0;
+        let submittingAfterCapacityConfirm = false;
         let roomsGuestState = {
             adults: Math.max(1, Number('@initialAdults')),
             children: Number('@initialChildren'),
@@ -839,7 +1205,7 @@
                 <button class="guest-summary-button" id="roomsGuestSummaryButton" type="button" aria-expanded="false" aria-controls="roomsGuestPickerPanel">
                     <i class="fa-regular fa-user" aria-hidden="true"></i>
                     <span id="roomsGuestSummaryText"></span>
-                    <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                    <i class="fa fa-chevron-down guest-chevron" aria-hidden="true"></i>
                 </button>
                 <div class="guest-picker-panel" id="roomsGuestPickerPanel">
                     <div class="guest-counter-row">
@@ -904,11 +1270,16 @@
                 });
             }
 
+            function setPickerOpen(isOpen) {
+                wrapper.classList.toggle('is-open', isOpen);
+                panel?.classList.toggle('has-open-picker', isOpen);
+                summaryButton?.setAttribute('aria-expanded', String(isOpen));
+            }
+
             summaryButton?.addEventListener('click', () => {
-                wrapper.classList.toggle('is-open');
-                summaryButton.setAttribute('aria-expanded', String(wrapper.classList.contains('is-open')));
+                setPickerOpen(!wrapper.classList.contains('is-open'));
             });
-            doneButton?.addEventListener('click', () => wrapper.classList.remove('is-open'));
+            doneButton?.addEventListener('click', () => setPickerOpen(false));
             wrapper.querySelectorAll('.guest-stepper').forEach((button) => {
                 button.addEventListener('click', () => {
                     const name = button.dataset.counter;
@@ -918,15 +1289,14 @@
                 });
             });
             document.addEventListener('click', (event) => {
-                if (!wrapper.contains(event.target)) wrapper.classList.remove('is-open');
+                if (!wrapper.contains(event.target)) setPickerOpen(false);
             });
             updatePicker();
         }
 
         setupRoomsGuestPicker();
-        comboForm?.querySelector('h2') && (comboForm.querySelector('h2').textContent = 'T\u00f9y ch\u1ec9nh combo ph\u00f2ng');
         if (comboSubmitButton) {
-            comboSubmitButton.textContent = 'Ti\u1ebfp t\u1ee5c combo \u0111\u00e3 ch\u1ecdn';
+            comboSubmitButton.textContent = 'Thanh toán';
         }
 
         function showError(message) {
@@ -968,37 +1338,148 @@
                 const max = Number(input.max || 0);
                 let count = Math.max(0, Math.min(max, Number(input.value || 0)));
                 input.value = String(count);
+                const price = Number(input.dataset.price || 0);
+                const lineTotal = count * price * stayNights;
+                const lineTotalElement = document.querySelector(`[data-line-total-for="${input.dataset.roomType}"]`);
+                if (lineTotalElement) {
+                    lineTotalElement.textContent = count > 0
+                        ? `${lineTotal.toLocaleString('vi-VN')}đ cho ${stayNights} đêm`
+                        : 'Chưa chọn phòng';
+                }
                 if (count <= 0) return;
 
                 rooms += count;
                 capacity += count * Number(input.dataset.capacity || 0);
-                nightlyTotal += count * Number(input.dataset.price || 0);
+                nightlyTotal += count * price;
                 selection.push(`${input.dataset.roomType}:${count}`);
             });
 
             if (comboSelectionInput) comboSelectionInput.value = selection.join(',');
             if (comboRoomsInput) comboRoomsInput.value = String(rooms);
+            selectedComboRooms = rooms;
+            selectedComboCapacity = capacity;
+            if (comboCapacityWarningConfirmedInput && !submittingAfterCapacityConfirm) {
+                comboCapacityWarningConfirmedInput.value = 'false';
+            }
+            const totalAmount = nightlyTotal * stayNights;
+            if (comboTitle) {
+                comboTitle.textContent = rooms === 0 ? 'Chọn phòng để tiếp tục' : `${rooms} phòng đã chọn`;
+            }
             if (comboSummary) {
                 comboSummary.textContent = rooms === 0
-                    ? 'Ch\u1ecdn s\u1ed1 ph\u00f2ng t\u1eebng lo\u1ea1i \u0111\u1ec3 \u0111\u1ee7 s\u1ee9c ch\u1ee9a.'
-                    : `${rooms} ph\u00f2ng \u00b7 ${capacity >= requiredGuests ? '\u0111\u00e1p \u1ee9ng' : 'ch\u01b0a \u0111\u1ee7'} ${requiredGuests} kh\u00e1ch \u00b7 ${nightlyTotal.toLocaleString('vi-VN')}\u0111 / \u0111\u00eam`;
+                    ? 'Chọn số phòng từng loại để đủ sức chứa.'
+                    : `${capacity >= requiredGuests ? 'Đáp ứng' : 'Chưa đủ'} ${requiredGuests} khách · ${stayNights} đêm · ${totalAmount.toLocaleString('vi-VN')}đ`;
             }
             if (comboSubmitButton) {
-                comboSubmitButton.disabled = rooms <= 0 || capacity < requiredGuests;
+                comboSubmitButton.disabled = rooms <= 0;
             }
+            comboStepButtons.forEach((button) => {
+                const input = document.getElementById(button.dataset.target);
+                if (!input) return;
+                const value = Number(input.value || 0);
+                const max = Number(input.max || 0);
+                const delta = Number(button.dataset.delta || 0);
+                button.disabled = delta < 0 ? value <= 0 : value >= max;
+            });
+            updateStickySummary();
         }
+
+        comboStepButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.target);
+                if (!input) return;
+                const max = Number(input.max || 0);
+                const value = Number(input.value || 0);
+                const nextValue = Math.max(0, Math.min(max, value + Number(button.dataset.delta || 0)));
+                input.value = String(nextValue);
+                updateComboSelection();
+            });
+        });
 
         comboRoomInputs.forEach((input) => {
             input.addEventListener('input', updateComboSelection);
             input.addEventListener('change', updateComboSelection);
         });
 
+        function setCapacityModalOpen(isOpen) {
+            capacityWarningModal?.classList.toggle('is-visible', isOpen);
+            document.body.classList.toggle('modal-open', isOpen);
+            if (isOpen) {
+                capacityConfirmButton?.focus();
+            }
+        }
+
+        function showCapacityWarning() {
+            if (capacityWarningText) {
+                capacityWarningText.innerHTML =
+                    `Combo ph\u00f2ng hi\u1ec7n t\u1ea1i ch\u1ec9 ch\u1ee9a t\u1ed1i \u0111a <strong>${selectedComboCapacity} kh\u00e1ch</strong>, trong khi b\u1ea1n \u0111ang \u0111\u1eb7t cho <strong>${requiredGuests} kh\u00e1ch</strong>.`;
+            }
+            setCapacityModalOpen(true);
+        }
+
+        capacityCancelButton?.addEventListener('click', () => setCapacityModalOpen(false));
+        capacityWarningModal?.addEventListener('click', (event) => {
+            if (event.target === capacityWarningModal) {
+                setCapacityModalOpen(false);
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && capacityWarningModal?.classList.contains('is-visible')) {
+                setCapacityModalOpen(false);
+            }
+        });
+        capacityConfirmButton?.addEventListener('click', () => {
+            if (comboCapacityWarningConfirmedInput) {
+                comboCapacityWarningConfirmedInput.value = 'true';
+            }
+            submittingAfterCapacityConfirm = true;
+            setCapacityModalOpen(false);
+            comboForm?.requestSubmit();
+        });
+
+        function updateStickySummary() {
+            const shouldShow = Boolean(comboForm && roomResults.length > 0 && roomOptionsInView && selectedComboRooms > 0);
+            comboForm?.classList.toggle('is-visible', shouldShow);
+            bookingRoomsPage?.classList.toggle('has-sticky-summary', shouldShow);
+        }
+
+        if (roomResultsPanel && 'IntersectionObserver' in window) {
+            const roomObserver = new IntersectionObserver((entries) => {
+                roomOptionsInView = entries.some((entry) => entry.isIntersecting);
+                updateStickySummary();
+            }, { threshold: 0.04 });
+            roomObserver.observe(roomResultsPanel);
+        } else {
+            const detectRoomOptions = () => {
+                if (!roomResultsPanel) return;
+                const rect = roomResultsPanel.getBoundingClientRect();
+                roomOptionsInView = rect.top < window.innerHeight && rect.bottom > 0;
+                updateStickySummary();
+            };
+            window.addEventListener('scroll', detectRoomOptions, { passive: true });
+            window.addEventListener('resize', detectRoomOptions);
+            detectRoomOptions();
+        }
+
         comboForm?.addEventListener('submit', function (event) {
             updateComboSelection();
-            if (comboSubmitButton?.disabled) {
-                event.preventDefault();
-                showError('Combo ph\u00f2ng ch\u01b0a \u0111\u1ee7 s\u1ee9c ch\u1ee9a cho s\u1ed1 kh\u00e1ch.');
+            if (submittingAfterCapacityConfirm && comboCapacityWarningConfirmedInput) {
+                comboCapacityWarningConfirmedInput.value = 'true';
             }
+
+            if (selectedComboRooms <= 0) {
+                event.preventDefault();
+                showError('Vui l\u00f2ng ch\u1ecdn \u00edt nh\u1ea5t 1 ph\u00f2ng \u0111\u1ec3 thanh to\u00e1n.');
+                return;
+            }
+
+            if (selectedComboCapacity < requiredGuests && !submittingAfterCapacityConfirm) {
+                event.preventDefault();
+                showCapacityWarning();
+                return;
+            }
+
+            submittingAfterCapacityConfirm = false;
         });
 
         updateComboSelection();

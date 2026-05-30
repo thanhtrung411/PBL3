@@ -80,6 +80,274 @@ public class BookingEmailService : IBookingEmailService
         }
     }
 
+    public async Task<bool> SendCheckoutReceiptEmailAsync(
+        string bookingCode,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var invoice = await _context.HoaDons
+                .AsNoTracking()
+                .Include(x => x.MaDatPhongNavigation)
+                .ThenInclude(x => x.MaKhNavigation)
+                .Include(x => x.ChiTietHoaDons)
+                .ThenInclude(x => x.MaDvNavigation)
+                .Include(x => x.ChiTietHoaDons)
+                .ThenInclude(x => x.MaLoaiPhongNavigation)
+                .Include(x => x.ChiTietHoaDons)
+                .ThenInclude(x => x.MaPhongNavigation)
+                .FirstOrDefaultAsync(x => x.MaDatPhong == bookingCode, cancellationToken);
+            if (invoice == null)
+            {
+                _logger.LogWarning(
+                    "Cannot send checkout receipt email because invoice was not found. BookingCode={BookingCode}",
+                    bookingCode);
+                return false;
+            }
+
+            var booking = invoice.MaDatPhongNavigation;
+            var customerEmail = booking.MaKhNavigation.Email?.Trim();
+            if (string.IsNullOrWhiteSpace(customerEmail))
+            {
+                _logger.LogWarning(
+                    "Cannot send checkout receipt email because customer email is missing. BookingCode={BookingCode}",
+                    bookingCode);
+                return false;
+            }
+
+            var subject = $"Hóa đơn check-out - {booking.MaDatPhong}";
+            var textBody = BuildCheckoutTextBody(invoice);
+            var htmlBody = BuildCheckoutHtmlBody(invoice);
+
+            await _emailSender.SendAsync(
+                customerEmail,
+                subject,
+                htmlBody,
+                textBody,
+                null,
+                cancellationToken);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to send checkout receipt email. BookingCode={BookingCode}",
+                bookingCode);
+            return false;
+        }
+    }
+
+    private static string BuildCheckoutTextBody(HoaDon invoice)
+    {
+        var booking = invoice.MaDatPhongNavigation;
+        var invoiceLines = GetInvoiceLines(invoice).ToList();
+        var lines = invoiceLines.Count == 0
+            ? "- Không có dòng hóa đơn."
+            : string.Join(Environment.NewLine, invoiceLines.Select(line =>
+                $"- {BuildInvoiceLineName(line)} | SL: {BuildQuantityLabel(line)} | Đơn giá: {FormatMoney(line.DonGia)} | Thành tiền: {FormatMoney(line.ThanhTien)}"));
+        var remaining = Math.Max(invoice.TongThanhToan - invoice.SoTienDaThanhToan, 0);
+
+        return $"""
+        Xin chào {booking.TenKhSnapshot},
+
+        Venus Hotel xác nhận quý khách đã hoàn tất thủ tục check-out.
+
+        Mã đặt phòng: {booking.MaDatPhong}
+        Mã hóa đơn: {invoice.MaHoaDon}
+        Họ tên: {booking.TenKhSnapshot}
+        Số điện thoại: {booking.SdtSnapshot ?? "N/A"}
+        Ngày nhận phòng: {booking.NgayNhanPhong:dd/MM/yyyy}
+        Ngày trả phòng: {booking.NgayTraPhong:dd/MM/yyyy}
+        Số đêm: {GetNights(booking)}
+
+        Chi tiết hóa đơn:
+        {lines}
+
+        Tổng tiền phòng: {FormatMoney(invoice.TongTienPhong)}
+        Tổng tiền dịch vụ: {FormatMoney(invoice.TongTienDichVu)}
+        Giảm giá: {FormatMoney(invoice.TienGiamGiaPhong)}
+        Tổng thanh toán: {FormatMoney(invoice.TongThanhToan)}
+        Đã thanh toán: {FormatMoney(invoice.SoTienDaThanhToan)}
+        Còn lại: {FormatMoney(remaining)}
+        Phương thức thanh toán cuối: {invoice.PhuongThucThanhToan ?? "N/A"}
+        Thời gian thanh toán cuối: {FormatDateTime(invoice.NgayThanhToanCuoi)}
+
+        Cảm ơn quý khách đã lưu trú tại Venus Hotel. Hẹn gặp lại quý khách trong những chuyến nghỉ dưỡng tiếp theo.
+        """;
+    }
+
+    private static string BuildCheckoutHtmlBody(HoaDon invoice)
+    {
+        var booking = invoice.MaDatPhongNavigation;
+        var remaining = Math.Max(invoice.TongThanhToan - invoice.SoTienDaThanhToan, 0);
+        var roomRowsHtml = BuildCheckoutRows(
+            invoice.ChiTietHoaDons.Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong));
+        var serviceRowsHtml = BuildCheckoutRows(
+            invoice.ChiTietHoaDons.Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.DichVu));
+
+        return $$"""
+        <!doctype html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                @media only screen and (max-width: 640px) {
+                    .email-shell { padding: 0 !important; }
+                    .email-card { border-radius: 0 !important; }
+                    .email-header { border-radius: 0 !important; padding: 24px 18px !important; }
+                    .email-header h1 { font-size: 24px !important; }
+                    .email-body { padding: 20px 16px !important; }
+                    .stack-column { display: block !important; width: 100% !important; padding-right: 0 !important; }
+                    .summary-column { display: block !important; width: 100% !important; }
+                    .summary-spacer { display: none !important; }
+                    .invoice-table th, .invoice-table td { font-size: 12px !important; padding: 9px 6px !important; }
+                    .info-label { display: block !important; width: auto !important; margin-bottom: 2px !important; }
+                }
+            </style>
+        </head>
+        <body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1f2937;line-height:1.5">
+            <div class="email-shell" style="max-width:760px;margin:0 auto;padding:24px">
+                <div class="email-header" style="background:#0f766e;border-radius:18px 18px 0 0;padding:28px;color:#ffffff">
+                    <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#f9e8a8;font-weight:700">Venus Hotel</div>
+                    <h1 style="margin:8px 0 6px;font-size:28px;line-height:1.2">Hóa đơn check-out</h1>
+                    <div style="display:inline-block;color:#ecfeff;font-weight:700;font-size:13px">
+                        <span style="display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;background:#14b8a6;color:#ffffff;border-radius:50%;margin-right:7px;font-size:12px">✓</span>
+                        <span>Check-out completed</span>
+                    </div>
+                </div>
+
+                <div class="email-card email-body" style="background:#ffffff;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 18px 18px;padding:26px">
+                    <p style="margin:0 0 18px;font-size:16px">Xin chào <strong>{{Html(booking.TenKhSnapshot)}}</strong>, Venus Hotel xác nhận quý khách đã hoàn tất thủ tục check-out. Hóa đơn cuối cùng của kỳ lưu trú được gửi kèm bên dưới.</p>
+
+                    <table style="width:100%;border-collapse:collapse;margin:18px 0">
+                        <tr>
+                            <td class="stack-column" style="vertical-align:top;width:58%;padding-right:18px">
+                                <h2 style="font-size:18px;margin:0 0 10px;color:#111827">Thông tin lưu trú</h2>
+                                {{BuildInfoRow("Mã đặt phòng", booking.MaDatPhong)}}
+                                {{BuildInfoRow("Mã hóa đơn", invoice.MaHoaDon)}}
+                                {{BuildInfoRow("Họ tên", booking.TenKhSnapshot)}}
+                                {{BuildInfoRow("Số điện thoại", booking.SdtSnapshot ?? "N/A")}}
+                                {{BuildInfoRow("CCCD/CMND", MaskIdentityNumber(booking.CccdSnapshot))}}
+                                {{BuildInfoRow("Ngày nhận phòng", booking.NgayNhanPhong.ToString("dd/MM/yyyy", VietnamCulture))}}
+                                {{BuildInfoRow("Ngày trả phòng", booking.NgayTraPhong.ToString("dd/MM/yyyy", VietnamCulture))}}
+                                {{BuildInfoRow("Số đêm", GetNights(booking).ToString(CultureInfo.InvariantCulture))}}
+                            </td>
+                            <td class="summary-column" style="vertical-align:top;width:42%;background:#f0fdfa;border:1px solid #99f6e4;border-radius:14px;padding:18px">
+                                <div style="font-size:13px;text-transform:uppercase;color:#0f766e;font-weight:800;margin-bottom:10px">Thanh toán</div>
+                                <table style="width:100%;border-collapse:collapse">
+                                    {{BuildMoneyRow("Tổng hóa đơn", invoice.TongThanhToan, true)}}
+                                    {{BuildMoneyRow("Đã thanh toán", invoice.SoTienDaThanhToan, true)}}
+                                    {{BuildMoneyRow("Còn lại", remaining, true)}}
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h2 style="font-size:18px;margin:22px 0 10px;color:#111827">Tiền phòng</h2>
+                    {{BuildCheckoutTable(roomRowsHtml)}}
+
+                    <h2 style="font-size:18px;margin:22px 0 10px;color:#111827">Dịch vụ sử dụng</h2>
+                    {{BuildCheckoutTable(serviceRowsHtml)}}
+
+                    <table style="width:100%;border-collapse:collapse;margin:20px 0 0">
+                        <tr>
+                            <td class="summary-column" style="width:48%;vertical-align:top;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:16px;color:#475569">
+                                <strong>Thông tin thanh toán cuối</strong><br />
+                                Phương thức: {{Html(invoice.PhuongThucThanhToan ?? "N/A")}}<br />
+                                Thời gian: {{Html(FormatDateTime(invoice.NgayThanhToanCuoi))}}
+                            </td>
+                            <td class="summary-spacer" style="width:4%"></td>
+                            <td class="summary-column" style="width:48%;vertical-align:top">
+                                <table style="width:100%;border-collapse:collapse">
+                                    {{BuildMoneyRow("Tổng tiền phòng", invoice.TongTienPhong)}}
+                                    {{BuildMoneyRow("Tổng tiền dịch vụ", invoice.TongTienDichVu)}}
+                                    {{BuildMoneyRow("Giảm giá", invoice.TienGiamGiaPhong)}}
+                                    {{BuildMoneyRow("Tổng thanh toán", invoice.TongThanhToan, true)}}
+                                    {{BuildMoneyRow("Đã thanh toán", invoice.SoTienDaThanhToan, true)}}
+                                    {{BuildMoneyRow("Còn lại", remaining, true)}}
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p style="margin:22px 0 0;color:#64748b;font-size:14px">Cảm ơn quý khách đã lưu trú tại Venus Hotel. Hẹn gặp lại quý khách trong những chuyến nghỉ dưỡng tiếp theo.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """;
+    }
+
+    private static string BuildCheckoutRows(IEnumerable<ChiTietHoaDon> lines)
+    {
+        var rows = lines
+            .OrderBy(x => x.MaCthd)
+            .Select(line => $"""
+            <tr>
+                <td style="padding:12px 10px;border-bottom:1px solid #edf2f7;color:#111827">{Html(BuildInvoiceLineName(line))}</td>
+                <td style="padding:12px 10px;border-bottom:1px solid #edf2f7;text-align:right;color:#111827">{Html(BuildQuantityLabel(line))}</td>
+                <td style="padding:12px 10px;border-bottom:1px solid #edf2f7;text-align:right;color:#111827">{Html(FormatMoney(line.DonGia))}</td>
+                <td style="padding:12px 10px;border-bottom:1px solid #edf2f7;text-align:right;color:#111827;font-weight:700">{Html(FormatMoney(line.ThanhTien))}</td>
+            </tr>
+            """)
+            .ToList();
+
+        return rows.Count == 0
+            ? """
+            <tr>
+                <td colspan="4" style="padding:12px 10px;border-bottom:1px solid #edf2f7;color:#64748b;text-align:center">Không có phát sinh.</td>
+            </tr>
+            """
+            : string.Join(Environment.NewLine, rows);
+    }
+
+    private static string BuildCheckoutTable(string rowsHtml)
+    {
+        return $$"""
+        <table class="invoice-table" style="border-collapse:collapse;width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+            <thead>
+                <tr style="background:#f8fafc">
+                    <th style="padding:12px 10px;text-align:left;color:#475569;font-size:13px">Nội dung</th>
+                    <th style="padding:12px 10px;text-align:right;color:#475569;font-size:13px">Số lượng</th>
+                    <th style="padding:12px 10px;text-align:right;color:#475569;font-size:13px">Đơn giá</th>
+                    <th style="padding:12px 10px;text-align:right;color:#475569;font-size:13px">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{rowsHtml}}
+            </tbody>
+        </table>
+        """;
+    }
+
+    private static string BuildInvoiceLineName(ChiTietHoaDon line)
+    {
+        if (line.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong)
+        {
+            var roomType = line.MaLoaiPhongNavigation?.TenLoaiPhong ?? line.NoiDung;
+            return line.MaPhongNavigation == null
+                ? roomType
+                : $"{roomType} - Phòng {line.MaPhongNavigation.SoPhong}";
+        }
+
+        return line.MaDvNavigation?.TenDv ?? line.NoiDung;
+    }
+
+    private static string BuildQuantityLabel(ChiTietHoaDon line)
+    {
+        if (line.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong)
+        {
+            return $"{line.SoLuong} đêm";
+        }
+
+        var unit = line.MaDvNavigation?.DonViTinh;
+        return string.IsNullOrWhiteSpace(unit)
+            ? line.SoLuong.ToString(CultureInfo.InvariantCulture)
+            : $"{line.SoLuong} {unit}";
+    }
+
     private static string BuildTextBody(HoaDon invoice, PaymentCallbackResult paymentResult, string qrPayload)
     {
         var booking = invoice.MaDatPhongNavigation;

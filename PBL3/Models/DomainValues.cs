@@ -5,9 +5,11 @@ public static class DomainValues
     public static class DatPhongTrangThai
     {
         public const string GiuCho = "GIU_CHO";
+        public const string DaDatCoc = "DA_DAT_COC";
         public const string DaNhanPhong = "DA_NHAN_PHONG";
         public const string TraPhong = "TRA_PHONG";
         public const string DaHuy = "DA_HUY";
+        public const string QuaHanNhanPhong = "QUA_HAN_NHAN_PHONG";
     }
 
     public static class HoaDonTrangThai

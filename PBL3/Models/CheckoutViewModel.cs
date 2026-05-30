@@ -10,6 +10,7 @@ namespace PBL3.Models
         public decimal PricePerNight { get; set; }
         public string RoomSelection { get; set; } = "";
         public List<CheckoutRoomLineViewModel> RoomLines { get; set; } = new();
+        public bool CapacityWarningConfirmed { get; set; }
 
         public DateTime CheckIn { get; set; }
         public DateTime CheckOut { get; set; }

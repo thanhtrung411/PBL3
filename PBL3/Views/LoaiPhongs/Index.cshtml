@@ -1,79 +1,1455 @@
-﻿@model IEnumerable<PBL3.Models.LoaiPhong>
+@model PBL3.Models.AdminRoomTypeIndexViewModel
 
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý loại phòng";
+    var firstRoomType = Model.RoomTypes.FirstOrDefault();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3 class="mb-1 fw-bold">Quản lý loại phòng</h3>
-        <p class="text-muted mb-0">Theo dõi và quản lý thông tin các hạng phòng</p>
+<style>
+    .room-type-page {
+        color: #111827;
+    }
+
+    .room-type-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .room-type-header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 850;
+        letter-spacing: 0;
+    }
+
+    .room-type-header p {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .room-type-layout {
+        display: block;
+    }
+
+    .room-type-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .admin-room-card {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr) minmax(210px, 0.35fr);
+        min-height: 210px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        cursor: pointer;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    }
+
+    .admin-room-card:hover,
+    .admin-room-card:focus-visible,
+    .admin-room-card.active {
+        border-color: rgba(31, 111, 235, 0.35);
+        box-shadow: 0 18px 34px rgba(15, 23, 42, 0.11);
+        transform: translateY(-1px);
+        outline: none;
+    }
+
+    .admin-room-media {
+        position: relative;
+        min-height: 210px;
+        background: #e5e7eb;
+    }
+
+    .admin-room-media img {
+        width: 100%;
+        height: 100%;
+        min-height: 210px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .room-stock-badge {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.9);
+        color: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 850;
+        padding: 8px 12px;
+    }
+
+    .admin-room-main {
+        display: grid;
+        align-content: center;
+        gap: 12px;
+        padding: 22px 24px;
+        min-width: 0;
+    }
+
+    .admin-room-title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .admin-room-title-row h2 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 850;
+        letter-spacing: 0;
+    }
+
+    .room-type-code {
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 850;
+        padding: 6px 10px;
+        white-space: nowrap;
+    }
+
+    .admin-room-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: #64748b;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .admin-room-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .admin-room-features {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: #64748b;
+        font-size: 0.92rem;
+    }
+
+    .admin-room-features li {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+    }
+
+    .admin-room-features i,
+    .admin-room-meta i {
+        color: #c99a2e;
+    }
+
+    .admin-room-side {
+        display: grid;
+        align-content: center;
+        gap: 14px;
+        border-left: 1px solid #edf2f7;
+        padding: 22px;
+        background: #fbfdff;
+    }
+
+    .room-price {
+        color: #b91c1c;
+        font-size: 1.38rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .room-price-note {
+        color: #64748b;
+        font-size: 0.86rem;
+        font-weight: 700;
+    }
+
+    .room-card-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .room-card-actions .btn {
+        border-radius: 7px;
+        font-weight: 780;
+    }
+
+    .room-card-actions .btn-delete {
+        grid-column: 1 / -1;
+    }
+
+    body.room-type-modal-open {
+        overflow: hidden;
+    }
+
+    .room-type-modal[hidden] {
+        display: none;
+    }
+
+    .room-type-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1080;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+    }
+
+    .room-type-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.58);
+        backdrop-filter: blur(5px);
+    }
+
+    .room-type-modal-dialog {
+        position: relative;
+        width: min(1120px, calc(100vw - 28px));
+        min-height: min(760px, calc(100vh - 36px));
+        max-height: calc(100vh - 36px);
+        overflow: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
+    }
+
+    .room-type-modal-dialog.price-detail-dialog {
+        width: min(1180px, calc(100vw - 28px));
+    }
+
+    .room-type-modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 2;
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.72);
+        color: #ffffff;
+        font-size: 1.05rem;
+    }
+
+    .room-type-modal-close:hover,
+    .room-type-modal-close:focus-visible {
+        background: #111827;
+        outline: none;
+    }
+
+    .detail-hero {
+        position: relative;
+        min-height: 300px;
+        background: #e5e7eb;
+    }
+
+    .detail-hero img {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .detail-body {
+        display: grid;
+        gap: 16px;
+        padding: 22px 28px 28px;
+    }
+
+    .detail-heading-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+        align-items: stretch;
+    }
+
+    .detail-body h2 {
+        margin: 0;
+        font-size: 1.18rem;
+        font-weight: 720;
+    }
+
+    .detail-body .room-type-code {
+        font-size: 0.74rem;
+        font-weight: 680;
+        padding: 5px 10px;
+    }
+
+    .detail-body .h6 {
+        font-size: 1rem;
+        font-weight: 720;
+    }
+
+    .detail-description {
+        margin: 10px 0 0;
+        color: #64748b;
+        font-size: 0.94rem;
+        font-weight: 560;
+    }
+
+    .detail-price-panel {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fbfdff;
+        padding: 14px 16px;
+    }
+
+    .detail-price-panel span {
+        display: block;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .detail-price-panel strong {
+        display: block;
+        margin-top: 4px;
+        color: #b91c1c;
+        font-size: 1.12rem;
+        font-weight: 740;
+    }
+
+    .detail-price-panel small {
+        display: block;
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 560;
+    }
+
+    .detail-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .detail-stat {
+        border: 1px solid #edf2f7;
+        border-radius: 10px;
+        background: #fbfdff;
+        padding: 12px 13px;
+    }
+
+    .detail-stat span {
+        display: block;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .detail-stat strong {
+        display: block;
+        margin-top: 4px;
+        color: #111827;
+        font-size: 0.95rem;
+        font-weight: 720;
+    }
+
+    .detail-section {
+        display: grid;
+        gap: 10px;
+    }
+
+    .price-overview-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .price-overview-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fbfdff;
+        padding: 13px 15px;
+    }
+
+    .price-default-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+    }
+
+    .price-overview-label {
+        display: block;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .price-overview-card strong {
+        display: block;
+        margin-top: 4px;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 740;
+    }
+
+    .price-overview-card small {
+        display: block;
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 560;
+    }
+
+    .price-overview-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .weekday-price-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 8px;
+        padding-bottom: 2px;
+    }
+
+    .weekday-price-chip {
+        display: grid;
+        flex: 1 0 132px;
+        gap: 3px;
+        min-height: 58px;
+        align-content: center;
+        border: 1px solid #dbe7f3;
+        border-radius: 999px;
+        background: #f8fafc;
+        color: #475569;
+        padding: 8px 10px;
+        text-align: center;
+    }
+
+    .weekday-price-chip.is-changed {
+        border-color: #f0c04a;
+        background: #fff7d6;
+        color: #7a4e00;
+    }
+
+    .weekday-price-chip strong {
+        font-size: 0.78rem;
+        font-weight: 720;
+        line-height: 1.1;
+    }
+
+    .weekday-price-chip small {
+        color: inherit;
+        font-size: 0.74rem;
+        font-weight: 650;
+        line-height: 1.1;
+    }
+
+    .price-detail-action {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .price-detail-form,
+    .holiday-create-form {
+        display: grid;
+        gap: 16px;
+        padding: 26px 30px;
+    }
+
+    .holiday-create-form {
+        padding-top: 0;
+    }
+
+    .price-detail-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .price-detail-header h2 {
+        margin: 8px 0 0;
+        font-size: 1.28rem;
+        font-weight: 740;
+    }
+
+    .price-editor-section {
+        display: grid;
+        gap: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fbfdff;
+        padding: 16px;
+    }
+
+    .price-editor-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #111827;
+        font-size: 0.92rem;
+        font-weight: 740;
+    }
+
+    .price-editor-title i {
+        color: #1d4ed8;
+    }
+
+    .price-input-group {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+    }
+
+    .price-input-group span {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .price-input-group input {
+        width: 100%;
+        border: 1px solid #dbe3ef;
+        border-radius: 9px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 0.94rem;
+        font-weight: 650;
+        padding: 10px 12px;
+    }
+
+    .weekday-multiplier-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .weekday-multiplier-card {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        border: 1px solid #dbe7f3;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 11px;
+    }
+
+    .weekday-multiplier-card span {
+        color: #111827;
+        font-size: 0.82rem;
+        font-weight: 740;
+        text-align: center;
+    }
+
+    .weekday-multiplier-card input {
+        width: 100%;
+        border: 1px solid #dbe3ef;
+        border-radius: 8px;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .weekday-multiplier-card small {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 650;
+        text-align: center;
+    }
+
+    .holiday-price-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    .holiday-price-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 84px 140px;
+        gap: 12px;
+        align-items: center;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 11px 13px;
+    }
+
+    .holiday-price-row strong,
+    .holiday-price-row b {
+        color: #111827;
+        font-size: 0.9rem;
+        font-weight: 740;
+    }
+
+    .holiday-price-row small {
+        display: block;
+        margin-top: 3px;
+        color: #64748b;
+        font-size: 0.78rem;
+    }
+
+    .holiday-price-row span {
+        border-radius: 999px;
+        background: #fff7d6;
+        color: #7a4e00;
+        font-size: 0.82rem;
+        font-weight: 740;
+        padding: 6px 10px;
+        text-align: center;
+    }
+
+    .holiday-create-grid {
+        display: grid;
+        grid-template-columns: 1.2fr repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .holiday-example {
+        border: 1px dashed #bfdbfe;
+        border-radius: 10px;
+        background: #eff6ff;
+        color: #1e3a8a;
+        font-size: 0.86rem;
+        font-weight: 650;
+        padding: 12px 14px;
+    }
+
+    .create-room-form {
+        display: grid;
+        gap: 18px;
+        padding: 30px;
+    }
+
+    .create-room-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+    }
+
+    .create-room-title {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .create-room-title-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #1d6df2;
+        color: #ffffff;
+        flex: 0 0 auto;
+    }
+
+    .create-room-header h2 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.35rem;
+        font-weight: 780;
+    }
+
+    .create-room-header p {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-size: 0.92rem;
+    }
+
+    .create-room-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 20px;
+    }
+
+    .create-room-field {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+    }
+
+    .create-room-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .create-room-field span {
+        color: #111827;
+        font-size: 0.88rem;
+        font-weight: 740;
+    }
+
+    .create-room-field span.required::after {
+        content: " *";
+        color: #dc2626;
+    }
+
+    .create-room-field input,
+    .create-room-field textarea {
+        width: 100%;
+        border: 1px solid #dbe3ef;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 11px 12px;
+        outline: none;
+    }
+
+    .create-room-field textarea {
+        min-height: 94px;
+        resize: vertical;
+    }
+
+    .create-price-box,
+    .create-image-box {
+        display: grid;
+        gap: 12px;
+        grid-column: 1 / -1;
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #fbfdff;
+        padding: 14px;
+    }
+
+    .create-box-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: #111827;
+        font-weight: 760;
+    }
+
+    .create-weekday-row {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+
+    .create-weekday-card {
+        display: grid;
+        flex: 1 0 96px;
+        gap: 5px;
+        border: 1px solid #dbe7f3;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 8px;
+    }
+
+    .create-weekday-card.is-changed {
+        border-color: #f0c04a;
+        background: #fff7d6;
+    }
+
+    .create-weekday-card strong,
+    .create-weekday-card small {
+        text-align: center;
+    }
+
+    .create-weekday-card strong {
+        color: #111827;
+        font-size: 0.76rem;
+    }
+
+    .create-weekday-card input {
+        border: 1px solid #dbe3ef;
+        border-radius: 7px;
+        padding: 6px;
+        font-size: 0.82rem;
+        text-align: center;
+    }
+
+    .create-weekday-card small {
+        color: #64748b;
+        font-size: 0.7rem;
+        font-weight: 650;
+    }
+
+    .image-upload-input {
+        border: 1px dashed #bfdbfe;
+        border-radius: 12px;
+        background: #eff6ff;
+        color: #1e3a8a;
+        padding: 14px;
+    }
+
+    .image-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .image-preview-item {
+        position: relative;
+        aspect-ratio: 1.2;
+        overflow: hidden;
+        border: 1px solid #dbe7f3;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+
+    .image-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .image-preview-item span {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.86);
+        color: #ffffff;
+        font-size: 0.68rem;
+        font-weight: 740;
+        padding: 4px 7px;
+    }
+
+    .create-room-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 4px;
+    }
+
+    .create-room-actions .btn {
+        border-radius: 9px;
+        font-weight: 740;
+        padding: 10px 18px;
+    }
+
+    .room-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .room-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #dbe7f3;
+        border-radius: 999px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.78rem;
+        font-weight: 650;
+        padding: 7px 11px;
+    }
+
+    .empty-room-state {
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #64748b;
+        font-weight: 800;
+        padding: 32px;
+        text-align: center;
+    }
+
+    @@media (max-width: 1180px) {
+        .admin-room-card {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-room-side {
+            border-left: 0;
+            border-top: 1px solid #edf2f7;
+        }
+    }
+
+    @@media (max-width: 720px) {
+        .room-type-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .room-type-header .btn {
+            width: 100%;
+        }
+
+        .admin-room-title-row,
+        .detail-stats,
+        .weekday-multiplier-grid,
+        .holiday-create-grid,
+        .holiday-price-row,
+        .create-room-grid,
+        .image-preview-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .detail-heading-row {
+            grid-template-columns: 1fr;
+        }
+
+        .price-default-card {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .admin-room-title-row {
+            flex-direction: column;
+        }
+
+        .room-card-actions {
+            grid-template-columns: 1fr;
+        }
+
+        .room-card-actions .btn-delete {
+            grid-column: auto;
+        }
+    }
+</style>
+
+<div class="room-type-page">
+    @Html.AntiForgeryToken()
+
+    <div class="room-type-header">
+        <div>
+            <h1>Quản lý loại phòng</h1>
+            <p>Danh sách hạng phòng hiển thị theo dạng thẻ như trang chọn phòng.</p>
+        </div>
+        <button type="button" class="btn btn-dark px-4 py-2" data-open-create-room-type>
+            <i class="bi bi-plus-lg"></i>
+            Thêm loại phòng mới
+        </button>
     </div>
-    <a asp-action="Create" class="btn btn-dark px-4"><i class="bi bi-plus"></i> Thêm loại phòng mới</a>
+
+    @if (TempData["CreateRoomTypeError"] is string createError)
+    {
+        <div class="alert alert-danger mb-3">@createError</div>
+    }
+
+    <div class="room-type-modal" id="createRoomTypeModal" hidden>
+        <div class="room-type-modal-backdrop" data-close-create-room-type></div>
+        <section class="room-type-modal-dialog price-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="createRoomTypeTitle">
+            <button type="button" class="room-type-modal-close" data-close-create-room-type aria-label="Đóng thêm loại phòng">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <form asp-action="Create" method="post" enctype="multipart/form-data" class="create-room-form" id="createRoomTypeForm">
+                @Html.AntiForgeryToken()
+                <div class="create-room-header">
+                    <div class="create-room-title">
+                        <span class="create-room-title-icon"><i class="bi bi-plus-lg"></i></span>
+                        <div>
+                            <h2 id="createRoomTypeTitle">Thêm loại phòng mới</h2>
+                            <p>Nhập thông tin hạng phòng, thiết lập giá và chọn tối đa 6 ảnh.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="create-room-grid">
+                    <label class="create-room-field">
+                        <span class="required">Tên loại phòng</span>
+                        <input name="RoomTypeName" type="text" maxlength="50" placeholder="VD: Premium Deluxe" required />
+                    </label>
+
+                    <label class="create-room-field">
+                        <span class="required">Sức chứa</span>
+                        <input name="MaxGuests" type="number" min="1" step="1" value="2" required />
+                    </label>
+
+                    <label class="create-room-field full">
+                        <span>Mô tả</span>
+                        <textarea name="Description" maxlength="255" placeholder="Nhập mô tả ngắn về hạng phòng..."></textarea>
+                    </label>
+
+                    <div class="create-price-box">
+                        <div class="create-box-heading">
+                            <span>Thiết lập giá</span>
+                            <small class="room-price-note">Hệ số 1 là giữ nguyên giá mặc định.</small>
+                        </div>
+                        <label class="create-room-field">
+                            <span class="required">Giá mặc định</span>
+                            <input name="DefaultPrice" type="number" min="1000" step="1000" value="800000" data-create-default-price required />
+                        </label>
+                        <div class="create-weekday-row">
+                            @{
+                                var createWeekdays = new[] {
+                                    (Day: 2, Label: "Thứ 2"),
+                                    (Day: 3, Label: "Thứ 3"),
+                                    (Day: 4, Label: "Thứ 4"),
+                                    (Day: 5, Label: "Thứ 5"),
+                                    (Day: 6, Label: "Thứ 6"),
+                                    (Day: 7, Label: "Thứ 7"),
+                                    (Day: 8, Label: "Chủ nhật")
+                                };
+                            }
+                            @for (var i = 0; i < createWeekdays.Length; i++)
+                            {
+                                <label class="create-weekday-card">
+                                    <strong>@createWeekdays[i].Label</strong>
+                                    <input type="hidden" name="WeekdayMultipliers[@i].DayValue" value="@createWeekdays[i].Day" />
+                                    <input name="WeekdayMultipliers[@i].Multiplier" type="number" min="0.1" step="0.05" value="1" data-create-weekday-multiplier />
+                                    <small data-create-weekday-preview>800,000đ</small>
+                                </label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="create-image-box">
+                        <div class="create-box-heading">
+                            <span>Ảnh nền loại phòng</span>
+                            <small class="room-price-note">Tối đa 6 ảnh, ảnh đầu tiên là ảnh bìa.</small>
+                        </div>
+                        <input class="image-upload-input"
+                               name="Images"
+                               type="file"
+                               accept="image/jpeg,image/png,image/webp"
+                               multiple
+                               data-create-images />
+                        <div class="image-preview-grid" data-create-image-preview></div>
+                    </div>
+                </div>
+
+                <div class="create-room-actions">
+                    <button type="button" class="btn btn-outline-secondary" data-close-create-room-type>Hủy</button>
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-check2"></i>
+                        Lưu loại phòng
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    @if (Model.RoomTypes.Count == 0)
+    {
+        <div class="empty-room-state">
+            Chưa có loại phòng nào trong hệ thống.
+        </div>
+    }
+    else
+    {
+        <div class="room-type-layout">
+            <div class="room-type-list" aria-label="Danh sách loại phòng">
+                @foreach (var roomType in Model.RoomTypes)
+                {
+                    <article class="admin-room-card"
+                             tabindex="0"
+                             data-room-type-card="@roomType.RoomTypeId"
+                             aria-label="Xem thông tin loại phòng @roomType.RoomTypeName">
+                        <div class="admin-room-media">
+                            <img src="@roomType.ImageUrl" alt="Ảnh loại phòng @roomType.RoomTypeName" loading="lazy" onerror="this.src='/images/booking_hero.jpg';" />
+                            <span class="room-stock-badge">Còn @roomType.AvailableRooms phòng</span>
+                        </div>
+                        <div class="admin-room-main">
+                            <div class="admin-room-title-row">
+                                <h2>@roomType.RoomTypeName</h2>
+                                <span class="room-type-code">@roomType.RoomTypeId</span>
+                            </div>
+                            <div class="admin-room-meta">
+                                <span><i class="bi bi-person"></i>Tối đa @roomType.MaxGuests người</span>
+                                <span><i class="bi bi-door-open"></i>@roomType.TotalRooms phòng</span>
+                            </div>
+                            <ul class="admin-room-features">
+                                <li><i class="bi bi-wifi"></i><span>Wifi tốc độ cao miễn phí</span></li>
+                                <li><i class="bi bi-cup-hot"></i><span>Bữa sáng và tiện nghi theo hạng phòng</span></li>
+                                <li><i class="bi bi-info-circle"></i><span>@roomType.Description</span></li>
+                            </ul>
+                        </div>
+                        <div class="admin-room-side">
+                            <div>
+                                <div class="room-price">
+                                    @(roomType.CurrentPrice.HasValue ? $"{roomType.CurrentPrice.Value:N0}đ" : "Chưa có giá")
+                                </div>
+                                <div class="room-price-note">/ đêm theo bảng giá hiện tại</div>
+                            </div>
+                            <div class="room-card-actions">
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-detail-button="@roomType.RoomTypeId">
+                                    <i class="bi bi-eye"></i>
+                                    Xem
+                                </button>
+                                <a asp-action="Edit" asp-route-id="@roomType.RoomTypeId" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Sửa
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@roomType.RoomTypeId" class="btn btn-outline-danger btn-sm btn-delete">
+                                    <i class="bi bi-trash"></i>
+                                    Xóa
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+
+        <div class="room-type-modal" id="roomTypeDetailModal" hidden>
+            <div class="room-type-modal-backdrop" data-close-detail-modal></div>
+            <section class="room-type-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="roomTypeModalTitle">
+                <button type="button" class="room-type-modal-close" data-close-detail-modal aria-label="Đóng chi tiết loại phòng">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <div id="roomTypeDetailPanel" aria-live="polite"></div>
+            </section>
+        </div>
+
+        <div class="room-type-modal" id="roomTypePriceDetailModal" hidden>
+            <div class="room-type-modal-backdrop" data-close-price-detail-modal></div>
+            <section class="room-type-modal-dialog price-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="priceDetailModalTitle">
+                <button type="button" class="room-type-modal-close" data-close-price-detail-modal aria-label="Đóng chi tiết giá">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                <div id="roomTypePriceDetailPanel" aria-live="polite"></div>
+            </section>
+        </div>
+
+        <div class="d-none" id="roomTypeDetailTemplates">
+            @foreach (var roomType in Model.RoomTypes)
+            {
+                <template id="roomTypeDetail_@roomType.RoomTypeId">
+                    @await Html.PartialAsync("_RoomTypeDetailCard", roomType)
+                </template>
+                <template id="roomTypePriceDetail_@roomType.RoomTypeId">
+                    @await Html.PartialAsync("_RoomTypePriceDetailCard", roomType)
+                </template>
+            }
+        </div>
+    }
 </div>
 
-<div class="bg-white shadow-sm" style="border-radius: 12px; border: 1px solid #f3f4f6; overflow: hidden;">
-    <div class="table-responsive">
-        <table class="table align-middle mb-0 table-hover">
-            <thead style="background-color: #f9fafb;">
-                <tr>
-                    <th class="border-bottom-0 py-3 ps-4 text-muted" style="font-size: 16px; font-weight: 600;">
-                        @Html.DisplayNameFor(model => model.TenLoaiPhong)
-                    </th>
-                    <th class="border-bottom-0 py-3 text-muted" style="font-size: 16px; font-weight: 600;">
-                        @Html.DisplayNameFor(model => model.SoNguoiToiDa)
-                    </th>
-                    <th class="border-bottom-0 py-3 text-muted" style="font-size: 16px; font-weight: 600;">
-                        @Html.DisplayNameFor(model => model.MoTa)
-                    </th>
-                    <th class="border-bottom-0 py-3 pe-4 text-muted" style="font-size: 14px; font-weight: 600; width: 250px;">
-                        <div class="d-flex justify-content-end">
-                            <div style="width: 220px;" class="text-start">Thao tác</div>
-                        </div>
-                    </th>
-                </tr>
-            </thead>
-            <tbody style="border-top: 1px solid #e5e7eb;">
-                @foreach (var item in Model)
-                {
-                    <tr style="border-bottom: 1px solid #f3f4f6;">
-                        <td class="py-3 ps-4 text-dark" style="font-weight: 600; font-size: 16px;">
-                            @Html.DisplayFor(modelItem => item.TenLoaiPhong)
-                        </td>
-                        <td class="py-3" style="font-size: 16px; color: #4b5563;">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-person text-muted"></i>
-                                @Html.DisplayFor(modelItem => item.SoNguoiToiDa) người
-                            </div>
-                        </td>
-                        <td class="py-3" style="font-size: 16px; color: #4b5563; max-width: 300px;">
-                            @Html.DisplayFor(modelItem => item.MoTa)
-                        </td>
-                        <td class="py-3 pe-4">
-                            <div class="d-flex justify-content-end">
-                                <div class="d-flex gap-2" style="width: 220px;">
-                                    <a asp-action="Details" asp-route-id="@item.MaLoaiPhong"
-                                       class="btn btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100"
-                                       style="background-color: #e0f2fe; color: #0284c7; border-radius: 6px; font-size: 13px; font-weight: 500;">
-                                        <i class="bi bi-eye"></i> Xem
-                                    </a>
-                                    <a asp-action="Edit" asp-route-id="@item.MaLoaiPhong"
-                                       class="btn btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100"
-                                       style="background-color: #f3f4f6; color: #4b5563; border-radius: 6px; font-size: 13px; font-weight: 500;">
-                                        <i class="bi bi-pencil-square"></i> Sửa
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@item.MaLoaiPhong"
-                                       class="btn btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100"
-                                       style="background-color: #fee2e2; color: #ef4444; border-radius: 6px; font-size: 13px; font-weight: 500;">
-                                        <i class="bi bi-trash"></i> Xóa
-                                    </a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
+<script>
+    (function () {
+        const cards = document.querySelectorAll("[data-room-type-card]");
+        const detailPanel = document.getElementById("roomTypeDetailPanel");
+        const modal = document.getElementById("roomTypeDetailModal");
+        const pricePanel = document.getElementById("roomTypePriceDetailPanel");
+        const priceModal = document.getElementById("roomTypePriceDetailModal");
+        const createModal = document.getElementById("createRoomTypeModal");
+        const createForm = document.getElementById("createRoomTypeForm");
+        const antiForgeryToken = document.querySelector("input[name='__RequestVerificationToken']")?.value || "";
+        const updatePriceRulesUrl = "@Url.Action("UpdatePriceRules", "LoaiPhongs")";
+        const addHolidayPriceUrl = "@Url.Action("AddHolidayPrice", "LoaiPhongs")";
+
+        function showDetail(roomTypeId) {
+            const template = document.getElementById(`roomTypeDetail_${roomTypeId}`);
+            if (!template || !detailPanel || !modal) return;
+
+            detailPanel.innerHTML = template.innerHTML;
+            cards.forEach(function (card) {
+                card.classList.toggle("active", card.dataset.roomTypeCard === roomTypeId);
+            });
+            modal.hidden = false;
+            document.body.classList.add("room-type-modal-open");
+        }
+
+        function closeDetail() {
+            if (!modal) return;
+
+            closePriceDetail();
+            modal.hidden = true;
+            document.body.classList.remove("room-type-modal-open");
+        }
+
+        function showPriceDetail(roomTypeId) {
+            const template = document.getElementById(`roomTypePriceDetail_${roomTypeId}`);
+            if (!template || !pricePanel || !priceModal) return;
+
+            pricePanel.innerHTML = template.innerHTML;
+            priceModal.hidden = false;
+            document.body.classList.add("room-type-modal-open");
+            recalculatePricePreview();
+        }
+
+        function closePriceDetail() {
+            if (!priceModal) return;
+
+            priceModal.hidden = true;
+        }
+
+        function showCreateModal() {
+            if (!createModal) return;
+
+            createModal.hidden = false;
+            document.body.classList.add("room-type-modal-open");
+            recalculateCreatePricePreview();
+        }
+
+        function closeCreateModal() {
+            if (!createModal) return;
+
+            createModal.hidden = true;
+            document.body.classList.remove("room-type-modal-open");
+        }
+
+        function parseNumber(value) {
+            const parsed = Number(String(value || "").replace(",", "."));
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function formatCurrency(value) {
+            return `${new Intl.NumberFormat("vi-VN").format(Math.round(value || 0))}đ`;
+        }
+
+        function toLocalDate(value) {
+            if (!value) return null;
+            const parts = value.split("-").map(Number);
+            if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
+        function toIsoDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatDate(date) {
+            return new Intl.DateTimeFormat("vi-VN").format(date);
+        }
+
+        function recalculatePricePreview() {
+            if (!pricePanel) return;
+
+            const defaultInput = pricePanel.querySelector("[data-default-price-input]");
+            const defaultPrice = parseNumber(defaultInput?.value);
+            pricePanel.querySelectorAll("[data-weekday-multiplier]").forEach(function (input) {
+                const preview = input.closest(".weekday-multiplier-card")?.querySelector("[data-weekday-price-preview]");
+                if (!preview) return;
+                preview.textContent = defaultPrice > 0
+                    ? formatCurrency(defaultPrice * parseNumber(input.value || "1"))
+                    : "Chưa có";
+            });
+
+            const holidayDate = toLocalDate(pricePanel.querySelector("[data-holiday-date]")?.value);
+            const before = parseInt(pricePanel.querySelector("[data-holiday-before]")?.value || "0", 10);
+            const after = parseInt(pricePanel.querySelector("[data-holiday-after]")?.value || "0", 10);
+            const multiplier = parseNumber(pricePanel.querySelector("[data-holiday-multiplier]")?.value || "1");
+            const example = pricePanel.querySelector("[data-holiday-example]");
+            if (!example) return;
+
+            if (!holidayDate || defaultPrice <= 0 || before < 0 || after < 0 || multiplier <= 0) {
+                example.textContent = "Chọn ngày lễ và hệ số để xem ví dụ.";
+                return;
+            }
+
+            const startDate = new Date(holidayDate);
+            startDate.setDate(startDate.getDate() - before);
+            const endDate = new Date(holidayDate);
+            endDate.setDate(endDate.getDate() + after);
+            example.textContent = `Áp dụng từ ${formatDate(startDate)} đến ${formatDate(endDate)}, giá ${formatCurrency(defaultPrice * multiplier)} mỗi đêm.`;
+        }
+
+        function recalculateCreatePricePreview() {
+            if (!createForm) return;
+
+            const defaultPrice = parseNumber(createForm.querySelector("[data-create-default-price]")?.value);
+            createForm.querySelectorAll("[data-create-weekday-multiplier]").forEach(function (input) {
+                const card = input.closest(".create-weekday-card");
+                const preview = card?.querySelector("[data-create-weekday-preview]");
+                if (!card || !preview) return;
+
+                const multiplier = parseNumber(input.value || "1");
+                card.classList.toggle("is-changed", Math.abs(multiplier - 1) > 0.0001);
+                preview.textContent = defaultPrice > 0 && multiplier > 0
+                    ? formatCurrency(defaultPrice * multiplier)
+                    : "0Ä‘";
+            });
+        }
+
+        function renderCreateImagePreview(files) {
+            if (!createForm) return;
+
+            const preview = createForm.querySelector("[data-create-image-preview]");
+            if (!preview) return;
+            preview.innerHTML = "";
+
+            Array.from(files).slice(0, 6).forEach(function (file, index) {
+                const item = document.createElement("div");
+                item.className = "image-preview-item";
+                const img = document.createElement("img");
+                img.alt = file.name;
+                img.src = URL.createObjectURL(file);
+                img.onload = function () {
+                    URL.revokeObjectURL(img.src);
+                };
+                const badge = document.createElement("span");
+                badge.textContent = index === 0 ? "Ảnh bìa" : `Ảnh ${index + 1}`;
+                item.appendChild(img);
+                item.appendChild(badge);
+                preview.appendChild(item);
+            });
+        }
+
+        async function postJson(url, payload) {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "RequestVerificationToken": antiForgeryToken
+                },
+                body: JSON.stringify(payload)
+            });
+            const body = await response.json().catch(function () { return {}; });
+            if (!response.ok) {
+                throw new Error(body.message || "Không thể cập nhật dữ liệu.");
+            }
+            return body;
+        }
+
+        cards.forEach(function (card) {
+            card.addEventListener("click", function (event) {
+                if (event.target.closest("a")) return;
+                showDetail(card.dataset.roomTypeCard);
+            });
+
+            card.addEventListener("keydown", function (event) {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                showDetail(card.dataset.roomTypeCard);
+            });
+        });
+
+        document.querySelectorAll("[data-detail-button]").forEach(function (button) {
+            button.addEventListener("click", function (event) {
+                event.stopPropagation();
+                showDetail(button.dataset.detailButton);
+            });
+        });
+
+        document.querySelectorAll("[data-close-detail-modal]").forEach(function (button) {
+            button.addEventListener("click", closeDetail);
+        });
+
+        document.querySelectorAll("[data-close-price-detail-modal]").forEach(function (button) {
+            button.addEventListener("click", closePriceDetail);
+        });
+
+        document.querySelectorAll("[data-open-create-room-type]").forEach(function (button) {
+            button.addEventListener("click", showCreateModal);
+        });
+
+        document.querySelectorAll("[data-close-create-room-type]").forEach(function (button) {
+            button.addEventListener("click", closeCreateModal);
+        });
+
+        document.addEventListener("click", async function (event) {
+            const priceDetailButton = event.target.closest("[data-open-price-detail]");
+            if (priceDetailButton) {
+                event.preventDefault();
+                showPriceDetail(priceDetailButton.dataset.openPriceDetail);
+                return;
+            }
+
+            const saveButton = event.target.closest("[data-save-price-rules]");
+            if (saveButton && pricePanel) {
+                event.preventDefault();
+                const form = pricePanel.querySelector("[data-price-rules-form]");
+                const defaultPrice = parseNumber(form?.querySelector("[data-default-price-input]")?.value);
+                const weekdayMultipliers = Array.from(form?.querySelectorAll("[data-weekday-multiplier]") || [])
+                    .map(function (input) {
+                        return {
+                            dayValue: Number(input.dataset.dayValue),
+                            multiplier: parseNumber(input.value || "1")
+                        };
+                    });
+
+                saveButton.disabled = true;
+                try {
+                    await postJson(updatePriceRulesUrl, {
+                        roomTypeId: form.dataset.roomTypeId,
+                        defaultPrice,
+                        weekdayMultipliers
+                    });
+                    window.location.reload();
+                } catch (error) {
+                    alert(error.message);
+                    saveButton.disabled = false;
                 }
-            </tbody>
-        </table>
-    </div>
-</div>
+                return;
+            }
+
+            const addHolidayButton = event.target.closest("[data-add-holiday-price]");
+            if (addHolidayButton && pricePanel) {
+                event.preventDefault();
+                const form = pricePanel.querySelector("[data-holiday-price-form]");
+                const holidayDateValue = form?.querySelector("[data-holiday-date]")?.value;
+                addHolidayButton.disabled = true;
+                try {
+                    await postJson(addHolidayPriceUrl, {
+                        roomTypeId: form.dataset.roomTypeId,
+                        holidayDate: holidayDateValue,
+                        daysBefore: parseInt(form.querySelector("[data-holiday-before]")?.value || "0", 10),
+                        daysAfter: parseInt(form.querySelector("[data-holiday-after]")?.value || "0", 10),
+                        multiplier: parseNumber(form.querySelector("[data-holiday-multiplier]")?.value || "1")
+                    });
+                    window.location.reload();
+                } catch (error) {
+                    alert(error.message);
+                    addHolidayButton.disabled = false;
+                }
+            }
+        });
+
+        document.addEventListener("input", function (event) {
+            if (event.target.closest("#roomTypePriceDetailPanel")) {
+                recalculatePricePreview();
+            }
+
+            if (event.target.closest("#createRoomTypeForm")) {
+                recalculateCreatePricePreview();
+            }
+        });
+
+        document.addEventListener("change", function (event) {
+            const imageInput = event.target.closest("[data-create-images]");
+            if (!imageInput) return;
+
+            if (imageInput.files.length > 6) {
+                alert("Chỉ được chọn tối đa 6 ảnh.");
+                imageInput.value = "";
+                renderCreateImagePreview([]);
+                return;
+            }
+
+            renderCreateImagePreview(imageInput.files);
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && createModal && !createModal.hidden) {
+                closeCreateModal();
+                return;
+            }
+
+            if (event.key === "Escape" && priceModal && !priceModal.hidden) {
+                closePriceDetail();
+                return;
+            }
+
+            if (event.key === "Escape" && modal && !modal.hidden) {
+                closeDetail();
+            }
+        });
+    })();
+</script>

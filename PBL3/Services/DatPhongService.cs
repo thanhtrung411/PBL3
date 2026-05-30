@@ -47,6 +47,7 @@ namespace PBL3.Services
                 .Where(c => c.MaPhong == maPhong && 
                             c.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
                             c.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.TraPhong &&
+                            c.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.QuaHanNhanPhong &&
                             c.MaHoaDonNavigation.MaDatPhongNavigation.MaDatPhong != maDatPhongNgoaiLe)
                 .ToListAsync();
 

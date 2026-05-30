@@ -147,6 +147,86 @@ namespace PBL3.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ReceptionistToday(CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.GetTodayArrivalsAsync(cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReceptionistRoomMap(CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.GetRoomMapAsync(cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReceptionistServiceUsage(CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.GetServiceUsageAsync(cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReceptionistServiceUsage(
+            [FromBody] ReceptionistAddServiceRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.AddServiceUsageAsync(
+                request ?? new ReceptionistAddServiceRequest(),
+                cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReceptionistCheckout(CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.GetCheckoutListAsync(cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReceptionistCheckout(
+            [FromBody] ReceptionistCheckoutRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (!IsDebugRouteEnabled())
+            {
+                return NotFound();
+            }
+
+            var result = await _receptionistCheckInService.CheckoutAsync(
+                request ?? new ReceptionistCheckoutRequest(),
+                cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> ReceptionistLookup(string code, CancellationToken cancellationToken)
         {
             if (!IsDebugRouteEnabled())

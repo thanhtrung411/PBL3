@@ -29,6 +29,7 @@ public class ExpiredBookingCleanupHostedService : BackgroundService
                 await using var scope = _scopeFactory.CreateAsyncScope();
                 var cleanup = scope.ServiceProvider.GetRequiredService<IExpiredBookingCleanupService>();
                 await cleanup.CancelExpiredOnlinePaymentsAsync(stoppingToken);
+                await cleanup.MarkExpiredNoShowBookingsAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

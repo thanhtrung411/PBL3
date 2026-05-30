@@ -7,4 +7,8 @@ public interface IBookingEmailService
     Task SendPaymentSuccessEmailAsync(
         PaymentCallbackResult paymentResult,
         CancellationToken cancellationToken = default);
+
+    Task<bool> SendCheckoutReceiptEmailAsync(
+        string bookingCode,
+        CancellationToken cancellationToken = default);
 }

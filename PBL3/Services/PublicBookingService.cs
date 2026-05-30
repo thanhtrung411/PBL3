@@ -129,7 +129,7 @@ public class PublicBookingService : IPublicBookingService
         }
     }
 
-    public async Task<CheckoutViewModel?> BuildCheckoutAsync(string? roomTypeId, DateTime? checkIn, DateTime? checkOut, int? guests, int? rooms = null, string? roomSelection = null)
+    public async Task<CheckoutViewModel?> BuildCheckoutAsync(string? roomTypeId, DateTime? checkIn, DateTime? checkOut, int? guests, int? rooms = null, string? roomSelection = null, bool capacityWarningConfirmed = false)
     {
         var normalizedSelection = NormalizeSelection(roomSelection);
         if (string.IsNullOrWhiteSpace(normalizedSelection) && !string.IsNullOrWhiteSpace(roomTypeId))
@@ -154,7 +154,7 @@ public class PublicBookingService : IPublicBookingService
             return null;
         }
 
-        if (roomLines.Sum(x => x.MaxGuestsPerRoom * x.Rooms) < search.Guests)
+        if (!capacityWarningConfirmed && roomLines.Sum(x => x.MaxGuestsPerRoom * x.Rooms) < search.Guests)
         {
             return null;
         }
@@ -170,13 +170,14 @@ public class PublicBookingService : IPublicBookingService
             PricePerNight = firstRoom.PricePerNight,
             RoomSelection = normalizedSelection,
             RoomLines = roomLines,
+            CapacityWarningConfirmed = capacityWarningConfirmed,
             CheckIn = search.CheckIn,
             CheckOut = search.CheckOut,
             Guests = search.Guests,
             NumberOfRooms = requestedRooms,
-            PaymentMethod = vnPayAvailable ? PaymentMethods.VnPay : PaymentMethods.PayAtHotel,
+            PaymentMethod = PaymentMethods.VnPay,
             VnPayAvailable = vnPayAvailable,
-            PaymentUnavailableMessage = vnPayAvailable ? null : "VNPay chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh merchant. Báº¡n váº«n cÃ³ thá»ƒ giá»¯ chá»— vÃ  thanh toÃ¡n táº¡i khÃ¡ch sáº¡n.",
+            PaymentUnavailableMessage = vnPayAvailable ? null : "VNPay chua duoc cau hinh. Vui long thu lai sau.",
             TotalAmount = roomLines.Sum(x => x.PricePerNight * x.Rooms * Math.Max((search.CheckOut - search.CheckIn).Days, 1))
         };
     }
@@ -310,6 +311,11 @@ public class PublicBookingService : IPublicBookingService
     public async Task<PublicBookingResult> ConfirmBookingAsync(CheckoutViewModel model)
     {
         await _expiredBookingCleanupService.CancelExpiredOnlinePaymentsAsync();
+        model.PaymentMethod = PaymentMethods.VnPay;
+        if (!IsVnPayConfigured())
+        {
+            return Fail("VNPay chua duoc cau hinh. Vui long thu lai sau.");
+        }
 
         var (checkIn, checkOut) = NormalizeDates(model.CheckIn, model.CheckOut);
         var checkInDate = DateOnly.FromDateTime(checkIn);
@@ -365,7 +371,7 @@ public class PublicBookingService : IPublicBookingService
             return Fail("Một số loại phòng bạn chọn không còn đủ số lượng. Vui lòng chọn lại.");
         }
 
-        if (roomLines.Sum(x => x.MaxGuestsPerRoom * x.Rooms) < guests)
+        if (!model.CapacityWarningConfirmed && roomLines.Sum(x => x.MaxGuestsPerRoom * x.Rooms) < guests)
         {
             return Fail("Combo phòng bạn chọn chưa đủ sức chứa cho số khách.");
         }
@@ -442,9 +448,7 @@ public class PublicBookingService : IPublicBookingService
             invoice.TienGiamGiaPhong = 0;
             invoice.TongThanhToan = roomTotal;
             invoice.SoTienDaThanhToan = 0;
-            invoice.PhuongThucThanhToan = model.PaymentMethod == PaymentMethods.PayAtHotel
-                ? DomainValues.PhuongThucThanhToan.TienMat
-                : DomainValues.PhuongThucThanhToan.Qr;
+            invoice.PhuongThucThanhToan = DomainValues.PhuongThucThanhToan.Qr;
             invoice.TrangThai = DomainValues.HoaDonTrangThai.ChuaThanhToan;
 
             if (!await _hoaDonService.UpdateAsync(invoice))
@@ -658,6 +662,7 @@ public class PublicBookingService : IPublicBookingService
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                         x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
                         x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.TraPhong &&
+                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.QuaHanNhanPhong &&
                         x.MaHoaDonNavigation.MaDatPhongNavigation.NgayNhanPhong < checkOut &&
                         x.MaHoaDonNavigation.MaDatPhongNavigation.NgayTraPhong > checkIn &&
                         ((x.MaLoaiPhong == normalizedRoomTypeId) ||

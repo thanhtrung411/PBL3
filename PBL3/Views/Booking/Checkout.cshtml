@@ -2,9 +2,7 @@
 @{
     Layout = null;
     var vnPayAvailable = Model.VnPayAvailable;
-    var selectedPaymentMethod = vnPayAvailable && Model.PaymentMethod == PaymentMethods.VnPay
-        ? PaymentMethods.VnPay
-        : PaymentMethods.PayAtHotel;
+    var selectedPaymentMethod = PaymentMethods.VnPay;
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -41,7 +39,7 @@
         }
 
         .checkout-shell {
-            max-width: 1180px;
+            max-width: 1240px;
             margin: 0 auto;
             padding: clamp(28px, 5vw, 52px) clamp(16px, 4vw, 28px);
         }
@@ -64,8 +62,8 @@
 
         .checkout-card {
             border: 1px solid var(--hotel-border);
-            border-radius: 10px;
-            box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(16, 24, 40, 0.05);
             overflow: hidden;
         }
 
@@ -75,15 +73,17 @@
 
         .checkout-page .form-label {
             color: #344054;
-            font-size: 0.8rem;
-            font-weight: 800;
+            font-size: 0.76rem;
+            font-weight: 700;
             letter-spacing: 0.03em;
             text-transform: uppercase;
         }
 
         .checkout-page .form-control {
-            min-height: 46px;
+            min-height: 48px;
             border-radius: 6px;
+            border-color: #d9e0e8;
+            font-size: 0.95rem;
         }
 
         .checkout-page .form-control:focus,
@@ -98,7 +98,7 @@
         }
 
         .payment-option {
-            min-height: 58px;
+            min-height: 68px;
             border-radius: 8px !important;
             background: #ffffff;
             transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
@@ -152,8 +152,8 @@
         .summary-card {
             top: 20px;
             border: 1px solid var(--hotel-border);
-            border-radius: 10px;
-            box-shadow: 0 12px 32px rgba(16, 24, 40, 0.09);
+            border-radius: 8px;
+            box-shadow: 0 10px 28px rgba(16, 24, 40, 0.08);
             overflow: hidden;
         }
 
@@ -174,7 +174,7 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 18px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .summary-row span:first-child {
@@ -196,7 +196,7 @@
         .total-row .total-amount {
             color: var(--hotel-danger);
             font-size: clamp(1.35rem, 3vw, 1.65rem);
-            font-weight: 800;
+            font-weight: 760;
             white-space: nowrap;
         }
 
@@ -303,7 +303,13 @@
                         <h1 class="h2 fw-bold mb-2">Hoàn tất đặt phòng</h1>
                         <p class="text-muted mb-0">Điền thông tin liên lạc và kiểm tra lại hóa đơn trước khi xác nhận</p>
                     </div>
-                    <a href="/Booking" class="btn btn-outline-dark mt-3 mt-lg-0">
+                    <a href="@Url.Action("Rooms", "Booking", new {
+                        checkIn = Model.CheckIn.ToString("yyyy-MM-dd"),
+                        checkOut = Model.CheckOut.ToString("yyyy-MM-dd"),
+                        guests = Model.Guests,
+                        rooms = Model.NumberOfRooms,
+                        roomSelection = Model.RoomSelection
+                    })" class="btn btn-outline-dark mt-3 mt-lg-0">
                         <i class="fa fa-arrow-left me-2" aria-hidden="true"></i>Quay lại
                     </a>
                 </div>
@@ -316,7 +322,9 @@
                     <input type="hidden" name="Guests" value="@Model.Guests" />
                     <input type="hidden" name="NumberOfRooms" value="@Model.NumberOfRooms" />
                     <input type="hidden" name="RoomSelection" value="@Model.RoomSelection" />
+                    <input type="hidden" name="CapacityWarningConfirmed" value="@Model.CapacityWarningConfirmed.ToString().ToLowerInvariant()" />
                     <input type="hidden" name="TotalAmount" value="@Model.RoomTotal" />
+                    <input type="hidden" name="PaymentMethod" value="@PaymentMethods.VnPay" />
 
                     <div class="checkout-error mb-4 p-3 @(TempData["Error"] != null ? "is-visible" : "")" id="checkoutError" role="alert" aria-live="polite" tabindex="-1">
                         <i class="fa fa-circle-exclamation mt-1" aria-hidden="true"></i>
@@ -393,26 +401,6 @@
                                             </div>
                                         </label>
                                     </div>
-                                    <div class="payment-option p-3 border">
-                                        <label class="d-flex align-items-start gap-3 mb-0" for="paymentHotel">
-                                            @if (selectedPaymentMethod == PaymentMethods.PayAtHotel)
-                                            {
-                                                <input class="form-check-input mt-1" type="radio" id="paymentHotel" name="PaymentMethod" value="@PaymentMethods.PayAtHotel" checked>
-                                            }
-                                            else
-                                            {
-                                                <input class="form-check-input mt-1" type="radio" id="paymentHotel" name="PaymentMethod" value="@PaymentMethods.PayAtHotel">
-                                            }
-                                            <span class="payment-icon mt-1"><i class="fa fa-building-columns fs-4" aria-hidden="true"></i></span>
-                                            <div>
-                                                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                                                    <h3 class="h6 fw-bold mb-0">Thanh toán tại khách sạn</h3>
-                                                    <span class="payment-badge">Giữ chỗ trước</span>
-                                                </div>
-                                                <p class="text-muted mb-0">Yêu cầu của bạn sẽ được giữ chỗ trong hệ thống. Lễ tân sẽ đối chiếu mã đặt phòng khi bạn đến check-in.</p>
-                                            </div>
-                                        </label>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -468,18 +456,18 @@
                                     </div>
 
                                     <div class="public-pill w-100 justify-content-center mb-3">
-                                        <i class="fa @(vnPayAvailable ? "fa-lock" : "fa-building-columns")" aria-hidden="true"></i>
-                                        <span>@(vnPayAvailable ? "Thông tin thanh toán được xử lý qua cổng VNPay" : "VNPay chưa cấu hình, giữ chỗ và thanh toán tại khách sạn")</span>
+                                        <i class="fa fa-lock" aria-hidden="true"></i>
+                                        <span>@(vnPayAvailable ? "Thanh toán online an toàn qua VNPay" : "VNPay chưa cấu hình. Vui lòng thử lại sau.")</span>
                                     </div>
 
-                                    <button type="submit" class="btn btn-pay w-100 py-3 fs-6" id="payButton">
+                                    <button type="submit" class="btn btn-pay w-100 py-3 fs-6" id="payButton" disabled="@(!vnPayAvailable)">
                                         <i class="fa fa-check default-icon" aria-hidden="true"></i>
                                         <i class="fa fa-spinner fa-spin loading-icon" aria-hidden="true"></i>
-                                        <span>@(selectedPaymentMethod == PaymentMethods.PayAtHotel ? "Xác nhận giữ phòng" : "Thanh toán VNPay")</span>
+                                        <span>Thanh toán VNPay</span>
                                     </button>
                                     <p class="text-center text-muted small mt-3 mb-0">
                                         <i class="fa fa-shield-halved me-1" aria-hidden="true"></i>
-                                        @(vnPayAvailable ? "VNPay xử lý giao dịch online an toàn; nếu chọn thanh toán tại khách sạn, hệ thống chỉ giữ chỗ." : "Hệ thống sẽ giữ chỗ và lễ tân sẽ đối chiếu mã đặt phòng khi bạn check-in.")
+                                        @(vnPayAvailable ? "Sau khi bấm thanh toán, hệ thống sẽ chuyển bạn sang cổng VNPay." : "Không thể tạo thanh toán khi VNPay chưa sẵn sàng.")
                                     </p>
                                 </div>
                             </aside>
@@ -505,11 +493,11 @@
             const vnPayInput = document.getElementById('paymentVnPay');
 
             function getPaymentMethod() {
-                return paymentInputs.find(input => input.checked)?.value || (vnPayInput?.disabled ? 'PAY_AT_HOTEL' : 'VNPAY');
+                return 'VNPAY';
             }
 
             function updateButtonLabel() {
-                const label = getPaymentMethod() === 'PAY_AT_HOTEL' ? 'Xác nhận giữ phòng' : 'Thanh toán VNPay';
+                const label = 'Thanh toán VNPay';
                 button.querySelector('span').textContent = label;
             }
 
@@ -533,7 +521,7 @@
             function setLoading(isLoading) {
                 button.disabled = isLoading;
                 button.classList.toggle('is-loading', isLoading);
-                button.querySelector('span').textContent = isLoading ? 'Đang xử lý...' : (getPaymentMethod() === 'PAY_AT_HOTEL' ? 'Xác nhận giữ phòng' : 'Thanh toán VNPay');
+                button.querySelector('span').textContent = isLoading ? 'Đang xử lý...' : 'Thanh toán VNPay';
             }
 
             paymentInputs.forEach(input => input.addEventListener('change', updateButtonLabel));

@@ -8,6 +8,18 @@ namespace PBL3.Services;
 
 public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
 {
+    private static readonly string[] NoShowCandidateStatuses =
+    {
+        DomainValues.DatPhongTrangThai.GiuCho,
+        DomainValues.DatPhongTrangThai.DaDatCoc
+    };
+
+    private static readonly string[] PaidInvoiceStatuses =
+    {
+        DomainValues.HoaDonTrangThai.DaThanhToan,
+        DomainValues.HoaDonTrangThai.ThanhToanMotPhan
+    };
+
     private readonly ApplicationDbContext _context;
     private readonly VnPayOptions _options;
     private readonly ILogger<ExpiredBookingCleanupService> _logger;
@@ -56,6 +68,111 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
         await _context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Cancelled {Count} expired VNPay booking holds.", expiredBookings.Count);
         return expiredBookings.Count;
+    }
+
+    public async Task<int> MarkExpiredNoShowBookingsAsync(CancellationToken cancellationToken = default)
+    {
+        var today = DateOnly.FromDateTime(GetVietnamNow());
+
+        var expiredBookings = await _context.DatPhongs
+            .Include(x => x.HoaDon)
+            .ThenInclude(x => x!.ChiTietHoaDons)
+            .Where(x => NoShowCandidateStatuses.Contains(x.TrangThai) &&
+                        x.NgayNhanPhong < today &&
+                        x.HoaDon != null &&
+                        PaidInvoiceStatuses.Contains(x.HoaDon.TrangThai))
+            .ToListAsync(cancellationToken);
+
+        if (expiredBookings.Count == 0)
+        {
+            return 0;
+        }
+
+        var expiredBookingIds = expiredBookings
+            .Select(x => x.MaDatPhong)
+            .ToList();
+
+        var assignedRoomIds = expiredBookings
+            .SelectMany(x => x.HoaDon?.ChiTietHoaDons.AsEnumerable() ?? Enumerable.Empty<ChiTietHoaDon>())
+            .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                        x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
+                        !string.IsNullOrWhiteSpace(x.MaPhong))
+            .Select(x => x.MaPhong!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var booking in expiredBookings)
+        {
+            booking.TrangThai = DomainValues.DatPhongTrangThai.QuaHanNhanPhong;
+            booking.GhiChu = AppendNote(
+                booking.GhiChu,
+                "Tu dong danh dau qua han nhan phong do khach khong den.");
+        }
+
+        if (assignedRoomIds.Count > 0)
+        {
+            await ReleaseRoomsIfNotBlockedAsync(assignedRoomIds, expiredBookingIds, today, cancellationToken);
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Marked {Count} bookings as no-show after missed check-in date.", expiredBookings.Count);
+        return expiredBookings.Count;
+    }
+
+    private async Task ReleaseRoomsIfNotBlockedAsync(
+        IReadOnlyCollection<string> roomIds,
+        IReadOnlyCollection<string> expiredBookingIds,
+        DateOnly today,
+        CancellationToken cancellationToken)
+    {
+        var blockedRoomIds = await _context.ChiTietHoaDons
+            .AsNoTracking()
+            .Include(x => x.MaHoaDonNavigation)
+            .ThenInclude(x => x.MaDatPhongNavigation)
+            .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                        x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
+                        x.MaPhong != null &&
+                        roomIds.Contains(x.MaPhong) &&
+                        !expiredBookingIds.Contains(x.MaHoaDonNavigation.MaDatPhong) &&
+                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
+                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.TraPhong &&
+                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.QuaHanNhanPhong &&
+                        x.MaHoaDonNavigation.MaDatPhongNavigation.NgayNhanPhong <= today &&
+                        x.MaHoaDonNavigation.MaDatPhongNavigation.NgayTraPhong > today)
+            .Select(x => x.MaPhong!)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var blockedRoomIdSet = blockedRoomIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var roomsToRelease = await _context.Phongs
+            .Where(x => roomIds.Contains(x.MaPhong) &&
+                        x.TrangThai == DomainValues.PhongTrangThai.DangSuDung)
+            .ToListAsync(cancellationToken);
+
+        foreach (var room in roomsToRelease)
+        {
+            if (!blockedRoomIdSet.Contains(room.MaPhong))
+            {
+                room.TrangThai = DomainValues.PhongTrangThai.Trong;
+            }
+        }
+    }
+
+    private static DateTime GetVietnamNow()
+    {
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetVietnamTimeZone());
+    }
+
+    private static TimeZoneInfo GetVietnamTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        }
+        catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+        }
     }
 
     private static string AppendNote(string? current, string next)

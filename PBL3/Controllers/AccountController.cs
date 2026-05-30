@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Globalization;
+using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -27,13 +29,18 @@ namespace PBL3.Controllers
         [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
         {
-            if (User.Identity?.IsAuthenticated == true && Url.IsLocalUrl(returnUrl))
-            {
-                return LocalRedirect(returnUrl);
-            }
-
             if (User.Identity?.IsAuthenticated == true)
             {
+                if (IsReceptionist(User))
+                {
+                    return RedirectToAction("Index", "Receptionist");
+                }
+
+                if (Url.IsLocalUrl(returnUrl))
+                {
+                    return LocalRedirect(returnUrl);
+                }
+
                 return RedirectToAction("Index", "Home");
             }
 
@@ -79,13 +86,13 @@ namespace PBL3.Controllers
                 : account.MaNvNavigation.HoTen;
             var roleName = (account.MaVaiTroNavigation?.TenVaiTro ?? account.MaVaiTro).Trim();
             var roleCode = account.MaVaiTro.Trim();
+            var roleKey = GetCanonicalRoleKey(roleName, roleCode);
 
             var claims = new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, account.MaTk.Trim()),
                 new(ClaimTypes.Name, displayName),
-                new(ClaimTypes.Role, roleName),
-                new(ClaimTypes.Role, roleCode),
+                new(ClaimTypes.Role, roleKey),
                 new("Username", account.TenDangNhap),
                 new("EmployeeId", account.MaNv.Trim())
             };
@@ -102,6 +109,11 @@ namespace PBL3.Controllers
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 principal,
                 properties);
+
+            if (roleKey == "receptionist")
+            {
+                return RedirectToAction("Index", "Receptionist");
+            }
 
             if (Url.IsLocalUrl(returnUrl))
             {
@@ -121,6 +133,19 @@ namespace PBL3.Controllers
         [AllowAnonymous]
         public IActionResult AccessDenied()
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                if (IsReceptionist(User))
+                {
+                    return RedirectToAction("Index", "Receptionist");
+                }
+
+                if (IsAdmin(User))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+            }
+
             Response.StatusCode = StatusCodes.Status403Forbidden;
             return Content("Ban khong co quyen truy cap khu vuc quan tri.");
         }
@@ -163,6 +188,66 @@ namespace PBL3.Controllers
         {
             return !string.IsNullOrWhiteSpace(password) &&
                    password.StartsWith("AQAAAA", StringComparison.Ordinal);
+        }
+
+        private static bool IsReceptionist(ClaimsPrincipal user)
+        {
+            return user.FindAll(ClaimTypes.Role)
+                .Any(claim => IsReceptionistRole(claim.Value));
+        }
+
+        private static bool IsAdmin(ClaimsPrincipal user)
+        {
+            return user.FindAll(ClaimTypes.Role)
+                .Any(claim => GetCanonicalRoleKey(claim.Value) == "admin");
+        }
+
+        private static bool IsReceptionistRole(params string?[] roles)
+        {
+            return roles
+                .Any(role => GetCanonicalRoleKey(role) == "receptionist");
+        }
+
+        private static string GetCanonicalRoleKey(params string?[] roles)
+        {
+            var normalizedRoles = roles.Select(NormalizeRoleKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (normalizedRoles.Contains("admin") || normalizedRoles.Contains("vt001"))
+            {
+                return "admin";
+            }
+
+            if (normalizedRoles.Contains("receptionist") ||
+                normalizedRoles.Contains("vt002") ||
+                normalizedRoles.Contains("le tan"))
+            {
+                return "receptionist";
+            }
+
+            return string.Empty;
+        }
+
+        private static string NormalizeRoleKey(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var normalized = value.Trim().Normalize(NormalizationForm.FormD);
+            var builder = new StringBuilder(normalized.Length);
+            foreach (var character in normalized)
+            {
+                var category = CharUnicodeInfo.GetUnicodeCategory(character);
+                if (category != UnicodeCategory.NonSpacingMark)
+                {
+                    builder.Append(character);
+                }
+            }
+
+            return builder
+                .ToString()
+                .Normalize(NormalizationForm.FormC)
+                .ToLowerInvariant();
         }
     }
 }

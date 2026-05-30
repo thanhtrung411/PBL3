@@ -1,45 +1,281 @@
 @model PBL3.Models.LoaiPhong
+
 @{
     Layout = "_AdminLayout";
+    ViewData["Title"] = "Sửa loại phòng";
 }
 
-@{
-    ViewData["Title"] = "Edit";
-}
+<style>
+    .room-edit-page {
+        color: #111827;
+    }
 
-<h1>Edit</h1>
+    .room-edit-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 24px;
+    }
 
-<h4>LoaiPhong</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="MaLoaiPhong" />
-            <div class="form-group">
-                <label asp-for="TenLoaiPhong" class="control-label"></label>
-                <input asp-for="TenLoaiPhong" class="form-control" />
-                <span asp-validation-for="TenLoaiPhong" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SoNguoiToiDa" class="control-label"></label>
-                <input asp-for="SoNguoiToiDa" class="form-control" />
-                <span asp-validation-for="SoNguoiToiDa" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MoTa" class="control-label"></label>
-                <input asp-for="MoTa" class="form-control" />
-                <span asp-validation-for="MoTa" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+    .room-edit-header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 820;
+        letter-spacing: 0;
+    }
+
+    .room-edit-header p {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .room-edit-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 18px;
+        align-items: start;
+    }
+
+    .room-edit-card,
+    .room-edit-summary {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+    }
+
+    .room-edit-card {
+        overflow: hidden;
+    }
+
+    .room-edit-card-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #edf2f7;
+        background: #fbfdff;
+        padding: 18px 20px;
+    }
+
+    .room-edit-card-head i {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #1d6df2;
+        color: #ffffff;
+    }
+
+    .room-edit-card-head h2 {
+        margin: 0;
+        font-size: 1.08rem;
+        font-weight: 780;
+    }
+
+    .room-edit-form {
+        display: grid;
+        gap: 18px;
+        padding: 22px;
+    }
+
+    .room-edit-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: 16px;
+    }
+
+    .room-edit-field {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+    }
+
+    .room-edit-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .room-edit-field span {
+        color: #111827;
+        font-size: 0.86rem;
+        font-weight: 740;
+    }
+
+    .room-edit-field input,
+    .room-edit-field textarea {
+        width: 100%;
+        border: 1px solid #dbe3ef;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 0.96rem;
+        font-weight: 600;
+        padding: 12px 13px;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .room-edit-field textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .room-edit-field input:focus,
+    .room-edit-field textarea:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .room-edit-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid #edf2f7;
+        padding-top: 18px;
+    }
+
+    .room-edit-actions .btn {
+        border-radius: 9px;
+        font-weight: 740;
+        padding: 10px 18px;
+    }
+
+    .room-edit-summary {
+        display: grid;
+        gap: 14px;
+        padding: 20px;
+    }
+
+    .room-type-code-large {
+        width: fit-content;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-size: 0.82rem;
+        font-weight: 780;
+        padding: 7px 12px;
+    }
+
+    .summary-title {
+        margin: 0;
+        font-size: 1.18rem;
+        font-weight: 780;
+    }
+
+    .summary-note {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .summary-stat {
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #fbfdff;
+        padding: 13px 14px;
+    }
+
+    .summary-stat span {
+        display: block;
+        color: #64748b;
+        font-size: 0.74rem;
+        font-weight: 740;
+        text-transform: uppercase;
+    }
+
+    .summary-stat strong {
+        display: block;
+        margin-top: 5px;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 760;
+    }
+
+    @@media (max-width: 980px) {
+        .room-edit-shell,
+        .room-edit-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .room-edit-header,
+        .room-edit-actions {
+            align-items: stretch;
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="room-edit-page">
+    <div class="room-edit-header">
+        <div>
+            <h1>Sửa loại phòng</h1>
+            <p>Cập nhật tên, sức chứa và thông tin mô tả của hạng phòng.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Quay lại
+        </a>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+    <div class="room-edit-shell">
+        <section class="room-edit-card">
+            <div class="room-edit-card-head">
+                <i class="bi bi-pencil-square"></i>
+                <h2>Thông tin chỉnh sửa</h2>
+            </div>
+
+            <form asp-action="Edit" class="room-edit-form">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="MaLoaiPhong" />
+
+                <div class="room-edit-grid">
+                    <label class="room-edit-field">
+                        <span>Tên loại phòng</span>
+                        <input asp-for="TenLoaiPhong" maxlength="50" autocomplete="off" />
+                        <span asp-validation-for="TenLoaiPhong" class="text-danger"></span>
+                    </label>
+
+                    <label class="room-edit-field">
+                        <span>Sức chứa</span>
+                        <input asp-for="SoNguoiToiDa" type="number" min="1" step="1" />
+                        <span asp-validation-for="SoNguoiToiDa" class="text-danger"></span>
+                    </label>
+
+                    <label class="room-edit-field full">
+                        <span>Thông tin</span>
+                        <textarea asp-for="MoTa" maxlength="255" placeholder="Nhập mô tả, tiện nghi hoặc ghi chú cho loại phòng..."></textarea>
+                        <span asp-validation-for="MoTa" class="text-danger"></span>
+                    </label>
+                </div>
+
+                <div class="room-edit-actions">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-check2"></i>
+                        Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <aside class="room-edit-summary">
+            <span class="room-type-code-large">@Model.MaLoaiPhong</span>
+            <h2 class="summary-title">@Model.TenLoaiPhong</h2>
+            <p class="summary-note">Mã loại phòng do hệ thống quản lý, không chỉnh sửa tại màn hình này.</p>
+            <div class="summary-stat">
+                <span>Sức chứa hiện tại</span>
+                <strong>@Model.SoNguoiToiDa người</strong>
+            </div>
+            <div class="summary-stat">
+                <span>Thông tin hiện tại</span>
+                <strong>@(string.IsNullOrWhiteSpace(Model.MoTa) ? "Chưa có mô tả" : Model.MoTa)</strong>
+            </div>
+        </aside>
+    </div>
 </div>
 
 @section Scripts {

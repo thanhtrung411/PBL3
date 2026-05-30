@@ -1,0 +1,117 @@
+@model PBL3.Models.AdminRoomTypeCardViewModel
+@using System.Globalization
+
+@{
+    var defaultPrice = Model.PriceOverview.DefaultPrice ?? 0;
+    var tomorrow = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
+    var defaultPriceValue = defaultPrice.ToString("0.##", CultureInfo.InvariantCulture);
+}
+
+<form class="price-detail-form" data-price-rules-form data-room-type-id="@Model.RoomTypeId">
+    <div class="price-detail-header">
+        <div>
+            <span class="room-type-code">@Model.RoomTypeId</span>
+            <h2 id="priceDetailModalTitle">Chi tiết giá @Model.RoomTypeName</h2>
+        </div>
+        <button type="button" class="btn btn-dark btn-sm" data-save-price-rules>
+            <i class="bi bi-check2"></i>
+            Lưu thay đổi
+        </button>
+    </div>
+
+    <section class="price-editor-section">
+        <div class="price-editor-title">
+            <i class="bi bi-cash-stack"></i>
+            <span>Giá mặc định</span>
+        </div>
+        <label class="price-input-group">
+            <span>Giá áp dụng hằng ngày</span>
+            <input type="number"
+                   min="0"
+                   step="1000"
+                   value="@defaultPriceValue"
+                   data-default-price-input />
+        </label>
+    </section>
+
+    <section class="price-editor-section">
+        <div class="price-editor-title">
+            <i class="bi bi-calendar-week"></i>
+            <span>Giá theo thứ</span>
+        </div>
+        <div class="weekday-multiplier-grid">
+            @foreach (var weekday in Model.PriceOverview.WeekdayPrices)
+            {
+                <label class="weekday-multiplier-card">
+                    <span>@weekday.DayLabel</span>
+                    <input type="number"
+                           min="0.1"
+                           step="0.05"
+                           value="@weekday.Multiplier.ToString("0.####", CultureInfo.InvariantCulture)"
+                           data-weekday-multiplier
+                           data-day-value="@weekday.DayValue" />
+                    <small data-weekday-price-preview>@(weekday.Price.HasValue ? $"{weekday.Price.Value:N0}đ" : "Chưa có")</small>
+                </label>
+            }
+        </div>
+    </section>
+
+    <section class="price-editor-section">
+        <div class="price-editor-title">
+            <i class="bi bi-stars"></i>
+            <span>Giá ngày lễ</span>
+        </div>
+        @if (Model.PriceOverview.HolidayPrices.Count == 0)
+        {
+            <div class="empty-room-state py-3">Chưa có giá ngày lễ trong tương lai.</div>
+        }
+        else
+        {
+            <div class="holiday-price-list">
+                @foreach (var holiday in Model.PriceOverview.HolidayPrices)
+                {
+                    <div class="holiday-price-row">
+                        <div>
+                            <strong>@holiday.StartDate.ToString("dd/MM/yyyy") - @holiday.EndDate.ToString("dd/MM/yyyy")</strong>
+                            <small>@holiday.Note</small>
+                        </div>
+                        <span>x@holiday.Multiplier.ToString("0.####")</span>
+                        <b>@holiday.Price.ToString("N0")đ</b>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</form>
+
+<form class="price-editor-section holiday-create-form" data-holiday-price-form data-room-type-id="@Model.RoomTypeId">
+    <div class="price-editor-title">
+        <i class="bi bi-plus-circle"></i>
+        <span>Thêm giá ngày lễ</span>
+    </div>
+    <div class="holiday-create-grid">
+        <label class="price-input-group">
+            <span>Ngày lễ</span>
+            <input type="date" min="@tomorrow" value="@tomorrow" data-holiday-date />
+        </label>
+        <label class="price-input-group">
+            <span>Số ngày trước lễ</span>
+            <input type="number" min="0" step="1" value="0" data-holiday-before />
+        </label>
+        <label class="price-input-group">
+            <span>Số ngày sau lễ</span>
+            <input type="number" min="0" step="1" value="0" data-holiday-after />
+        </label>
+        <label class="price-input-group">
+            <span>Hệ số nhân</span>
+            <input type="number" min="0.1" step="0.05" value="1.5" data-holiday-multiplier />
+        </label>
+    </div>
+    <div class="holiday-example" data-holiday-example>
+        Chọn ngày lễ và hệ số để xem ví dụ.
+    </div>
+    <button type="button" class="btn btn-outline-primary btn-sm" data-add-holiday-price>
+        <i class="bi bi-plus-lg"></i>
+        Thêm giá ngày lễ
+    </button>
+</form>

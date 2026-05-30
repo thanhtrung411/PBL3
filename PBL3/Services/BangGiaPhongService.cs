@@ -72,14 +72,20 @@ namespace PBL3.Services
 
         public async Task<decimal> LayGiaPhongHienTaiAsync(string maLoaiPhong)
         {
-            var today = DateOnly.FromDateTime(DateTime.Now);
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var todayWeekday = GetVietnamWeekday(DateTime.Today);
             var bangGia = await _context.BangGiaPhongs
                 .AsNoTracking()
-                .Where(b => b.MaLoaiPhong == maLoaiPhong && 
-                            b.TrangThai == "Hoạt động" && 
-                            b.TuNgay <= today && 
-                            b.DenNgay >= today)
+                .Where(b => b.MaLoaiPhong == maLoaiPhong &&
+                            b.TrangThai == "Hoạt động" &&
+                            b.GiaApDung > 0 &&
+                            ((b.LoaiGia == "MACDINH" && b.ThuApDung == null) ||
+                             (b.TuNgay <= today &&
+                              b.DenNgay >= today &&
+                              ((b.LoaiGia == "THEOTHU" && b.ThuApDung == todayWeekday) ||
+                               (b.LoaiGia == "NGAYLE" && b.ThuApDung == null)))))
                 .OrderByDescending(b => b.UuTien)
+                .ThenByDescending(b => b.TuNgay)
                 .FirstOrDefaultAsync();
 
             if (bangGia != null)
@@ -91,12 +97,21 @@ namespace PBL3.Services
                 .AsNoTracking()
                 .Where(b => b.MaLoaiPhong == maLoaiPhong &&
                             b.TrangThai == "Hoạt động" &&
+                            b.LoaiGia == "MACDINH" &&
+                            b.ThuApDung == null &&
                             b.GiaApDung > 0)
                 .OrderByDescending(b => b.DenNgay)
-                .ThenByDescending(b => b.UuTien)
+                .ThenByDescending(b => b.TuNgay)
                 .FirstOrDefaultAsync();
 
             return fallbackBangGia?.GiaApDung ?? 0;
+        }
+
+        private static byte GetVietnamWeekday(DateTime date)
+        {
+            return date.DayOfWeek == DayOfWeek.Sunday
+                ? (byte)8
+                : (byte)((int)date.DayOfWeek + 1);
         }
     }
 }

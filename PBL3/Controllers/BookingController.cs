@@ -34,12 +34,28 @@ namespace PBL3.Controllers
 
         public async Task<IActionResult> Rooms(DateTime? checkIn, DateTime? checkOut, int? guests, string? roomType, int? rooms)
         {
+            var hasSearched = checkIn.HasValue ||
+                              checkOut.HasValue ||
+                              guests.HasValue ||
+                              rooms.HasValue ||
+                              !string.IsNullOrWhiteSpace(roomType);
             var model = await _publicBookingService.SearchRoomsAsync(checkIn, checkOut, guests, roomType, rooms);
+            model.HasSearched = hasSearched;
+            if (!hasSearched)
+            {
+                model.RoomSelection = null;
+                model.RecommendedRooms.Clear();
+                foreach (var result in model.Results)
+                {
+                    result.RecommendedRooms = 0;
+                }
+            }
+
             return View(model);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Checkout(string? roomId, DateTime? checkIn, DateTime? checkOut, int? guests, int? rooms, string? roomSelection)
+        public async Task<IActionResult> Checkout(string? roomId, DateTime? checkIn, DateTime? checkOut, int? guests, int? rooms, string? roomSelection, bool capacityWarningConfirmed = false)
         {
             if (string.IsNullOrWhiteSpace(roomId) && string.IsNullOrWhiteSpace(roomSelection))
             {
@@ -48,7 +64,7 @@ namespace PBL3.Controllers
             }
 
             var normalizedRoomId = roomId?.Trim();
-            var model = await _publicBookingService.BuildCheckoutAsync(normalizedRoomId, checkIn, checkOut, guests, rooms, roomSelection);
+            var model = await _publicBookingService.BuildCheckoutAsync(normalizedRoomId, checkIn, checkOut, guests, rooms, roomSelection, capacityWarningConfirmed);
             if (model == null)
             {
                 TempData["Error"] = "Loại phòng này hiện không còn phù hợp với lựa chọn của bạn. Vui lòng chọn lại.";
@@ -72,11 +88,14 @@ namespace PBL3.Controllers
             PublicBookingResult result;
             try
             {
-                if (data.PaymentMethod == PaymentMethods.VnPay && !IsVnPayConfigured())
+                data.PaymentMethod = PaymentMethods.VnPay;
+                if (!IsVnPayConfigured())
                 {
-                    data.PaymentMethod = PaymentMethods.PayAtHotel;
-                    TempData["Success"] = "VNPay chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh merchant. Há»‡ thá»‘ng Ä‘Ã£ chuyá»ƒn sang giá»¯ chá»— vÃ  thanh toÃ¡n táº¡i khÃ¡ch sáº¡n.";
+                    var rebuilt = await RebuildCheckoutModelAsync(data);
+                    TempData["Error"] = "VNPay chua duoc cau hinh. Vui long thu lai sau.";
+                    return View("Checkout", rebuilt);
                 }
+
 
                 result = await _publicBookingService.ConfirmBookingAsync(data);
             }
@@ -103,12 +122,7 @@ namespace PBL3.Controllers
                 });
             }
 
-            if (data.PaymentMethod == PaymentMethods.VnPay)
-            {
-                return RedirectToAction("Start", "Payment", new { id = result.BookingCode });
-            }
-
-            return RedirectToAction(nameof(Success), new { id = result.BookingCode });
+            return RedirectToAction("Start", "Payment", new { id = result.BookingCode });
         }
 
         public IActionResult Success(string? id)
@@ -157,7 +171,8 @@ namespace PBL3.Controllers
                 submitted.CheckOut,
                 submitted.Guests,
                 submitted.NumberOfRooms,
-                submitted.RoomSelection);
+                submitted.RoomSelection,
+                submitted.CapacityWarningConfirmed);
 
             if (rebuilt == null)
             {
@@ -171,7 +186,8 @@ namespace PBL3.Controllers
             rebuilt.Note = submitted.Note;
             rebuilt.NumberOfRooms = submitted.NumberOfRooms;
             rebuilt.RoomSelection = submitted.RoomSelection;
-            rebuilt.PaymentMethod = rebuilt.VnPayAvailable ? submitted.PaymentMethod : PaymentMethods.PayAtHotel;
+            rebuilt.CapacityWarningConfirmed = submitted.CapacityWarningConfirmed;
+            rebuilt.PaymentMethod = PaymentMethods.VnPay;
             return rebuilt;
         }
 
