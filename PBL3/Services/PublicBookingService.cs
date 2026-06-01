@@ -118,7 +118,7 @@ public class PublicBookingService : IPublicBookingService
             model.Results = results;
             if (results.Any() && !model.RecommendedRooms.Any())
             {
-                model.ErrorMessage = "CÃ¡c phÃ²ng cÃ²n trá»‘ng chÆ°a Ä‘á»§ sá»©c chá»©a cho sá»‘ khÃ¡ch trong sá»‘ phÃ²ng báº¡n chá»n.";
+                model.ErrorMessage = "Các phòng còn trống chưa đủ sức chứa cho số khách trong số phòng bạn chọn.";
             }
             return model;
         }
@@ -165,7 +165,7 @@ public class PublicBookingService : IPublicBookingService
         return new CheckoutViewModel
         {
             RoomId = firstRoom.RoomTypeId,
-            RoomName = roomLines.Count == 1 ? firstRoom.RoomName : "Combo phÃ²ng Venus Hotel",
+            RoomName = roomLines.Count == 1 ? firstRoom.RoomName : "Combo phòng Venus Hotel",
             ImageUrl = firstRoom.ImageUrl,
             PricePerNight = firstRoom.PricePerNight,
             RoomSelection = normalizedSelection,

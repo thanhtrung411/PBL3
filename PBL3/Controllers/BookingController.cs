@@ -131,7 +131,7 @@ namespace PBL3.Controllers
             ViewBag.VnPayAvailable = IsVnPayConfigured();
             ViewBag.PaymentUnavailableMessage = IsVnPayConfigured()
                 ? null
-                : "VNPay chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh merchant. Äáº·t phÃ²ng váº«n Ä‘Æ°á»£c giá»¯ chá»— vÃ  báº¡n cÃ³ thá»ƒ thanh toÃ¡n táº¡i khÃ¡ch sáº¡n.";
+                : "VNPay chưa được cấu hình merchant. Đặt phòng vẫn được giữ chỗ và bạn có thể thanh toán tại khách sạn.";
             return View();
         }
 
