@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using PBL3.Models;
 using PBL3.Services.Interfaces;
 
-namespace PBL3.Areas.Admin.Controllers
+namespace PBL3.Controllers.Admin
 {
     [Area("Admin")]
     public class PhongsController : Controller

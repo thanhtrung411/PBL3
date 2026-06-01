@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace PBL3.Areas.Admin.Controllers
+namespace PBL3.Controllers.Admin
 {
     [Area("Admin")]
     public class AdminController : Controller
