@@ -12,6 +12,8 @@ namespace PBL3.Services;
 
 public class VnPayService : IVnPayService
 {
+    private const string WalkInVnPayMarker = "WALKIN_VNPAY_PENDING";
+
     private readonly ApplicationDbContext _context;
     private readonly VnPayOptions _options;
     private readonly ILogger<VnPayService> _logger;
@@ -121,6 +123,7 @@ public class VnPayService : IVnPayService
             amount = parsedAmount / 100m;
         }
 
+        var orderInfo = data.GetValueOrDefault("vnp_OrderInfo", "");
         var responseCode = data.GetValueOrDefault("vnp_ResponseCode", "");
         var transactionStatus = data.GetValueOrDefault("vnp_TransactionStatus", "");
         var success = isValid && responseCode == "00" && transactionStatus == "00";
@@ -135,6 +138,8 @@ public class VnPayService : IVnPayService
             IpnResponseCode = isValid ? "00" : "97",
             IpnMessage = isValid ? "Confirm success" : "Invalid signature",
             BookingCode = data.GetValueOrDefault("vnp_TxnRef", "").Trim(),
+            OrderInfo = orderInfo,
+            IsWalkInPayment = IsWalkInOrderInfo(orderInfo),
             ResponseCode = responseCode,
             TransactionStatus = transactionStatus,
             TransactionNo = data.GetValueOrDefault("vnp_TransactionNo"),
@@ -158,6 +163,7 @@ public class VnPayService : IVnPayService
 
         var invoice = await _context.HoaDons
             .Include(x => x.MaDatPhongNavigation)
+            .Include(x => x.ChiTietHoaDons)
             .FirstOrDefaultAsync(x => x.MaDatPhong == result.BookingCode);
         if (invoice == null)
         {
@@ -166,6 +172,9 @@ public class VnPayService : IVnPayService
             result.IpnMessage = "Order not found";
             return result;
         }
+
+        var isWalkInVnPay = result.IsWalkInPayment || IsWalkInVnPayInvoice(invoice);
+        result.IsWalkInPayment = isWalkInVnPay;
 
         if ((invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
              invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy) &&
@@ -192,6 +201,11 @@ public class VnPayService : IVnPayService
             return result;
         }
 
+        if (!result.Success && isWalkInVnPay)
+        {
+            await CancelFailedWalkInPaymentAsync(invoice);
+        }
+
         if (result.Success)
         {
             if (invoice.TongThanhToan > 0 && result.Amount != invoice.TongThanhToan)
@@ -200,6 +214,11 @@ public class VnPayService : IVnPayService
                 result.Message = "Số tiền thanh toán không khớp với hóa đơn.";
                 result.IpnResponseCode = "04";
                 result.IpnMessage = "Invalid amount";
+                if (isWalkInVnPay)
+                {
+                    await CancelFailedWalkInPaymentAsync(invoice);
+                }
+
                 return result;
             }
 
@@ -209,6 +228,19 @@ public class VnPayService : IVnPayService
             invoice.PhuongThucThanhToan = DomainValues.PhuongThucThanhToan.Qr;
             invoice.TrangThai = DomainValues.HoaDonTrangThai.DaThanhToan;
             invoice.GhiChu = AppendNote(invoice.GhiChu, $"VNPay: {result.TransactionNo}; Bank: {result.BankCode}");
+            if (isWalkInVnPay)
+            {
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                var isImmediateCheckIn = invoice.MaDatPhongNavigation.NgayNhanPhong <= today;
+                invoice.MaDatPhongNavigation.TrangThai = isImmediateCheckIn
+                    ? DomainValues.DatPhongTrangThai.DaNhanPhong
+                    : DomainValues.DatPhongTrangThai.DaDatCoc;
+                if (isImmediateCheckIn)
+                {
+                    await MarkInvoiceRoomsAsync(invoice, DomainValues.PhongTrangThai.DangSuDung);
+                }
+            }
+
             await _context.SaveChangesAsync();
             await SendPaymentSuccessEmailAsync(result);
         }
@@ -217,6 +249,49 @@ public class VnPayService : IVnPayService
         result.IpnMessage = "Confirm success";
 
         return result;
+    }
+
+    private async Task CancelFailedWalkInPaymentAsync(HoaDon invoice)
+    {
+        invoice.TrangThai = DomainValues.HoaDonTrangThai.DaHuy;
+        invoice.MaDatPhongNavigation.TrangThai = DomainValues.DatPhongTrangThai.DaHuy;
+        invoice.GhiChu = AppendNote(invoice.GhiChu, "VNPay không thành công, hủy phòng đã chọn.");
+        await MarkInvoiceRoomsAsync(invoice, DomainValues.PhongTrangThai.Trong);
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task MarkInvoiceRoomsAsync(HoaDon invoice, string status)
+    {
+        var roomIds = invoice.ChiTietHoaDons
+            .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                        !string.IsNullOrWhiteSpace(x.MaPhong))
+            .Select(x => x.MaPhong!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (roomIds.Count == 0)
+        {
+            return;
+        }
+
+        var rooms = await _context.Phongs
+            .Where(x => roomIds.Contains(x.MaPhong))
+            .ToListAsync();
+        foreach (var room in rooms)
+        {
+            room.TrangThai = status;
+        }
+    }
+
+    private static bool IsWalkInVnPayInvoice(HoaDon invoice)
+    {
+        return invoice.GhiChu?.Contains(WalkInVnPayMarker, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static bool IsWalkInOrderInfo(string? orderInfo)
+    {
+        return !string.IsNullOrWhiteSpace(orderInfo) &&
+               (orderInfo.Contains(WalkInVnPayMarker, StringComparison.OrdinalIgnoreCase) ||
+                orderInfo.Contains("check-in vang lai", StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task SendPaymentSuccessEmailAsync(PaymentCallbackResult result)

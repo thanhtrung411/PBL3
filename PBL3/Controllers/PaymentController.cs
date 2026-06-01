@@ -86,6 +86,25 @@ public class PaymentController : Controller
     public async Task<IActionResult> VnPayReturn()
     {
         var result = await _vnPayService.ProcessCallbackAsync(Request.Query);
+        if (result.IsWalkInPayment)
+        {
+            var status = result.Success
+                ? "success"
+                : string.Equals(result.ResponseCode, "24", StringComparison.OrdinalIgnoreCase)
+                    ? "cancelled"
+                    : "failed";
+
+            return RedirectToAction(
+                "Index",
+                "Receptionist",
+                new
+                {
+                    walkInPaymentStatus = status,
+                    bookingCode = result.BookingCode,
+                    message = result.Message
+                });
+        }
+
         return View("Result", result);
     }
 
@@ -109,10 +128,16 @@ public class PaymentController : Controller
 
     private string ResolveVnPayReturnUrl()
     {
+        var currentHostUrl = Url.Action(nameof(VnPayReturn), "Payment", null, Request.Scheme, Request.Host.Value) ?? "";
         var configuredUrl = _vnPayOptions.ReturnUrl?.Trim();
         if (string.IsNullOrWhiteSpace(configuredUrl))
         {
-            return Url.Action(nameof(VnPayReturn), "Payment", null, Request.Scheme, Request.Host.Value) ?? "";
+            return currentHostUrl;
+        }
+
+        if (IsLocalHost(Request.Host.Host) && !string.IsNullOrWhiteSpace(currentHostUrl))
+        {
+            return currentHostUrl;
         }
 
         if (Uri.TryCreate(configuredUrl, UriKind.Absolute, out var configuredUri))
@@ -126,6 +151,13 @@ public class PaymentController : Controller
         }
 
         return configuredUrl.Replace("//Payment/", "/Payment/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsLocalHost(string? host)
+    {
+        return string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(host, "127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(host, "::1", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeReturnPath(string path)

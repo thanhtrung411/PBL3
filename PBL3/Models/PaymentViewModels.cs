@@ -38,9 +38,11 @@ public class PaymentCallbackResult
 {
     public bool IsValidSignature { get; set; }
     public bool Success { get; set; }
+    public bool IsWalkInPayment { get; set; }
     public string IpnResponseCode { get; set; } = "00";
     public string IpnMessage { get; set; } = "Confirm success";
     public string BookingCode { get; set; } = "";
+    public string OrderInfo { get; set; } = "";
     public string ResponseCode { get; set; } = "";
     public string TransactionStatus { get; set; } = "";
     public string? TransactionNo { get; set; }
