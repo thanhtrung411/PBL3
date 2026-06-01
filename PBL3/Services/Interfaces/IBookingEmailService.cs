@@ -10,5 +10,6 @@ public interface IBookingEmailService
 
     Task<bool> SendCheckoutReceiptEmailAsync(
         string bookingCode,
+        string? recipientEmail = null,
         CancellationToken cancellationToken = default);
 }

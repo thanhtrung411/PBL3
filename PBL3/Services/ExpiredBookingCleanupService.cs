@@ -8,6 +8,8 @@ namespace PBL3.Services;
 
 public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
 {
+    private const string WalkInVnPayMarker = "WALKIN_VNPAY_PENDING";
+
     private static readonly string[] NoShowCandidateStatuses =
     {
         DomainValues.DatPhongTrangThai.GiuCho,
@@ -41,6 +43,7 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
 
         var expiredBookings = await _context.DatPhongs
             .Include(x => x.HoaDon)
+            .ThenInclude(x => x!.ChiTietHoaDons)
             .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.GiuCho &&
                         x.NgayDat <= cutoff &&
                         x.HoaDon != null &&
@@ -62,6 +65,26 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
             {
                 booking.HoaDon.TrangThai = DomainValues.HoaDonTrangThai.DaHuy;
                 booking.HoaDon.GhiChu = AppendNote(booking.HoaDon.GhiChu, $"Tu huy do qua han thanh toan VNPay sau {expireMinutes} phut.");
+            }
+        }
+
+        var walkInRoomIds = expiredBookings
+            .Where(x => x.HoaDon?.GhiChu?.Contains(WalkInVnPayMarker, StringComparison.OrdinalIgnoreCase) == true)
+            .SelectMany(x => x.HoaDon?.ChiTietHoaDons.AsEnumerable() ?? Enumerable.Empty<ChiTietHoaDon>())
+            .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                        !string.IsNullOrWhiteSpace(x.MaPhong))
+            .Select(x => x.MaPhong!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (walkInRoomIds.Count > 0)
+        {
+            var rooms = await _context.Phongs
+                .Where(x => walkInRoomIds.Contains(x.MaPhong) &&
+                            x.TrangThai == DomainValues.PhongTrangThai.DangSuDung)
+                .ToListAsync(cancellationToken);
+            foreach (var room in rooms)
+            {
+                room.TrangThai = DomainValues.PhongTrangThai.Trong;
             }
         }
 
@@ -111,7 +134,7 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
 
         if (assignedRoomIds.Count > 0)
         {
-            await ReleaseRoomsIfNotBlockedAsync(assignedRoomIds, expiredBookingIds, today, cancellationToken);
+            await ReleaseRoomsIfNotBlockedAsync(assignedRoomIds, expiredBookingIds, cancellationToken);
         }
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -122,7 +145,6 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
     private async Task ReleaseRoomsIfNotBlockedAsync(
         IReadOnlyCollection<string> roomIds,
         IReadOnlyCollection<string> expiredBookingIds,
-        DateOnly today,
         CancellationToken cancellationToken)
     {
         var blockedRoomIds = await _context.ChiTietHoaDons
@@ -134,11 +156,7 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
                         x.MaPhong != null &&
                         roomIds.Contains(x.MaPhong) &&
                         !expiredBookingIds.Contains(x.MaHoaDonNavigation.MaDatPhong) &&
-                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
-                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.TraPhong &&
-                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.QuaHanNhanPhong &&
-                        x.MaHoaDonNavigation.MaDatPhongNavigation.NgayNhanPhong <= today &&
-                        x.MaHoaDonNavigation.MaDatPhongNavigation.NgayTraPhong > today)
+                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong)
             .Select(x => x.MaPhong!)
             .Distinct()
             .ToListAsync(cancellationToken);

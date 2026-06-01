@@ -147,8 +147,7 @@ input {
     color: var(--reception-gold);
     font-size: 0.76rem;
     font-weight: 900;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    letter-spacing: 0;
 }
 
 h1,
@@ -258,8 +257,7 @@ h2 {
     color: inherit;
     font-size: 0.72rem;
     font-weight: 900;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    letter-spacing: 0;
 }
 
 .workflow-step.active {
@@ -318,6 +316,11 @@ h2 {
     gap: 18px;
 }
 
+.scan-grid {
+    grid-template-columns: minmax(420px, 0.95fr) minmax(0, 1.35fr);
+    align-items: start;
+}
+
 .tool-panel {
     border: 1px solid var(--reception-line);
     border-radius: 10px;
@@ -348,13 +351,17 @@ h2 {
 
 .scanner-frame {
     position: relative;
-    min-height: 340px;
+    min-height: 250px;
     overflow: hidden;
     border: 1px dashed #bed0e6;
     border-radius: 10px;
     background:
         linear-gradient(135deg, rgba(31, 111, 235, 0.08), rgba(22, 138, 85, 0.06)),
         #f8fbff;
+}
+
+.checkin-scan-card .scanner-frame {
+    min-height: 250px;
 }
 
 .qr-reader {
@@ -427,12 +434,37 @@ h2 {
 
 .manual-form {
     display: grid;
-    gap: 13px;
+    gap: 14px;
 }
 
 .manual-form label {
     color: var(--reception-muted);
     font-weight: 820;
+}
+
+.checkin-lookup-card .manual-form {
+    margin-top: 8px;
+}
+
+.checkin-lookup-card .manual-form label {
+    color: var(--reception-ink);
+    font-size: 0.95rem;
+    font-weight: 850;
+}
+
+.checkin-lookup-card .manual-form .form-control {
+    min-height: 58px;
+    border-color: #cbd9eb;
+    background: #ffffff;
+    font-size: 1.08rem;
+    font-weight: 680;
+    padding: 13px 16px;
+}
+
+.checkin-lookup-card .manual-form .btn {
+    min-height: 58px;
+    font-size: 1.02rem;
+    font-weight: 850;
 }
 
 .form-control {
@@ -448,30 +480,35 @@ h2 {
 .details-list,
 .confirm-list {
     display: grid;
-    gap: 10px;
+    gap: 8px;
 }
 
 .detail-row,
 .confirm-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 14px;
-    min-height: 42px;
+    display: grid;
+    grid-template-columns: minmax(140px, 0.55fr) minmax(0, 1fr);
+    gap: 12px;
+    min-height: 38px;
+    align-items: center;
     border: 1px solid #edf2f7;
-    border-radius: 8px;
+    border-radius: 7px;
     background: #fbfdff;
-    padding: 10px 12px;
+    padding: 9px 11px;
 }
 
 .detail-row span,
 .confirm-row span {
     color: var(--reception-muted);
+    font-size: 0.86rem;
     font-weight: 750;
 }
 
 .detail-row strong,
 .confirm-row strong {
-    text-align: right;
+    color: var(--reception-ink);
+    font-size: 0.94rem;
+    font-weight: 760;
+    text-align: left;
     overflow-wrap: anywhere;
 }
 
@@ -485,8 +522,8 @@ h2 {
 
 .requirement-list {
     display: grid;
-    gap: 9px;
-    margin-top: 16px;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 .requirement-item {
@@ -495,9 +532,9 @@ h2 {
     justify-content: space-between;
     gap: 12px;
     border: 1px solid #dcefe5;
-    border-radius: var(--reception-radius);
+    border-radius: 8px;
     background: var(--reception-green-soft);
-    padding: 11px 12px;
+    padding: 10px 12px;
 }
 
 .requirement-item strong,
@@ -634,6 +671,59 @@ h2 {
     margin-bottom: 18px;
 }
 
+.checkin-lookup-card {
+    order: 1;
+    min-height: 360px;
+    display: grid;
+    align-content: start;
+    border-color: #cfe0f6;
+    background:
+        linear-gradient(180deg, rgba(31, 111, 235, 0.055), rgba(255, 255, 255, 0) 44%),
+        #ffffff;
+}
+
+.checkin-scan-card {
+    order: 2;
+    min-height: 360px;
+    display: grid;
+}
+
+.checkin-info-card {
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(20, 32, 51, 0.06);
+}
+
+.room-map-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.room-map-type-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.room-map-type-filter span {
+    color: var(--reception-muted);
+    font-size: 0.84rem;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.room-map-type-filter select {
+    width: 150px;
+    min-height: 34px;
+    border-radius: 999px;
+    color: var(--reception-ink);
+    font-size: 0.86rem;
+    font-weight: 780;
+}
+
 .room-map-summary {
     display: flex;
     align-items: center;
@@ -693,16 +783,16 @@ h2 {
 
 .room-map-floors {
     display: grid;
-    gap: 18px;
+    gap: 14px;
 }
 
 .room-map-floor {
     display: grid;
-    gap: 12px;
+    gap: 10px;
     border: 1px solid #e7eef6;
     border-radius: 10px;
     background: #fbfdff;
-    padding: 14px;
+    padding: 12px;
 }
 
 .room-map-floor-header {
@@ -727,33 +817,46 @@ h2 {
 
 .room-map-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, 116px);
+    gap: 8px;
+    justify-content: start;
 }
 
 .room-map-tile {
-    min-height: 122px;
+    width: 116px;
+    min-height: 88px;
     display: grid;
-    gap: 12px;
+    gap: 7px;
     align-content: space-between;
+    text-align: left;
     border: 1px solid #dfe8f2;
-    border-left-width: 4px;
-    border-radius: 9px;
+    border-radius: 8px;
     background: #ffffff;
-    padding: 12px;
-    box-shadow: 0 8px 18px rgba(20, 32, 51, 0.04);
+    padding: 9px 10px;
+    box-shadow: 0 6px 14px rgba(20, 32, 51, 0.04);
+    cursor: pointer;
+}
+
+.room-map-tile:hover,
+.room-map-tile:focus-visible,
+.room-map-tile.selected {
+    border-color: var(--reception-blue);
+    box-shadow: 0 8px 18px rgba(31, 111, 235, 0.14);
+    outline: none;
 }
 
 .room-map-tile.available {
-    border-left-color: var(--reception-green);
+    border-color: #bfe6d2;
+    background: #f7fdf9;
 }
 
 .room-map-tile.occupied {
-    border-left-color: var(--reception-blue);
+    border-color: #bfd6ff;
+    background: #f7fbff;
 }
 
 .room-map-tile.maintenance {
-    border-left-color: var(--reception-gold);
+    border-color: #f2dda8;
     background: #fffdf8;
 }
 
@@ -763,28 +866,268 @@ h2 {
     display: block;
 }
 
+.room-map-tile-head {
+    display: grid;
+    gap: 3px;
+}
+
 .room-map-tile strong {
     color: var(--reception-ink);
-    font-size: 1.2rem;
+    font-size: 1.04rem;
     font-weight: 900;
+    line-height: 1.1;
 }
 
 .room-map-tile small,
 .room-map-tile-meta span {
     color: var(--reception-muted);
-    font-size: 0.84rem;
+    font-size: 0.76rem;
     font-weight: 750;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.room-map-tile-meta span {
+    color: var(--reception-ink);
+    font-weight: 850;
 }
 
 .room-map-tile-meta {
     display: grid;
-    gap: 3px;
+    gap: 2px;
+}
+
+.room-map-empty-line {
+    min-height: 0.95rem;
+}
+
+.room-map-modal[hidden] {
+    display: none !important;
+}
+
+.room-map-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: grid;
+    place-items: center;
+    background: rgba(15, 23, 42, 0.54);
+    padding: 24px;
+}
+
+.room-map-modal-dialog {
+    width: min(820px, 100%);
+    max-height: min(760px, calc(100vh - 48px));
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 28px 72px rgba(15, 23, 42, 0.34);
+}
+
+.room-map-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border-bottom: 1px solid #e7eef6;
+    padding: 18px 22px;
+}
+
+.room-map-modal-header h3 {
+    margin: 0;
+    color: var(--reception-ink);
+    font-size: 1.12rem;
+    font-weight: 900;
+}
+
+.room-map-modal-close {
+    width: 38px;
+    height: 38px;
+    display: inline-grid;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: #f4f7fb;
+    color: var(--reception-ink);
+}
+
+.room-map-modal-close:hover {
+    background: #e9eef7;
+}
+
+.room-map-modal-body {
+    overflow: auto;
+    display: grid;
+    gap: 14px;
+    padding: 20px 22px 22px;
+}
+
+.room-map-detail {
+    display: grid;
+    gap: 12px;
+    border: 1px solid #dfe8f2;
+    border-radius: 10px;
+    background: #ffffff;
+    margin-bottom: 14px;
+    padding: 14px;
+    box-shadow: 0 10px 24px rgba(20, 32, 51, 0.05);
+}
+
+.room-map-detail-empty {
+    color: var(--reception-muted);
+    font-weight: 760;
+    text-align: center;
+}
+
+.room-map-detail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.room-map-detail-head p,
+.room-map-detail-head h3 {
+    margin: 0;
+}
+
+.room-map-detail-head h3 {
+    color: var(--reception-ink);
+    font-size: 1.08rem;
+    font-weight: 900;
+}
+
+.room-map-detail-status {
+    border-radius: 999px;
+    background: #edf2f7;
+    color: var(--reception-muted);
+    font-size: 0.82rem;
+    font-weight: 880;
+    padding: 6px 10px;
+    white-space: nowrap;
+}
+
+.room-map-detail-status.available {
+    background: var(--reception-green-soft);
+    color: var(--reception-green);
+}
+
+.room-map-detail-status.occupied {
+    background: var(--reception-blue-soft);
+    color: var(--reception-blue);
+}
+
+.room-map-detail-status.maintenance {
+    background: #fff5df;
+    color: #9d741f;
+}
+
+.room-map-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.room-map-guest-box {
+    display: grid;
+    gap: 10px;
+}
+
+.room-map-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.room-map-section-title span {
+    color: var(--reception-ink);
+    font-size: 0.98rem;
+    font-weight: 900;
+}
+
+.room-map-detail-grid > div {
+    min-width: 0;
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    background: #fbfdff;
+    padding: 10px;
+}
+
+.room-map-detail-grid > .room-map-detail-wide {
+    grid-column: 1 / -1;
+}
+
+.room-map-detail-grid span,
+.room-map-service-title span,
+.room-map-service-empty {
+    color: var(--reception-muted);
+    font-size: 0.82rem;
+    font-weight: 760;
+}
+
+.room-map-detail-grid strong {
+    display: block;
+    color: var(--reception-ink);
+    font-size: 0.94rem;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.room-map-service-box {
+    display: grid;
+    gap: 8px;
+    border-top: 1px solid #edf2f7;
+    padding-top: 12px;
+}
+
+.room-map-service-title,
+.room-map-service-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.room-map-service-title strong {
+    color: var(--reception-blue);
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.room-map-service-line {
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    background: #fbfdff;
+    padding: 9px 10px;
+}
+
+.room-map-service-line span {
+    color: var(--reception-ink);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.room-map-service-line strong {
+    color: var(--reception-ink);
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.room-map-service-empty {
+    border: 1px dashed #cfdced;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
 }
 
 .service-usage-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.8fr);
-    gap: 18px;
+    grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.75fr);
+    gap: 16px;
     align-items: start;
 }
 
@@ -814,20 +1157,19 @@ h2 {
 
 .service-stay-list {
     display: grid;
-    gap: 12px;
+    gap: 10px;
 }
 
 .service-stay-card {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
-    gap: 12px;
+    gap: 10px;
     border: 1px solid #e1e9f2;
-    border-left: 4px solid var(--reception-blue);
-    border-radius: 10px;
+    border-radius: 8px;
     background: #ffffff;
-    padding: 15px;
+    padding: 13px;
     cursor: pointer;
-    box-shadow: 0 10px 24px rgba(20, 32, 51, 0.05);
+    box-shadow: 0 8px 18px rgba(20, 32, 51, 0.04);
     transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
@@ -840,7 +1182,7 @@ h2 {
 }
 
 .service-stay-card.selected {
-    background: #fbfdff;
+    background: #f7fbff;
 }
 
 .service-stay-main {
@@ -848,9 +1190,9 @@ h2 {
 }
 
 .service-stay-main h3 {
-    margin: 8px 0 4px;
+    margin: 7px 0 4px;
     color: var(--reception-ink);
-    font-size: 1.08rem;
+    font-size: 1.02rem;
     font-weight: 850;
 }
 
@@ -882,7 +1224,7 @@ h2 {
 .service-lines {
     grid-column: 1 / -1;
     display: grid;
-    gap: 7px;
+    gap: 6px;
     border-top: 1px solid #edf2f7;
     padding-top: 10px;
 }
@@ -912,23 +1254,32 @@ h2 {
     position: sticky;
     top: 24px;
     display: grid;
-    gap: 12px;
+    gap: 11px;
     border: 1px solid #dfe8f2;
-    border-radius: 10px;
-    background: #fbfdff;
-    padding: 18px;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 16px;
+    box-shadow: 0 12px 28px rgba(20, 32, 51, 0.06);
 }
 
 .service-form h3 {
     margin: 0;
     color: var(--reception-ink);
-    font-size: 1.2rem;
+    font-size: 1.12rem;
     font-weight: 850;
 }
 
 .service-form label {
     color: var(--reception-muted);
+    font-size: 0.88rem;
     font-weight: 820;
+}
+
+.service-form .form-select,
+.service-form .form-control {
+    min-height: 44px;
+    border-radius: 8px;
+    font-size: 0.98rem;
 }
 
 .service-form-row {
@@ -939,7 +1290,7 @@ h2 {
 }
 
 .service-estimate {
-    min-height: 48px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     border: 1px solid #d7e2ee;
@@ -949,6 +1300,49 @@ h2 {
     font-size: 1.06rem;
     font-weight: 900;
     padding: 10px 12px;
+}
+
+.service-selected-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #dfe8f2;
+    border-radius: 8px;
+    background: #f7fbff;
+    padding: 11px 12px;
+}
+
+.service-selected-box > div,
+.service-selected-box-muted {
+    min-width: 0;
+}
+
+.service-selected-box span,
+.service-selected-box small {
+    display: block;
+    color: var(--reception-muted);
+    font-size: 0.8rem;
+    font-weight: 740;
+}
+
+.service-selected-box strong {
+    display: block;
+    color: var(--reception-ink);
+    font-size: 0.95rem;
+    font-weight: 850;
+    overflow-wrap: anywhere;
+}
+
+.service-selected-box > strong {
+    color: var(--reception-green);
+    white-space: nowrap;
+}
+
+.service-selected-box-muted {
+    display: grid;
+    gap: 2px;
+    background: #fbfdff;
 }
 
 .checkout-grid {
@@ -1044,7 +1438,6 @@ h2 {
     color: var(--reception-muted);
     font-size: 0.72rem;
     font-weight: 850;
-    text-transform: uppercase;
 }
 
 .walkin-guest-summary dd {
@@ -1062,6 +1455,398 @@ h2 {
 
 .walkin-room-panel {
     position: static;
+    gap: 10px;
+    padding: 14px;
+}
+
+.walkin-room-panel .panel-heading {
+    margin-bottom: 0;
+}
+
+.walkin-room-panel .checkout-detail-empty {
+    padding: 10px 12px;
+}
+
+.walkin-room-panel .walkin-booking-panel {
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+}
+
+.walkin-room-panel .walkin-guest-summary {
+    gap: 6px;
+}
+
+.walkin-room-panel .walkin-guest-summary h3 {
+    font-size: 0.98rem;
+}
+
+.walkin-room-panel .walkin-guest-summary dl {
+    gap: 8px;
+}
+
+.walkin-room-panel .walkin-guest-summary dt {
+    font-size: 0.68rem;
+}
+
+.walkin-room-panel .walkin-guest-summary dd {
+    font-size: 0.86rem;
+}
+
+.walkin-room-panel .walkin-edit-btn {
+    min-height: 36px;
+    padding: 7px 10px;
+}
+
+.walkin-payment-panel {
+    gap: 16px;
+}
+
+.walkin-payment-heading p,
+.walkin-payment-heading h3 {
+    margin: 0;
+}
+
+.walkin-payment-overview {
+    display: grid;
+    grid-template-columns: minmax(240px, 0.75fr) minmax(0, 1.25fr);
+    gap: 14px;
+    align-items: stretch;
+}
+
+.walkin-payment-due-card,
+.walkin-payment-method-card,
+.walkin-cash-box {
+    border: 1px solid #dfe8f2;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 16px;
+}
+
+.walkin-payment-due-card {
+    display: grid;
+    align-content: center;
+    gap: 6px;
+    border-left: 4px solid var(--reception-blue);
+    background: #fbfdff;
+}
+
+.walkin-payment-due-card span,
+.walkin-payment-due-card small,
+.walkin-payment-field label,
+.walkin-payment-method-card h4 {
+    color: var(--reception-muted);
+    font-size: 0.86rem;
+    font-weight: 820;
+}
+
+.walkin-payment-due-card strong {
+    color: var(--reception-ink);
+    font-size: 1.75rem;
+    font-weight: 950;
+    line-height: 1.15;
+}
+
+.walkin-payment-method-card {
+    display: grid;
+    gap: 12px;
+}
+
+.walkin-payment-method-card h4 {
+    margin: 0;
+    color: var(--reception-ink);
+    font-size: 0.98rem;
+    font-weight: 850;
+}
+
+.walkin-payment-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.walkin-payment-option {
+    min-height: 92px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid #dfe8f2;
+    border-radius: 9px;
+    background: #fbfdff;
+    cursor: pointer;
+    padding: 13px;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.walkin-payment-option:has(input:checked) {
+    border-color: var(--reception-blue);
+    background: var(--reception-blue-soft);
+    box-shadow: 0 10px 22px rgba(31, 111, 235, 0.12);
+}
+
+.walkin-payment-option input {
+    margin-top: 4px;
+}
+
+.walkin-payment-option strong,
+.walkin-payment-option small {
+    display: block;
+}
+
+.walkin-payment-option strong {
+    color: var(--reception-ink);
+    font-size: 0.98rem;
+    font-weight: 900;
+}
+
+.walkin-payment-option small {
+    margin-top: 4px;
+    color: var(--reception-muted);
+    font-size: 0.82rem;
+    font-weight: 740;
+    line-height: 1.35;
+}
+
+.walkin-cash-box {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.42fr);
+    gap: 14px;
+    align-items: end;
+}
+
+.walkin-cash-box[hidden] {
+    display: none !important;
+}
+
+.walkin-payment-field {
+    display: grid;
+    gap: 7px;
+}
+
+.walkin-payment-field .form-control {
+    min-height: 50px;
+    font-size: 1.08rem;
+    font-weight: 780;
+}
+
+.walkin-change-box {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.walkin-change-box .checkout-money-row {
+    min-height: 50px;
+}
+
+.walkin-confirm-panel {
+    max-width: 880px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.walkin-confirm-summary {
+    display: grid;
+}
+
+.walkin-invoice-card {
+    overflow: hidden;
+    border: 1px solid #dfe8f2;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 16px 34px rgba(20, 32, 51, 0.08);
+}
+
+.walkin-invoice-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: linear-gradient(135deg, var(--reception-ink), #263a5a);
+    color: #ffffff;
+    padding: 18px 20px;
+}
+
+.walkin-invoice-header p,
+.walkin-invoice-header h3 {
+    margin: 0;
+}
+
+.walkin-invoice-header .eyebrow {
+    color: var(--reception-gold);
+}
+
+.walkin-invoice-header h3 {
+    color: #ffffff;
+    font-size: 1.12rem;
+    font-weight: 850;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+}
+
+.walkin-invoice-header > span {
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-weight: 850;
+    padding: 7px 12px;
+    white-space: nowrap;
+}
+
+.walkin-invoice-body {
+    display: grid;
+    gap: 16px;
+    padding: 20px;
+}
+
+.walkin-invoice-guest {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.55fr);
+    gap: 14px;
+    border-bottom: 1px solid #e7eef6;
+    padding-bottom: 16px;
+}
+
+.walkin-invoice-guest > div,
+.walkin-invoice-dates > div {
+    min-width: 0;
+}
+
+.walkin-invoice-guest span,
+.walkin-invoice-dates span,
+.walkin-invoice-row span,
+.walkin-invoice-guest small,
+.walkin-invoice-dates small {
+    color: var(--reception-muted);
+    font-size: 0.86rem;
+    font-weight: 760;
+}
+
+.walkin-invoice-guest strong,
+.walkin-invoice-dates strong {
+    display: block;
+    color: var(--reception-ink);
+    font-size: 1rem;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.walkin-invoice-guest small,
+.walkin-invoice-dates small {
+    display: block;
+    margin-top: 2px;
+}
+
+.walkin-invoice-lines {
+    display: grid;
+    gap: 10px;
+    border-bottom: 1px solid #e7eef6;
+    padding-bottom: 16px;
+}
+
+.walkin-invoice-line,
+.walkin-invoice-row,
+.walkin-invoice-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.walkin-invoice-line {
+    border: 1px solid #edf2f7;
+    border-radius: 9px;
+    background: #fbfdff;
+    padding: 11px 12px;
+}
+
+.walkin-invoice-line div {
+    min-width: 0;
+}
+
+.walkin-invoice-line strong {
+    color: var(--reception-ink);
+    font-weight: 880;
+}
+
+.walkin-invoice-line span {
+    display: block;
+    margin-top: 3px;
+    color: var(--reception-muted);
+    font-size: 0.84rem;
+    font-weight: 740;
+    overflow-wrap: anywhere;
+}
+
+.walkin-invoice-line > strong,
+.walkin-invoice-row strong {
+    white-space: nowrap;
+}
+
+.walkin-invoice-dates {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    border-bottom: 1px solid #e7eef6;
+    padding-bottom: 16px;
+}
+
+.walkin-invoice-dates > div {
+    border: 1px solid #edf2f7;
+    border-radius: 9px;
+    background: #ffffff;
+    padding: 12px;
+}
+
+.walkin-invoice-money {
+    display: grid;
+    gap: 10px;
+}
+
+.walkin-invoice-row {
+    color: var(--reception-muted);
+    font-weight: 780;
+}
+
+.walkin-invoice-row strong {
+    color: var(--reception-ink);
+}
+
+.walkin-invoice-total {
+    border-radius: 10px;
+    background: var(--reception-blue-soft);
+    color: var(--reception-blue);
+    padding: 14px 16px;
+}
+
+.walkin-invoice-total span {
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.walkin-invoice-total strong {
+    color: var(--reception-blue);
+    font-size: 1.35rem;
+    font-weight: 950;
+    white-space: nowrap;
+}
+
+.walkin-invoice-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 999px;
+    background: #f4f7fb;
+    color: var(--reception-muted);
+    font-size: 0.88rem;
+    font-weight: 780;
+    padding: 10px 12px;
+    text-align: center;
+}
+
+.walkin-invoice-note i {
+    color: var(--reception-green);
 }
 
 .checkout-detail-panel {
@@ -1243,6 +2028,46 @@ h2 {
     font-weight: 820;
 }
 
+.checkout-receipt-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.checkout-receipt-option {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid #dbe6f2;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--reception-ink);
+    cursor: pointer;
+    font-weight: 760;
+    padding: 11px 12px;
+}
+
+.checkout-receipt-option input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--reception-blue);
+}
+
+.checkout-email-field {
+    display: grid;
+    gap: 7px;
+}
+
+.checkout-email-field input:disabled {
+    background: #f3f6fa;
+    color: var(--reception-muted);
+}
+
+.checkout-email-field input.disabled {
+    background: #f8fafc;
+    border-style: dashed;
+}
+
 .room-heading {
     align-items: center;
 }
@@ -1290,6 +2115,10 @@ h2 {
     gap: 18px;
 }
 
+.walkin-room-panel .room-groups {
+    gap: 10px;
+}
+
 .room-type-section {
     display: grid;
     gap: 12px;
@@ -1320,10 +2149,60 @@ h2 {
     white-space: nowrap;
 }
 
+.walkin-room-type {
+    gap: 8px;
+    padding: 10px;
+}
+
+.walkin-room-type-header {
+    align-items: flex-start;
+}
+
+.walkin-room-type-header > div {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.walkin-room-type-header strong {
+    color: var(--reception-ink);
+}
+
+.walkin-room-meta {
+    color: var(--reception-muted);
+    font-size: 0.82rem;
+    font-weight: 760;
+    line-height: 1.35;
+}
+
+.walkin-floor-section {
+    display: grid;
+    gap: 6px;
+    border-top: 1px solid #edf2f7;
+    padding-top: 8px;
+}
+
+.walkin-floor-title {
+    color: var(--reception-muted);
+    font-size: 0.78rem;
+    font-weight: 850;
+    letter-spacing: 0;
+}
+
+.walkin-room-grid {
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    gap: 8px;
+}
+
 .room-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 10px;
+}
+
+.room-grid.walkin-room-grid {
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    gap: 7px;
 }
 
 .room-tile {
@@ -1376,6 +2255,79 @@ h2 {
     color: #8a6512;
 }
 
+.walkin-room-grid .room-tile {
+    min-height: 76px;
+    gap: 3px;
+    padding: 8px 9px;
+}
+
+.walkin-room-grid .room-tile strong {
+    font-size: 1rem;
+}
+
+.walkin-room-grid .room-tile small {
+    font-size: 0.78rem;
+    line-height: 1.25;
+}
+
+.walkin-room-type.is-limit-reached .room-tile.available:not(.selected) {
+    border-color: #e4ebf3;
+    background: #f6f8fb;
+    color: #9aa5b1;
+}
+
+.walkin-selection-bar {
+    position: fixed;
+    right: 34px;
+    bottom: 16px;
+    left: calc(288px + 34px);
+    z-index: 1040;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    border: 1px solid rgba(31, 111, 235, 0.22);
+    border-left: 4px solid var(--reception-blue);
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%);
+    padding: 14px 16px;
+    box-shadow: 0 14px 30px rgba(31, 111, 235, 0.12);
+}
+
+.walkin-room-panel {
+    padding-bottom: 110px;
+}
+
+.walkin-selection-bar > div {
+    display: grid;
+    gap: 5px;
+}
+
+.walkin-selection-bar strong {
+    color: var(--reception-ink);
+    font-size: 1.02rem;
+    font-weight: 900;
+}
+
+.walkin-selection-bar span {
+    color: var(--reception-muted);
+    font-size: 0.88rem;
+    font-weight: 760;
+}
+
+.walkin-selected-types {
+    color: var(--reception-blue);
+    font-size: 0.92rem;
+    font-weight: 850;
+    overflow-wrap: anywhere;
+}
+
+.walkin-selection-bar .btn {
+    min-width: 138px;
+    box-shadow: 0 10px 24px rgba(31, 111, 235, 0.2);
+}
+
 .selected-room-list {
     display: grid;
     gap: 10px;
@@ -1397,6 +2349,104 @@ h2 {
     overflow-wrap: anywhere;
 }
 
+.reception-main .room-tile strong,
+.reception-main .room-tile small,
+.reception-main .room-map-tile strong,
+.reception-main .room-map-tile small,
+.reception-main .room-map-tile-meta span,
+.reception-main .room-map-detail-grid strong,
+.reception-main .room-map-service-line strong,
+.reception-main .arrival-main h3,
+.reception-main .arrival-main p,
+.reception-main .arrival-meta span,
+.reception-main .arrival-status,
+.reception-main .arrival-side strong,
+.reception-main .service-stay-main h3,
+.reception-main .service-stay-main p,
+.reception-main .service-stay-total span,
+.reception-main .service-line,
+.reception-main .service-line strong,
+.reception-main .service-selected-box strong,
+.reception-main .service-selected-box span,
+.reception-main .service-selected-box small,
+.reception-main .checkout-stay-money span,
+.reception-main .checkout-stay-money strong,
+.reception-main .checkout-guest-box h4,
+.reception-main .checkout-guest-box p,
+.reception-main .checkout-guest-box strong,
+.reception-main .checkout-line,
+.reception-main .checkout-line strong,
+.reception-main .checkout-money-row,
+.reception-main .checkout-money-row strong,
+.reception-main .detail-row strong,
+.reception-main .confirm-row strong,
+.reception-main .selected-room strong,
+.reception-main .walkin-guest-summary h3,
+.reception-main .walkin-guest-summary dd,
+.reception-main .walkin-invoice-card strong,
+.reception-main .walkin-invoice-card span,
+.reception-main .walkin-invoice-card small,
+.reception-main .walkin-selection-bar strong,
+.reception-main .walkin-selection-bar span,
+.reception-main .walkin-selected-types {
+    font-weight: 500;
+}
+
+.reception-main .arrival-code,
+.reception-main .room-counter,
+.reception-main .today-summary,
+.reception-main .room-map-count {
+    font-weight: 600;
+}
+
+.reception-main .walkin-invoice-header h3,
+.reception-main .walkin-invoice-header > span {
+    font-weight: 850;
+}
+
+.reception-main .room-tile {
+    gap: 7px;
+}
+
+.reception-main .walkin-room-grid .room-tile {
+    min-height: 82px;
+    gap: 5px;
+}
+
+.reception-main .room-tile strong {
+    font-weight: 900;
+    line-height: 1.15;
+}
+
+.reception-main .room-tile small {
+    font-weight: 720;
+    line-height: 1.35;
+}
+
+.reception-main .room-map-tile {
+    gap: 9px;
+    min-height: 94px;
+    padding: 10px;
+}
+
+.reception-main .room-map-tile strong {
+    font-weight: 900;
+}
+
+.reception-main .room-map-tile small {
+    font-weight: 750;
+    line-height: 1.35;
+}
+
+.reception-main .room-map-tile-meta {
+    gap: 4px;
+}
+
+.reception-main .room-map-tile-meta span {
+    font-weight: 850;
+    line-height: 1.35;
+}
+
 .success-panel {
     max-width: 680px;
     margin: 28px auto 0;
@@ -1416,6 +2466,125 @@ h2 {
 .success-panel p {
     color: var(--reception-muted);
     font-weight: 700;
+}
+
+.walkin-done-panel {
+    max-width: 760px;
+    padding: 30px;
+}
+
+.walkin-done-summary {
+    display: grid;
+    gap: 14px;
+    margin: 22px 0;
+    text-align: left;
+}
+
+.walkin-done-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.walkin-done-meta > div,
+.walkin-done-room-block {
+    border: 1px solid #e3ebf5;
+    border-radius: 10px;
+    background: #fbfdff;
+}
+
+.walkin-done-meta > div {
+    min-width: 0;
+    padding: 12px;
+}
+
+.walkin-done-meta span,
+.walkin-done-meta small,
+.walkin-done-room-heading span,
+.walkin-done-room-group span,
+.walkin-done-empty {
+    color: var(--reception-muted);
+    font-size: 0.84rem;
+    font-weight: 760;
+}
+
+.walkin-done-meta strong {
+    display: block;
+    color: var(--reception-ink);
+    font-size: 0.98rem;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.walkin-done-room-block {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+}
+
+.walkin-done-room-heading,
+.walkin-done-room-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.walkin-done-room-heading strong {
+    color: var(--reception-blue);
+    font-weight: 900;
+}
+
+.walkin-done-room-list {
+    display: grid;
+    gap: 10px;
+}
+
+.walkin-done-room-group {
+    border: 1px solid #edf2f7;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 12px;
+}
+
+.walkin-done-room-group > div:first-child {
+    min-width: 0;
+}
+
+.walkin-done-room-group strong {
+    display: block;
+    color: var(--reception-ink);
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.walkin-done-room-group span {
+    display: block;
+    margin-top: 3px;
+}
+
+.walkin-done-room-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.walkin-done-room-chips span {
+    border-radius: 999px;
+    background: #eaf3ff;
+    color: var(--reception-blue);
+    font-size: 0.9rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 8px 10px;
+}
+
+.walkin-done-empty {
+    border: 1px dashed #cfdced;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
 }
 
 .compact {
@@ -1467,6 +2636,17 @@ h2 {
     .walkin-guest-summary dl {
         grid-template-columns: repeat(2, minmax(120px, 1fr));
     }
+
+    .walkin-payment-overview,
+    .walkin-cash-box,
+    .walkin-invoice-guest {
+        grid-template-columns: 1fr;
+    }
+
+    .walkin-selection-bar {
+        right: 20px;
+        left: 20px;
+    }
 }
 
 @media (max-width: 760px) {
@@ -1491,6 +2671,8 @@ h2 {
     .room-type-header,
     .room-map-toolbar,
     .room-map-floor-header,
+    .room-map-detail-head,
+    .room-map-service-line,
     .arrival-card,
     .arrival-side,
     .service-section-title,
@@ -1531,12 +2713,56 @@ h2 {
         flex-direction: column;
     }
 
+    .room-map-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
     .walkin-guest-summary dl {
         grid-template-columns: 1fr;
     }
 
+    .walkin-payment-options {
+        grid-template-columns: 1fr;
+    }
+
+    .walkin-invoice-header,
+    .walkin-invoice-line,
+    .walkin-invoice-row,
+    .walkin-invoice-total {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .walkin-invoice-body {
+        padding: 16px;
+    }
+
+    .walkin-invoice-dates {
+        grid-template-columns: 1fr;
+    }
+
+    .walkin-done-meta {
+        grid-template-columns: 1fr;
+    }
+
+    .walkin-done-room-heading,
+    .walkin-done-room-group {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .walkin-done-room-chips {
+        justify-content: flex-start;
+    }
+
     .walkin-edit-btn {
         align-self: stretch;
+    }
+
+    .walkin-selection-bar {
+        align-items: stretch;
+        flex-direction: column;
+        bottom: 10px;
     }
 
     .footer-actions,

@@ -9,6 +9,8 @@ namespace PBL3.Services;
 
 public class ReceptionistCheckInService : IReceptionistCheckInService
 {
+    private const string WalkInVnPayMarker = "WALKIN_VNPAY_PENDING";
+
     private static readonly string[] MaintenanceStatuses =
     {
         DomainValues.PhongTrangThai.BaoTri,
@@ -98,7 +100,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     public async Task<ReceptionistRoomMapResult> GetRoomMapAsync(
         CancellationToken cancellationToken = default)
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
         var rooms = await _context.Phongs
             .AsNoTracking()
             .Include(x => x.MaLoaiPhongNavigation)
@@ -113,9 +114,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                         x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
                         x.MaPhong != null &&
-                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong &&
-                        x.MaHoaDonNavigation.MaDatPhongNavigation.NgayNhanPhong <= today &&
-                        x.MaHoaDonNavigation.MaDatPhongNavigation.NgayTraPhong > today)
+                        x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong)
             .Select(x => new
             {
                 RoomId = x.MaPhong!,
@@ -176,7 +175,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     public async Task<ReceptionistServiceUsageResult> GetServiceUsageAsync(
         CancellationToken cancellationToken = default)
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
         var activeBookings = await _context.DatPhongs
             .AsNoTracking()
             .Include(x => x.MaKhNavigation)
@@ -190,8 +188,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .ThenInclude(x => x!.ChiTietHoaDons)
             .ThenInclude(x => x.MaPhongNavigation)
             .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong &&
-                        x.NgayNhanPhong <= today &&
-                        x.NgayTraPhong > today &&
                         x.HoaDon != null)
             .OrderBy(x => x.TenKhSnapshot)
             .ThenBy(x => x.MaDatPhong)
@@ -246,6 +242,11 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             return FailAddService("Số lượng dịch vụ phải lớn hơn 0.", bookingCode);
         }
 
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(ExecuteAddServiceTransactionAsync);
+
+        async Task<ReceptionistAddServiceResult> ExecuteAddServiceTransactionAsync()
+        {
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         var booking = await _context.DatPhongs
             .Include(x => x.HoaDon)
@@ -305,7 +306,10 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         };
 
         booking.HoaDon.ChiTietHoaDons.Add(line);
-        booking.HoaDon.TongTienDichVu += line.ThanhTien;
+        booking.HoaDon.TongTienDichVu = booking.HoaDon.ChiTietHoaDons
+            .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.DichVu &&
+                        x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+            .Sum(x => x.ThanhTien);
         booking.HoaDon.TongThanhToan =
             booking.HoaDon.TongTienPhong +
             booking.HoaDon.TongTienDichVu -
@@ -327,6 +331,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             GrandTotal = booking.HoaDon.TongThanhToan,
             AddedLine = BuildServiceLineDto(line, service)
         };
+        }
     }
 
     public async Task<ReceptionistCheckoutListResult> GetCheckoutListAsync(
@@ -380,8 +385,14 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             return FailCheckout("Số tiền thu thêm không hợp lệ.", bookingCode);
         }
 
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(ExecuteCheckoutTransactionAsync);
+
+        async Task<ReceptionistCheckoutResult> ExecuteCheckoutTransactionAsync()
+        {
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         var booking = await _context.DatPhongs
+            .Include(x => x.MaKhNavigation)
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .ThenInclude(x => x.MaPhongNavigation)
@@ -436,6 +447,23 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 : $"{invoice.GhiChu}\n{request.Note.Trim()}";
         }
 
+        var receiptEmail = NormalizeOptional(request.ReceiptEmail);
+        if (request.SendReceiptEmail && string.IsNullOrWhiteSpace(receiptEmail))
+        {
+            return FailCheckout(
+                "Nhập email khách trước khi gửi hóa đơn.",
+                booking.MaDatPhong,
+                invoice.SoTienDaThanhToan,
+                invoice.TongThanhToan,
+                Math.Max(invoice.TongThanhToan - invoice.SoTienDaThanhToan, 0));
+        }
+
+        if (!string.IsNullOrWhiteSpace(receiptEmail) &&
+            !string.Equals(booking.MaKhNavigation.Email, receiptEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            booking.MaKhNavigation.Email = receiptEmail;
+        }
+
         var roomLines = invoice.ChiTietHoaDons
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                         x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
@@ -457,26 +485,30 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         await _context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        var emailSent = await _bookingEmailService.SendCheckoutReceiptEmailAsync(
-            booking.MaDatPhong,
-            cancellationToken);
+        var emailSent = request.SendReceiptEmail &&
+            await _bookingEmailService.SendCheckoutReceiptEmailAsync(
+                booking.MaDatPhong,
+                receiptEmail,
+                cancellationToken);
+        var emailMessage = request.SendReceiptEmail
+            ? emailSent
+                ? "Đã gửi hóa đơn check-out qua email."
+                : "Không gửi được email hóa đơn. Kiểm tra email khách hoặc cấu hình SMTP."
+            : "Không gửi email hóa đơn theo lựa chọn của lễ tân.";
 
         return new ReceptionistCheckoutResult
         {
             Success = true,
-            Message = emailSent
-                ? "Check-out thành công. Đã gửi hóa đơn qua email cho khách."
-                : "Check-out thành công. Chưa gửi được email hóa đơn cho khách.",
+            Message = $"Check-out thành công. {emailMessage}",
             BookingCode = booking.MaDatPhong,
             PaidAmount = invoice.SoTienDaThanhToan,
             GrandTotal = invoice.TongThanhToan,
             RemainingAmount = Math.Max(invoice.TongThanhToan - invoice.SoTienDaThanhToan, 0),
             EmailSent = emailSent,
-            EmailMessage = emailSent
-                ? "Đã gửi hóa đơn check-out qua email."
-                : "Không gửi được email hóa đơn. Kiểm tra email khách hoặc cấu hình SMTP.",
+            EmailMessage = emailMessage,
             ReleasedRooms = releasedRooms
         };
+        }
     }
 
     public async Task<ReceptionistRoomSelectionResult> GetRoomSelectionAsync(
@@ -507,18 +539,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .OrderBy(x => x.Tang)
             .ThenBy(x => x.SoPhong)
             .ToListAsync(cancellationToken);
-        var reservationCandidates = rooms
-            .Where(room => !blockedRoomIds.Contains(room.MaPhong) &&
-                           !IsMaintenanceStatus(room.TrangThai) &&
-                           !IsBusyStatus(room.TrangThai))
-            .ToList();
-        var unassignedDemand = await GetUnassignedDemandByRoomTypeAsync(
-            booking.NgayNhanPhong,
-            booking.NgayTraPhong,
-            booking.MaDatPhong,
-            cancellationToken);
-        var reservedRoomIds = GetReservedRoomIdsForUnassignedDemand(reservationCandidates, unassignedDemand);
-
         var groups = bookingDto.Requirements
             .Select(requirement => new ReceptionistRoomGroupDto
             {
@@ -527,16 +547,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 RequiredRooms = requirement.RequiredRooms,
                 Rooms = rooms
                     .Where(room => string.Equals(room.MaLoaiPhong, requirement.RoomTypeId, StringComparison.OrdinalIgnoreCase))
-                    .Select(room =>
-                    {
-                        var dto = BuildRoomDto(room, blockedRoomIds.Contains(room.MaPhong));
-                        if (reservedRoomIds.Contains(room.MaPhong) && dto.IsSelectable)
-                        {
-                            MarkRoomAsReserved(dto);
-                        }
-
-                        return dto;
-                    })
+                    .Select(room => BuildRoomDto(room, blockedRoomIds.Contains(room.MaPhong)))
                     .ToList()
             })
             .ToList();
@@ -567,6 +578,11 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(ExecuteCheckInTransactionAsync);
+
+        async Task<ReceptionistCheckInResult> ExecuteCheckInTransactionAsync()
+        {
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         var booking = await LoadBookingAsync(bookingCode, tracking: true, cancellationToken);
         if (booking == null)
@@ -627,32 +643,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             }
         }
 
-        var requiredRoomTypeIds = requiredCounts.Keys.ToList();
-        var selectableRoomsForReservation = await _context.Phongs
-            .AsNoTracking()
-            .Where(x => requiredRoomTypeIds.Contains(x.MaLoaiPhong))
-            .ToListAsync(cancellationToken);
-        var reservationCandidates = selectableRoomsForReservation
-            .Where(room => !blockedRoomIds.Contains(room.MaPhong) &&
-                           !IsMaintenanceStatus(room.TrangThai) &&
-                           !IsBusyStatus(room.TrangThai))
-            .ToList();
-        var unassignedDemand = await GetUnassignedDemandByRoomTypeAsync(
-            booking.NgayNhanPhong,
-            booking.NgayTraPhong,
-            booking.MaDatPhong,
-            cancellationToken);
-        var reservedRoomIds = GetReservedRoomIdsForUnassignedDemand(reservationCandidates, unassignedDemand);
-        foreach (var room in selectedRooms)
-        {
-            if (reservedRoomIds.Contains(room.MaPhong))
-            {
-                return FailCheckIn(
-                    $"Phòng {room.SoPhong} cần giữ cho đặt phòng khác trong khoảng ngày này.",
-                    booking.MaDatPhong);
-            }
-        }
-
         foreach (var typeGroup in roomLines.GroupBy(x => x.MaLoaiPhong!, StringComparer.OrdinalIgnoreCase))
         {
             var roomsForType = selectedRooms
@@ -693,6 +683,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 })
                 .ToList()
         };
+        }
     }
 
     public async Task<ReceptionistWalkInAvailabilityResult> GetWalkInAvailabilityAsync(
@@ -700,7 +691,17 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        if (request.CheckOutDate <= today)
+        var checkInDate = request.CheckInDate == default ? today : request.CheckInDate;
+        if (checkInDate < today)
+        {
+            return new ReceptionistWalkInAvailabilityResult
+            {
+                Success = false,
+                Message = "Ngày nhận phòng không được trước hôm nay."
+            };
+        }
+
+        if (request.CheckOutDate <= checkInDate)
         {
             return new ReceptionistWalkInAvailabilityResult
             {
@@ -709,7 +710,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             };
         }
 
-        var nights = Math.Max(request.CheckOutDate.DayNumber - today.DayNumber, 1);
+        var nights = Math.Max(request.CheckOutDate.DayNumber - checkInDate.DayNumber, 1);
         var rooms = await _context.Phongs
             .AsNoTracking()
             .Include(x => x.MaLoaiPhongNavigation)
@@ -717,56 +718,66 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .ThenBy(x => x.SoPhong)
             .ToListAsync(cancellationToken);
         var blockedRoomIds = await GetBlockedRoomIdsForRangeAsync(
-            today,
+            checkInDate,
             request.CheckOutDate,
             cancellationToken);
 
         var availableRooms = rooms
             .Where(room => !blockedRoomIds.Contains(room.MaPhong) &&
                            !IsMaintenanceStatus(room.TrangThai) &&
-                           !IsBusyStatus(room.TrangThai))
+                           (checkInDate > today || !IsBusyStatus(room.TrangThai)))
             .ToList();
         var unassignedDemand = await GetUnassignedDemandByRoomTypeAsync(
-            today,
+            checkInDate,
             request.CheckOutDate,
             excludedBookingCode: null,
             cancellationToken);
-        var reservedRoomIds = GetReservedRoomIdsForUnassignedDemand(availableRooms, unassignedDemand);
-        var selectableRoomCount = availableRooms.Count(room => !reservedRoomIds.Contains(room.MaPhong));
-        var reservedRoomCount = availableRooms.Count - selectableRoomCount;
         var roomTypePrices = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
         foreach (var roomTypeId in availableRooms.Select(x => x.MaLoaiPhong).Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            roomTypePrices[roomTypeId] = await GetCurrentRoomTypePriceAsync(roomTypeId, today, cancellationToken);
+            roomTypePrices[roomTypeId] = await GetCurrentRoomTypePriceAsync(roomTypeId, checkInDate, cancellationToken);
         }
+
+        var maxSelectableRoomCount = availableRooms
+            .GroupBy(x => x.MaLoaiPhong, StringComparer.OrdinalIgnoreCase)
+            .Sum(group =>
+            {
+                unassignedDemand.TryGetValue(group.Key, out var reservedCount);
+                return Math.Max(group.Count() - reservedCount, 0);
+            });
+        var reservedRoomCount = Math.Max(availableRooms.Count - maxSelectableRoomCount, 0);
 
         return new ReceptionistWalkInAvailabilityResult
         {
             Success = true,
-            Message = availableRooms.Count == 0 || selectableRoomCount == 0
+            Message = availableRooms.Count == 0 || maxSelectableRoomCount == 0
                 ? "Hiện không có phòng trống phù hợp."
                 : reservedRoomCount > 0
-                    ? $"Có {selectableRoomCount} phòng có thể chọn. {reservedRoomCount} phòng đang giữ cho đặt trước."
-                    : $"Có {selectableRoomCount} phòng trống có thể nhận khách.",
-            CheckInDate = today.ToString("dd/MM/yyyy"),
+                    ? $"Có {maxSelectableRoomCount} phòng có thể chọn. {reservedRoomCount} suất phòng đang giữ cho đặt trước."
+                    : $"Có {maxSelectableRoomCount} phòng trống có thể nhận khách.",
+            CheckInDate = checkInDate.ToString("dd/MM/yyyy"),
             CheckOutDate = request.CheckOutDate.ToString("dd/MM/yyyy"),
             Nights = nights,
             Groups = availableRooms
                 .GroupBy(x => new { x.MaLoaiPhong, x.MaLoaiPhongNavigation.TenLoaiPhong })
-                .OrderBy(x => x.Key.TenLoaiPhong)
+                .OrderBy(x => x.Min(room => room.MaLoaiPhongNavigation.SoNguoiToiDa))
+                .ThenBy(x => roomTypePrices.TryGetValue(x.Key.MaLoaiPhong, out var price) ? price : 0)
+                .ThenBy(x => x.Key.TenLoaiPhong)
                 .Select(group => new ReceptionistRoomGroupDto
                 {
                     RoomTypeId = group.Key.MaLoaiPhong,
                     RoomTypeName = group.Key.TenLoaiPhong,
                     RequiredRooms = 0,
-                    Rooms = group.Select(room =>
+                    MaxSelectableRooms = Math.Max(group.Count() -
+                        (unassignedDemand.TryGetValue(group.Key.MaLoaiPhong, out var reservedCount) ? reservedCount : 0), 0),
+                    ReservedForBookingCount = unassignedDemand.TryGetValue(group.Key.MaLoaiPhong, out var reservedForType)
+                        ? Math.Min(reservedForType, group.Count())
+                        : 0,
+                    PricePerNight = roomTypePrices.TryGetValue(group.Key.MaLoaiPhong, out var groupPrice) ? groupPrice : 0,
+                    Capacity = group.First().MaLoaiPhongNavigation.SoNguoiToiDa,
+                    Rooms = group.OrderBy(room => room.Tang).ThenBy(room => room.SoPhong).Select(room =>
                     {
                         var dto = BuildRoomDto(room, false);
-                        if (reservedRoomIds.Contains(room.MaPhong) && dto.IsSelectable)
-                        {
-                            MarkRoomAsReserved(dto);
-                        }
-
                         dto.PricePerNight = roomTypePrices.TryGetValue(room.MaLoaiPhong, out var price) ? price : 0;
                         return dto;
                     }).ToList()
@@ -780,14 +791,20 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
+        var checkInDate = request.CheckInDate == default ? today : request.CheckInDate;
         if (string.IsNullOrWhiteSpace(request.CustomerName))
         {
             return FailWalkIn("Nhập họ tên khách trước khi check-in.");
         }
 
-        if (request.CheckOutDate <= today)
+        if (checkInDate < today)
         {
-            return FailWalkIn("Ngày trả phòng phải sau hôm nay.");
+            return FailWalkIn("Ngày nhận phòng không được trước hôm nay.");
+        }
+
+        if (request.CheckOutDate <= checkInDate)
+        {
+            return FailWalkIn("Ngày trả phòng phải sau ngày nhận phòng.");
         }
 
         if (request.GuestCount <= 0)
@@ -812,6 +829,11 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             return FailWalkIn("Không xác định được nhân viên lễ tân.");
         }
 
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(ExecuteWalkInTransactionAsync);
+
+        async Task<ReceptionistWalkInCheckInResult> ExecuteWalkInTransactionAsync()
+        {
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         var selectedRooms = await _context.Phongs
             .Include(x => x.MaLoaiPhongNavigation)
@@ -823,14 +845,14 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         }
 
         var blockedRoomIds = await GetBlockedRoomIdsForRangeAsync(
-            today,
+            checkInDate,
             request.CheckOutDate,
             cancellationToken);
         foreach (var room in selectedRooms)
         {
             if (blockedRoomIds.Contains(room.MaPhong) ||
                 IsMaintenanceStatus(room.TrangThai) ||
-                IsBusyStatus(room.TrangThai))
+                (checkInDate == today && IsBusyStatus(room.TrangThai)))
             {
                 return FailWalkIn($"Phòng {room.SoPhong} không còn trống để nhận khách.");
             }
@@ -847,23 +869,32 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         var reservationCandidates = selectableRoomsForReservation
             .Where(room => !blockedRoomIds.Contains(room.MaPhong) &&
                            !IsMaintenanceStatus(room.TrangThai) &&
-                           !IsBusyStatus(room.TrangThai))
+                           (checkInDate > today || !IsBusyStatus(room.TrangThai)))
             .ToList();
         var unassignedDemand = await GetUnassignedDemandByRoomTypeAsync(
-            today,
+            checkInDate,
             request.CheckOutDate,
             excludedBookingCode: null,
             cancellationToken);
-        var reservedRoomIds = GetReservedRoomIdsForUnassignedDemand(reservationCandidates, unassignedDemand);
-        foreach (var room in selectedRooms)
+        var selectedCountByType = selectedRooms
+            .GroupBy(x => x.MaLoaiPhong, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.Count(), StringComparer.OrdinalIgnoreCase);
+        var candidateCountByType = reservationCandidates
+            .GroupBy(x => x.MaLoaiPhong, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.Count(), StringComparer.OrdinalIgnoreCase);
+        foreach (var selectedType in selectedCountByType)
         {
-            if (reservedRoomIds.Contains(room.MaPhong))
+            candidateCountByType.TryGetValue(selectedType.Key, out var candidateCount);
+            unassignedDemand.TryGetValue(selectedType.Key, out var reservedCount);
+            var maxSelectable = Math.Max(candidateCount - reservedCount, 0);
+            if (selectedType.Value > maxSelectable)
             {
-                return FailWalkIn($"Phòng {room.SoPhong} cần giữ cho đặt phòng khác trong khoảng ngày này.");
+                var typeName = selectedRooms.First(x => x.MaLoaiPhong == selectedType.Key).MaLoaiPhongNavigation.TenLoaiPhong;
+                return FailWalkIn($"{typeName} chỉ còn chọn được tối đa {maxSelectable} phòng vì đang giữ chỗ cho đặt trước.");
             }
         }
 
-        var nights = Math.Max(request.CheckOutDate.DayNumber - today.DayNumber, 1);
+        var nights = Math.Max(request.CheckOutDate.DayNumber - checkInDate.DayNumber, 1);
         var capacity = selectedRooms.Sum(x => x.MaLoaiPhongNavigation.SoNguoiToiDa);
         if (capacity < request.GuestCount)
         {
@@ -874,7 +905,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         var roomPrices = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
         foreach (var roomTypeId in selectedRooms.Select(x => x.MaLoaiPhong).Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            var price = await GetCurrentRoomTypePriceAsync(roomTypeId, today, cancellationToken);
+            var price = await GetCurrentRoomTypePriceAsync(roomTypeId, checkInDate, cancellationToken);
             if (price <= 0)
             {
                 return FailWalkIn($"Loại phòng {roomTypeId} chưa có giá áp dụng.");
@@ -884,7 +915,8 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         }
 
         total = selectedRooms.Sum(room => roomPrices[room.MaLoaiPhong] * nights);
-        if (request.PaymentAmount + 0.01m < total)
+        var isVnPayPayment = IsVnPayPayment(request.PaymentMethod);
+        if (!isVnPayPayment && request.PaymentAmount + 0.01m < total)
         {
             return FailWalkIn($"Khách vãng lai cần thanh toán đủ {total:N0}đ trước khi check-in.");
         }
@@ -902,6 +934,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             return FailWalkIn("Không thể tạo mã đặt phòng hoặc hóa đơn.");
         }
 
+        var isImmediateCheckIn = checkInDate == today;
         var booking = new DatPhong
         {
             MaDatPhong = bookingCode,
@@ -911,14 +944,21 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             CccdSnapshot = NormalizeOptional(request.IdentityNumber),
             SdtSnapshot = NormalizeOptional(request.PhoneNumber),
             NgayDat = DateTime.UtcNow,
-            NgayNhanPhong = today,
+            NgayNhanPhong = checkInDate,
             NgayTraPhong = request.CheckOutDate,
-            TrangThai = DomainValues.DatPhongTrangThai.DaNhanPhong,
+            TrangThai = isVnPayPayment
+                ? DomainValues.DatPhongTrangThai.GiuCho
+                : isImmediateCheckIn
+                    ? DomainValues.DatPhongTrangThai.DaNhanPhong
+                    : DomainValues.DatPhongTrangThai.DaDatCoc,
             GhiChu = string.IsNullOrWhiteSpace(request.Note)
-                ? "Khách vãng lai - thu đủ tiền trước check-in"
+                ? isVnPayPayment
+                    ? "Khách vãng lai - chờ thanh toán VNPay"
+                    : "Khách vãng lai - thu đủ tiền trước check-in"
                 : $"Khách vãng lai - {request.Note.Trim()}"
         };
 
+        var paidAmount = isVnPayPayment ? 0 : total;
         var invoice = new HoaDon
         {
             MaHoaDon = invoiceCode,
@@ -928,13 +968,17 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             TienDatCoc = 0,
             TienGiamGiaPhong = 0,
             TongThanhToan = total,
-            SoTienDaThanhToan = total,
-            NgayThanhToanCuoi = DateTime.UtcNow,
-            PhuongThucThanhToan = string.IsNullOrWhiteSpace(request.PaymentMethod)
-                ? DomainValues.PhuongThucThanhToan.TienMat
-                : request.PaymentMethod.Trim(),
-            TrangThai = DomainValues.HoaDonTrangThai.DaThanhToan,
-            GhiChu = "Thanh toán đủ khi check-in vãng lai"
+            SoTienDaThanhToan = paidAmount,
+            NgayThanhToanCuoi = isVnPayPayment ? null : DateTime.UtcNow,
+            PhuongThucThanhToan = isVnPayPayment
+                ? DomainValues.PhuongThucThanhToan.Qr
+                : DomainValues.PhuongThucThanhToan.TienMat,
+            TrangThai = isVnPayPayment
+                ? DomainValues.HoaDonTrangThai.ChuaThanhToan
+                : DomainValues.HoaDonTrangThai.DaThanhToan,
+            GhiChu = isVnPayPayment
+                ? $"{WalkInVnPayMarker}; Chờ thanh toán VNPay khi check-in vãng lai"
+                : "Thanh toán đủ khi check-in vãng lai"
         };
 
         _context.DatPhongs.Add(booking);
@@ -966,7 +1010,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 MaPhong = room.MaPhong,
                 MaLoaiPhong = room.MaLoaiPhong,
                 NoiDung = $"Check-in vãng lai phòng {room.SoPhong} - {room.MaLoaiPhongNavigation.TenLoaiPhong}",
-                NgayApDung = today,
+                NgayApDung = checkInDate,
                 SoNguoi = assignedGuests,
                 SoLuong = nights,
                 DonGia = unitPrice,
@@ -974,7 +1018,10 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 TrangThai = DomainValues.ChiTietHoaDonTrangThai.HieuLuc
             });
 
-            room.TrangThai = DomainValues.PhongTrangThai.DangSuDung;
+            if (isImmediateCheckIn)
+            {
+                room.TrangThai = DomainValues.PhongTrangThai.DangSuDung;
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -983,10 +1030,13 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         return new ReceptionistWalkInCheckInResult
         {
             Success = true,
-            Message = "Check-in khách vãng lai thành công.",
+            Message = isVnPayPayment
+                ? "Đã giữ phòng, chuyển sang VNPay để thanh toán."
+                : "Check-in khách vãng lai thành công.",
             BookingCode = bookingCode,
             InvoiceCode = invoiceCode,
             GrandTotal = total,
+            RequiresOnlinePayment = isVnPayPayment,
             AssignedRooms = selectedRooms
                 .OrderBy(x => x.SoPhong)
                 .Select(x => new ReceptionistAssignedRoomDto
@@ -998,6 +1048,51 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 })
                 .ToList()
         };
+        }
+    }
+
+    public async Task CancelWalkInPendingPaymentAsync(
+        string bookingCode,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(bookingCode))
+        {
+            return;
+        }
+
+        var booking = await _context.DatPhongs
+            .Include(x => x.HoaDon)
+            .ThenInclude(x => x!.ChiTietHoaDons)
+            .FirstOrDefaultAsync(x => x.MaDatPhong == bookingCode.Trim(), cancellationToken);
+        if (booking?.HoaDon == null ||
+            !IsWalkInVnPayInvoice(booking.HoaDon) ||
+            booking.HoaDon.TrangThai == DomainValues.HoaDonTrangThai.DaThanhToan)
+        {
+            return;
+        }
+
+        booking.TrangThai = DomainValues.DatPhongTrangThai.DaHuy;
+        booking.HoaDon.TrangThai = DomainValues.HoaDonTrangThai.DaHuy;
+        booking.HoaDon.GhiChu = AppendNote(booking.HoaDon.GhiChu, "Hủy vì không tạo được thanh toán VNPay.");
+
+        var roomIds = booking.HoaDon.ChiTietHoaDons
+            .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                        !string.IsNullOrWhiteSpace(x.MaPhong))
+            .Select(x => x.MaPhong!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (roomIds.Count > 0)
+        {
+            var rooms = await _context.Phongs
+                .Where(x => roomIds.Contains(x.MaPhong))
+                .ToListAsync(cancellationToken);
+            foreach (var room in rooms)
+            {
+                room.TrangThai = DomainValues.PhongTrangThai.Trong;
+            }
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<DatPhong?> LoadBookingAsync(
@@ -1010,6 +1105,9 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .ThenInclude(x => x.MaLoaiPhongNavigation)
+            .Include(x => x.HoaDon)
+            .ThenInclude(x => x!.ChiTietHoaDons)
+            .ThenInclude(x => x.MaPhongNavigation)
             .AsQueryable();
 
         if (!tracking)
@@ -1203,6 +1301,26 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
+    private static bool IsVnPayPayment(string? paymentMethod)
+    {
+        return string.Equals(paymentMethod?.Trim(), "VNPAY", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsWalkInVnPayInvoice(HoaDon invoice)
+    {
+        return invoice.GhiChu?.Contains(WalkInVnPayMarker, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static string AppendNote(string? existing, string note)
+    {
+        if (string.IsNullOrWhiteSpace(existing))
+        {
+            return note;
+        }
+
+        return $"{existing.Trim()} | {note}";
+    }
+
     private async Task<HashSet<string>> GetBlockedRoomIdsAsync(
         DatPhong booking,
         CancellationToken cancellationToken)
@@ -1244,6 +1362,17 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 Guests = group.Sum(x => x.SoNguoi)
             })
             .OrderBy(x => x.RoomTypeName)
+            .ToList();
+        var assignedRooms = GetActiveRoomLines(booking)
+            .Where(x => x.MaPhongNavigation != null)
+            .OrderBy(x => x.MaPhongNavigation!.SoPhong)
+            .Select(x => new ReceptionistAssignedRoomDto
+            {
+                RoomId = x.MaPhongNavigation!.MaPhong,
+                RoomNumber = x.MaPhongNavigation.SoPhong,
+                RoomTypeId = x.MaLoaiPhong ?? string.Empty,
+                RoomTypeName = x.MaLoaiPhongNavigation?.TenLoaiPhong ?? x.MaLoaiPhong ?? "Phòng"
+            })
             .ToList();
 
         var canCheckIn = true;
@@ -1287,6 +1416,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             PhoneNumber = booking.SdtSnapshot ?? booking.MaKhNavigation.SoDienThoai,
             Email = booking.MaKhNavigation.Email,
             IdentityNumber = booking.CccdSnapshot ?? booking.MaKhNavigation.Cccd,
+            BookingDate = booking.NgayDat.ToString("dd/MM/yyyy"),
             CheckInDate = booking.NgayNhanPhong.ToString("dd/MM/yyyy"),
             CheckOutDate = booking.NgayTraPhong.ToString("dd/MM/yyyy"),
             Nights = Math.Max(booking.NgayTraPhong.DayNumber - booking.NgayNhanPhong.DayNumber, 1),
@@ -1296,7 +1426,8 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             PaidAmount = invoice?.SoTienDaThanhToan ?? 0,
             CanCheckIn = canCheckIn,
             CheckInMessage = checkInMessage,
-            Requirements = requirements
+            Requirements = requirements,
+            AssignedRooms = assignedRooms
         };
     }
 
@@ -1339,6 +1470,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             BookingCode = booking.MaDatPhong,
             CustomerName = booking.TenKhSnapshot,
             PhoneNumber = booking.SdtSnapshot ?? booking.MaKhNavigation.SoDienThoai,
+            Email = booking.MaKhNavigation.Email,
             CheckInDate = booking.NgayNhanPhong.ToString("dd/MM/yyyy"),
             CheckOutDate = booking.NgayTraPhong.ToString("dd/MM/yyyy"),
             Nights = Math.Max(booking.NgayTraPhong.DayNumber - booking.NgayNhanPhong.DayNumber, 1),
@@ -1412,6 +1544,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 _ => "Trống"
             },
             IsSelectable = status == "available",
+            Capacity = room.MaLoaiPhongNavigation.SoNguoiToiDa,
             BookingCode = bookingCode,
             CurrentGuestName = guestName,
             CheckOutDate = checkOutDate?.ToString("dd/MM/yyyy")
@@ -1438,15 +1571,9 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 "occupied" => "Đã có khách",
                 _ => "Trống"
             },
-            IsSelectable = status == "available"
+            IsSelectable = status == "available",
+            Capacity = room.MaLoaiPhongNavigation.SoNguoiToiDa
         };
-    }
-
-    private static void MarkRoomAsReserved(ReceptionistRoomDto room)
-    {
-        room.Status = "reserved";
-        room.StatusLabel = "Giữ đặt trước";
-        room.IsSelectable = false;
     }
 
     private static bool IsMaintenanceStatus(string? status)

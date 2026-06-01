@@ -6,10 +6,14 @@
         roomPlan: null,
         roomMap: null,
         roomMapFilter: "all",
+        roomMapTypeFilter: "all",
+        roomMapServiceUsage: null,
+        selectedRoomMapRoomId: "",
         serviceUsage: null,
         checkoutList: null,
         walkInAvailability: null,
         selectedWalkInRooms: new Map(),
+        walkInStep: "info",
         selectedCheckoutCode: "",
         selectedRooms: new Map(),
         scanner: null,
@@ -19,6 +23,7 @@
     const elements = {
         alertArea: document.getElementById("alertArea"),
         workflowStrip: document.querySelector(".workflow-strip"),
+        receptionHeaderTitle: document.getElementById("receptionHeaderTitle"),
         bookingCodeInput: document.getElementById("bookingCodeInput"),
         manualLookupForm: document.getElementById("manualLookupForm"),
         startScannerBtn: document.getElementById("startScannerBtn"),
@@ -47,11 +52,17 @@
         todayArrivalsList: document.getElementById("todayArrivalsList"),
         roomMapRefreshBtn: document.getElementById("roomMapRefreshBtn"),
         roomMapSummary: document.getElementById("roomMapSummary"),
+        roomMapTypeFilter: document.getElementById("roomMapTypeFilter"),
+        roomMapDetailModal: document.getElementById("roomMapDetailModal"),
+        roomMapDetailBody: document.getElementById("roomMapDetailBody"),
+        roomMapDetailClose: document.getElementById("roomMapDetailClose"),
         roomMapFloors: document.getElementById("roomMapFloors"),
         serviceUsageRefreshBtn: document.getElementById("serviceUsageRefreshBtn"),
         serviceUsageSummary: document.getElementById("serviceUsageSummary"),
         serviceStayList: document.getElementById("serviceStayList"),
         serviceUsageForm: document.getElementById("serviceUsageForm"),
+        serviceSelectedStayInfo: document.getElementById("serviceSelectedStayInfo"),
+        serviceSelectedServiceInfo: document.getElementById("serviceSelectedServiceInfo"),
         serviceBookingSelect: document.getElementById("serviceBookingSelect"),
         serviceOptionSelect: document.getElementById("serviceOptionSelect"),
         serviceQuantityInput: document.getElementById("serviceQuantityInput"),
@@ -67,6 +78,9 @@
         checkoutPaymentAmount: document.getElementById("checkoutPaymentAmount"),
         checkoutPaymentMethod: document.getElementById("checkoutPaymentMethod"),
         checkoutNote: document.getElementById("checkoutNote"),
+        checkoutSendEmail: document.getElementById("checkoutSendEmail"),
+        checkoutPrintInvoice: document.getElementById("checkoutPrintInvoice"),
+        checkoutReceiptEmail: document.getElementById("checkoutReceiptEmail"),
         confirmCheckoutBtn: document.getElementById("confirmCheckoutBtn"),
         walkInResetBtn: document.getElementById("walkInResetBtn"),
         walkInForm: document.getElementById("walkInForm"),
@@ -75,6 +89,7 @@
         walkInIdentity: document.getElementById("walkInIdentity"),
         walkInEmail: document.getElementById("walkInEmail"),
         walkInGuestCount: document.getElementById("walkInGuestCount"),
+        walkInCheckinDate: document.getElementById("walkInCheckinDate"),
         walkInCheckoutDate: document.getElementById("walkInCheckoutDate"),
         walkInGender: document.getElementById("walkInGender"),
         walkInNationality: document.getElementById("walkInNationality"),
@@ -89,7 +104,23 @@
         walkInConfirmBtn: document.getElementById("walkInConfirmBtn"),
         walkInGuestSummary: document.getElementById("walkInGuestSummary"),
         walkInEditGuestBtn: document.getElementById("walkInEditGuestBtn"),
-        walkInViews: document.querySelectorAll("[data-walkin-view]")
+        walkInViews: document.querySelectorAll("[data-walkin-view]"),
+        walkInStepIndicators: document.querySelectorAll("[data-walkin-step-indicator]"),
+        walkInSelectedCount: document.getElementById("walkInSelectedCount"),
+        walkInSelectedCapacity: document.getElementById("walkInSelectedCapacity"),
+        walkInSelectedTypes: document.getElementById("walkInSelectedTypes"),
+        walkInStayNights: document.getElementById("walkInStayNights"),
+        walkInGoPaymentBtn: document.getElementById("walkInGoPaymentBtn"),
+        walkInPaymentChoices: document.querySelectorAll('input[name="walkInPaymentChoice"]'),
+        walkInCashBox: document.getElementById("walkInCashBox"),
+        walkInPaymentDue: document.getElementById("walkInPaymentDue"),
+        walkInChangeAmount: document.getElementById("walkInChangeAmount"),
+        walkInReviewBtn: document.getElementById("walkInReviewBtn"),
+        walkInConfirmSummary: document.getElementById("walkInConfirmSummary"),
+        walkInDoneMessage: document.getElementById("walkInDoneMessage"),
+        walkInDoneRooms: document.getElementById("walkInDoneRooms"),
+        walkInNewBtn: document.getElementById("walkInNewBtn"),
+        walkInBackBtns: document.querySelectorAll("[data-walkin-back]")
     };
 
     elements.manualLookupForm.addEventListener("submit", function (event) {
@@ -103,7 +134,14 @@
     elements.continueToConfirmBtn.addEventListener("click", showConfirmStep);
     elements.confirmCheckInBtn.addEventListener("click", confirmCheckIn);
     elements.newCheckInBtn.addEventListener("click", resetFlow);
-    elements.refreshCheckInBtn?.addEventListener("click", resetFlow);
+    elements.refreshCheckInBtn?.addEventListener("click", function () {
+        if (state.currentStep === "walkIn") {
+            resetWalkIn();
+            return;
+        }
+
+        resetFlow();
+    });
     elements.walkInNavBtn?.addEventListener("click", showWalkIn);
     elements.walkInForm?.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -111,10 +149,27 @@
     });
     elements.walkInResetBtn?.addEventListener("click", resetWalkIn);
     elements.walkInEditGuestBtn?.addEventListener("click", function () {
-        showWalkInView("intake");
+        showWalkInView("info");
     });
+    elements.walkInGoPaymentBtn?.addEventListener("click", showWalkInPaymentStep);
+    elements.walkInReviewBtn?.addEventListener("click", showWalkInConfirmStep);
     elements.walkInConfirmBtn?.addEventListener("click", submitWalkInCheckIn);
     elements.walkInPaymentAmount?.addEventListener("input", updateWalkInSelectionState);
+    elements.walkInPaymentChoices?.forEach(function (item) {
+        item.addEventListener("change", updateWalkInPaymentUi);
+    });
+    elements.walkInBackBtns?.forEach(function (button) {
+        button.addEventListener("click", function () {
+            showWalkInView(button.dataset.walkinBack);
+        });
+    });
+    elements.walkInNewBtn?.addEventListener("click", resetWalkIn);
+    elements.walkInCheckinDate?.addEventListener("change", function () {
+        ensureWalkInDateOrder();
+        state.walkInAvailability = null;
+        state.selectedWalkInRooms.clear();
+        renderWalkInAvailability();
+    });
     elements.walkInCheckoutDate?.addEventListener("change", function () {
         state.walkInAvailability = null;
         state.selectedWalkInRooms.clear();
@@ -140,6 +195,13 @@
     elements.checkoutNavBtn?.addEventListener("click", loadCheckoutList);
     elements.checkoutRefreshBtn?.addEventListener("click", loadCheckoutList);
     elements.checkoutPaymentForm?.addEventListener("submit", submitCheckout);
+    elements.checkoutSendEmail?.addEventListener("change", syncCheckoutEmailField);
+    elements.checkoutReceiptEmail?.addEventListener("input", function () {
+        if (elements.checkoutReceiptEmail.value.trim() && elements.checkoutSendEmail) {
+            elements.checkoutSendEmail.checked = true;
+            syncCheckoutEmailField();
+        }
+    });
     document.querySelectorAll("[data-room-map-filter]").forEach(function (button) {
         button.addEventListener("click", function () {
             state.roomMapFilter = button.dataset.roomMapFilter || "all";
@@ -149,10 +211,46 @@
             renderRoomMap();
         });
     });
+    elements.roomMapTypeFilter?.addEventListener("change", function () {
+        state.roomMapTypeFilter = elements.roomMapTypeFilter.value || "all";
+        renderRoomMap();
+    });
+    elements.roomMapFloors?.addEventListener("click", function (event) {
+        const tile = event.target.closest("[data-room-map-room-id]");
+        if (!tile) return;
+
+        selectRoomMapRoom(tile.dataset.roomMapRoomId);
+    });
+    elements.roomMapFloors?.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter" && event.key !== " ") return;
+
+        const tile = event.target.closest("[data-room-map-room-id]");
+        if (!tile) return;
+
+        event.preventDefault();
+        selectRoomMapRoom(tile.dataset.roomMapRoomId);
+    });
+    elements.roomMapDetailClose?.addEventListener("click", closeRoomMapDetailModal);
+    elements.roomMapDetailModal?.addEventListener("click", function (event) {
+        if (event.target === elements.roomMapDetailModal) {
+            closeRoomMapDetailModal();
+        }
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && elements.roomMapDetailModal && !elements.roomMapDetailModal.hidden) {
+            closeRoomMapDetailModal();
+        }
+    });
 
     document.querySelectorAll("[data-step-indicator]").forEach(function (button) {
         button.addEventListener("click", function () {
             goToStepFromIndicator(button.dataset.stepIndicator);
+        });
+    });
+
+    elements.walkInStepIndicators?.forEach(function (button) {
+        button.addEventListener("click", function () {
+            goToWalkInStepFromIndicator(button.dataset.walkinStepIndicator);
         });
     });
 
@@ -162,7 +260,13 @@
         });
     });
 
+    handleWalkInPaymentReturn();
+
     function setStep(step) {
+        if (step !== "scan" && state.scannerRunning) {
+            stopScanner().catch(function () { });
+        }
+
         state.currentStep = step;
         const workflowSteps = ["scan", "details", "rooms", "confirm", "done"];
         if (!workflowSteps.includes(step) && step !== "walkIn") {
@@ -178,14 +282,8 @@
             panel.classList.toggle("active", panel.dataset.stepPanel === step);
         });
 
-        const order = workflowSteps;
-        const activeIndex = order.indexOf(step);
-        document.querySelectorAll("[data-step-indicator]").forEach(function (indicator) {
-            const index = order.indexOf(indicator.dataset.stepIndicator);
-            indicator.classList.toggle("active", index <= activeIndex);
-            indicator.classList.toggle("completed", index < activeIndex);
-            indicator.classList.toggle("is-available", canNavigateToStep(indicator.dataset.stepIndicator));
-        });
+        updateReceptionShell(step);
+        updateWorkflowIndicators();
         elements.checkInNavBtn?.classList.toggle("active", step !== "today" && step !== "roomMap" && step !== "services" && step !== "checkout" && step !== "walkIn");
         elements.walkInNavBtn?.classList.toggle("active", step === "walkIn");
         elements.todayArrivalsNavBtn?.classList.toggle("active", step === "today");
@@ -196,7 +294,125 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    async function handleWalkInPaymentReturn() {
+        const query = new URLSearchParams(window.location.search);
+        const status = query.get("walkInPaymentStatus");
+        if (!status) {
+            return;
+        }
+
+        const bookingCode = query.get("bookingCode") || "";
+        const message = query.get("message") || "";
+        showWalkIn();
+
+        if (status === "success") {
+            renderWalkInDone({
+                bookingCode,
+                message: bookingCode
+                    ? `Thanh toán VNPay thành công. Mã đặt phòng ${bookingCode}.`
+                    : "Thanh toán VNPay thành công."
+            });
+            showWalkInView("done");
+            if (bookingCode) {
+                await loadWalkInDoneBooking(bookingCode);
+            }
+            showAlert(message || "Thanh toán VNPay thành công.", "success");
+        } else {
+            resetWalkIn();
+            showAlert(
+                message || "Thanh toán VNPay chưa hoàn tất. Các phòng đã chọn đã được hủy giữ.",
+                status === "cancelled" ? "warning" : "danger");
+        }
+
+        query.delete("walkInPaymentStatus");
+        query.delete("bookingCode");
+        query.delete("message");
+        const nextUrl = `${window.location.pathname}${query.toString() ? `?${query}` : ""}${window.location.hash}`;
+        window.history.replaceState({}, document.title, nextUrl);
+    }
+
+    async function loadWalkInDoneBooking(bookingCode) {
+        try {
+            const result = await fetchJson(`/Receptionist/Lookup?code=${encodeURIComponent(bookingCode)}`);
+            if (result.success && result.booking) {
+                renderWalkInDone({
+                    bookingCode,
+                    message: `Thanh toán VNPay thành công. Mã đặt phòng ${bookingCode}.`,
+                    booking: result.booking,
+                    rooms: result.booking.assignedRooms || []
+                });
+            }
+        } catch {
+            renderWalkInDone({
+                bookingCode,
+                message: `Thanh toán VNPay thành công. Mã đặt phòng ${bookingCode}.`,
+                rooms: []
+            });
+        }
+    }
+
+    function updateReceptionShell(step) {
+        const isWalkIn = step === "walkIn";
+        const isCheckIn = step === "scan" || step === "details" || step === "rooms" || step === "confirm" || step === "done";
+        if (elements.receptionHeaderTitle) {
+            elements.receptionHeaderTitle.textContent = isWalkIn ? "Check-in khách vãng lai" : getHeaderTitle(step);
+        }
+
+        const labels = isWalkIn
+            ? ["Thông tin", "Chọn phòng", "Thanh toán", "Xác nhận", "Hoàn tất"]
+            : ["Quét mã", "Thông tin", "Chọn phòng", "Xác nhận", "Hoàn tất"];
+        document.querySelectorAll("[data-step-indicator] strong").forEach(function (label, index) {
+            label.textContent = labels[index] || label.textContent;
+        });
+    }
+
+    function getHeaderTitle(step) {
+        if (step === "today") return "Khách đến hôm nay";
+        if (step === "roomMap") return "Sơ đồ phòng";
+        if (step === "services") return "Sử dụng dịch vụ";
+        if (step === "checkout") return "Check-out khách lưu trú";
+        return "Check-in khách đặt phòng";
+    }
+
+    function updateWorkflowIndicators() {
+        const workflowSteps = ["scan", "details", "rooms", "confirm", "done"];
+        const walkInSteps = ["info", "rooms", "payment", "confirm", "done"];
+        const indicators = Array.from(document.querySelectorAll("[data-step-indicator]"));
+
+        if (state.currentStep === "walkIn") {
+            const activeIndex = Math.max(walkInSteps.indexOf(state.walkInStep), 0);
+            indicators.forEach(function (indicator, index) {
+                const walkInStep = walkInSteps[index];
+                indicator.classList.toggle("active", index <= activeIndex);
+                indicator.classList.toggle("completed", index < activeIndex);
+                indicator.classList.toggle("is-available", canNavigateToWalkInStep(walkInStep));
+            });
+            return;
+        }
+
+        const activeIndex = workflowSteps.indexOf(state.currentStep);
+        indicators.forEach(function (indicator) {
+            const index = workflowSteps.indexOf(indicator.dataset.stepIndicator);
+            indicator.classList.toggle("active", index <= activeIndex);
+            indicator.classList.toggle("completed", index < activeIndex);
+            indicator.classList.toggle("is-available", canNavigateToStep(indicator.dataset.stepIndicator));
+        });
+    }
+
     function goToStepFromIndicator(step) {
+        if (state.currentStep === "walkIn") {
+            const map = {
+                scan: "info",
+                details: "rooms",
+                rooms: "payment",
+                confirm: "confirm",
+                done: "done"
+            };
+            const walkInStep = map[step] || "info";
+            goToWalkInStepFromIndicator(walkInStep);
+            return;
+        }
+
         if (!canNavigateToStep(step)) {
             showAlert("Bước này chưa có đủ dữ liệu để mở.", "warning");
             return;
@@ -250,12 +466,16 @@
 
     function showWalkIn() {
         setStep("walkIn");
-        const tomorrow = new Date();
+        const today = new Date();
+        const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        if (elements.walkInCheckoutDate && !elements.walkInCheckoutDate.value) {
-            elements.walkInCheckoutDate.value = tomorrow.toISOString().slice(0, 10);
+        if (elements.walkInCheckinDate && !elements.walkInCheckinDate.value) {
+            elements.walkInCheckinDate.value = formatInputDate(today);
         }
-        showWalkInView(state.walkInAvailability ? "booking" : "intake");
+        if (elements.walkInCheckoutDate && !elements.walkInCheckoutDate.value) {
+            elements.walkInCheckoutDate.value = formatInputDate(tomorrow);
+        }
+        showWalkInView(state.walkInAvailability ? state.walkInStep : "info");
         renderWalkInGuestSummary();
         renderWalkInAvailability();
     }
@@ -267,7 +487,8 @@
         if (elements.walkInGuestCount) elements.walkInGuestCount.value = "1";
         if (elements.walkInNationality) elements.walkInNationality.value = "Việt Nam";
         if (elements.walkInPaymentAmount) elements.walkInPaymentAmount.value = "0";
-        showWalkInView("intake");
+        state.walkInStep = "info";
+        showWalkInView("info");
         showWalkIn();
     }
 
@@ -276,15 +497,16 @@
             return;
         }
 
+        const checkinDate = elements.walkInCheckinDate?.value || "";
         const checkoutDate = elements.walkInCheckoutDate?.value || "";
-        if (!checkoutDate) {
-            showAlert("Chọn ngày trả phòng trước khi tìm phòng.", "warning");
+        if (!checkinDate || !checkoutDate) {
+            showAlert("Chọn ngày nhận và ngày trả phòng trước khi tìm phòng.", "warning");
             return;
         }
 
         setButtonBusy(elements.walkInLoadRoomsBtn, true, "Đang tải...");
         try {
-            const result = await fetchJson(`/Receptionist/WalkInAvailability?checkOutDate=${encodeURIComponent(checkoutDate)}`);
+            const result = await fetchJson(`/Receptionist/WalkInAvailability?checkInDate=${encodeURIComponent(checkinDate)}&checkOutDate=${encodeURIComponent(checkoutDate)}`);
             if (!result.success) {
                 showAlert(result.message || "Không tải được phòng trống.", "danger");
                 return;
@@ -294,8 +516,7 @@
             state.selectedWalkInRooms.clear();
             renderWalkInGuestSummary();
             renderWalkInAvailability();
-            showWalkInView("booking");
-            showAlert(result.message, "info");
+            showWalkInView("rooms");
         } catch (error) {
             showAlert(error.message, "danger");
         } finally {
@@ -304,9 +525,37 @@
     }
 
     function showWalkInView(view) {
+        state.walkInStep = view || "info";
         elements.walkInViews?.forEach(function (item) {
-            item.hidden = item.dataset.walkinView !== view;
+            item.hidden = item.dataset.walkinView !== state.walkInStep;
         });
+        updateWorkflowIndicators();
+        updateWalkInPaymentUi();
+    }
+
+    function goToWalkInStepFromIndicator(step) {
+        if (!canNavigateToWalkInStep(step)) {
+            showAlert("Bước này chưa có đủ dữ liệu để mở.", "warning");
+            return;
+        }
+
+        if (step === "confirm") {
+            renderWalkInConfirmSummary();
+        }
+        showWalkInView(step);
+    }
+
+    function canNavigateToWalkInStep(step) {
+        if (step === "info") return true;
+        if (step === "rooms") return Boolean(state.walkInAvailability);
+        if (step === "payment") return state.selectedWalkInRooms.size > 0;
+        if (step === "confirm") {
+            if (state.selectedWalkInRooms.size === 0) return false;
+            return getWalkInPaymentMethod() === "vnpay" ||
+                Number(elements.walkInPaymentAmount?.value || 0) + 0.01 >= getWalkInTotal();
+        }
+
+        return step === "done" && state.walkInStep === "done";
     }
 
     function validateWalkInGuestInfo() {
@@ -322,28 +571,43 @@
             return false;
         }
 
+        const checkinDate = elements.walkInCheckinDate?.value || "";
+        const checkoutDate = elements.walkInCheckoutDate?.value || "";
+        if (!checkinDate || !checkoutDate) {
+            showAlert("Chọn ngày nhận và ngày trả phòng.", "warning");
+            return false;
+        }
+
+        if (checkoutDate <= checkinDate) {
+            showAlert("Ngày trả phòng phải sau ngày nhận phòng.", "warning");
+            elements.walkInCheckoutDate?.focus();
+            return false;
+        }
+
         return true;
     }
 
     function renderWalkInGuestSummary() {
         if (!elements.walkInGuestSummary) return;
 
-        const customerName = elements.walkInCustomerName?.value.trim() || "Khách vãng lai";
+        const customerName = formatPersonName(elements.walkInCustomerName?.value.trim() || "Khách vãng lai");
         const phone = elements.walkInPhone?.value.trim() || "Chưa có SĐT";
         const identity = elements.walkInIdentity?.value.trim() || "Chưa có giấy tờ";
         const guestCount = Number(elements.walkInGuestCount?.value || 1);
+        const checkinDate = elements.walkInCheckinDate?.value || "";
         const checkoutDate = elements.walkInCheckoutDate?.value || "";
+        const checkinLabel = checkinDate ? formatDateLabel(checkinDate) : "Chưa chọn ngày nhận";
         const checkoutLabel = checkoutDate ? formatDateLabel(checkoutDate) : "Chưa chọn ngày trả";
 
         elements.walkInGuestSummary.innerHTML = `
             <div>
-                <p class="eyebrow">Guest</p>
                 <h3>${escapeHtml(customerName)}</h3>
             </div>
             <dl>
                 <div><dt>SĐT</dt><dd>${escapeHtml(phone)}</dd></div>
-                <div><dt>Giấy tờ</dt><dd>${escapeHtml(identity)}</dd></div>
+                <div><dt>CCCD/Hộ chiếu</dt><dd>${escapeHtml(identity)}</dd></div>
                 <div><dt>Số khách</dt><dd>${guestCount}</dd></div>
+                <div><dt>Nhận phòng</dt><dd>${escapeHtml(checkinLabel)}</dd></div>
                 <div><dt>Trả phòng</dt><dd>${escapeHtml(checkoutLabel)}</dd></div>
             </dl>
         `;
@@ -368,40 +632,52 @@
         }
 
         elements.walkInRoomGroups.innerHTML = groups.map(function (group) {
-            const rooms = (group.rooms || []).map(function (room) {
-                const status = room.status || "available";
-                const disabled = room.isSelectable ? "" : "disabled";
+            const roomsByFloor = groupRoomsByFloor(group.rooms || []);
+            const floorSections = roomsByFloor.map(function (floor) {
+                const rooms = floor.rooms.map(function (room) {
+                    const status = room.status || "available";
+                    const disabled = room.isSelectable ? "" : "disabled";
+                    return `
+                        <button type="button"
+                                class="room-tile compact ${escapeHtml(status)}"
+                                data-walkin-room-id="${escapeHtml(room.roomId)}"
+                                data-walkin-room-type="${escapeHtml(group.roomTypeId)}"
+                                ${disabled}
+                                aria-pressed="false">
+                            <strong>${escapeHtml(formatDisplayText(room.roomNumber))}</strong>
+                            <small>${escapeHtml(formatDisplayText(room.roomTypeName || group.roomTypeName))}</small>
+                            <small>${escapeHtml(formatSentenceText(room.statusLabel || "Trống"))}</small>
+                        </button>
+                    `;
+                }).join("");
+
                 return `
-                    <button type="button"
-                            class="room-tile ${escapeHtml(status)}"
-                            data-walkin-room-id="${escapeHtml(room.roomId)}"
-                            ${disabled}
-                            aria-pressed="false">
-                        <strong>${escapeHtml(room.roomNumber)}</strong>
-                        <small>Tầng ${room.floor}</small>
-                        <small>${escapeHtml(room.roomTypeName)}</small>
-                        <small>${formatMoney(room.pricePerNight)} / đêm</small>
-                        <small>${escapeHtml(room.statusLabel || "")}</small>
-                    </button>
+                    <div class="walkin-floor-section">
+                        <div class="walkin-floor-title">Tầng ${floor.floor}</div>
+                        <div class="room-grid walkin-room-grid">${rooms}</div>
+                    </div>
                 `;
             }).join("");
 
-            const selectableCount = (group.rooms || []).filter(function (room) {
-                return room.isSelectable;
-            }).length;
-
+            const totalRooms = group.rooms?.length || 0;
+            const maxSelectable = Math.max(Number(group.maxSelectableRooms || 0), 0);
+            const reservedCount = Math.max(Number(group.reservedForBookingCount || 0), 0);
+            const reservedText = reservedCount > 0 ? ` · giữ trước ${reservedCount}` : "";
             return `
-                <section class="room-type-section">
-                    <div class="room-type-header">
-                        <strong>${escapeHtml(group.roomTypeName)} <small>(${escapeHtml(group.roomTypeId)})</small></strong>
-                        <span>${selectableCount}/${group.rooms?.length || 0} phòng có thể chọn</span>
+                <section class="room-type-section walkin-room-type" data-walkin-room-type-section="${escapeHtml(group.roomTypeId)}" data-max-selectable="${maxSelectable}">
+                    <div class="room-type-header walkin-room-type-header">
+                        <div>
+                            <strong>${escapeHtml(formatDisplayText(group.roomTypeName))}</strong>
+                            <span class="walkin-room-meta">${formatMoney(group.pricePerNight || 0)} / đêm · tối đa ${escapeHtml(String(group.capacity || 0))} khách/phòng · ${totalRooms} phòng${reservedText}</span>
+                        </div>
+                        <span class="room-counter" data-walkin-room-counter="${escapeHtml(group.roomTypeId)}">0/${maxSelectable} đã chọn</span>
                     </div>
-                    <div class="room-grid">${rooms}</div>
+                    ${floorSections}
                 </section>
             `;
         }).join("");
 
-        elements.walkInRoomGroups.querySelectorAll(".room-tile.available[data-walkin-room-id]").forEach(function (tile) {
+        elements.walkInRoomGroups.querySelectorAll(".room-tile[data-walkin-room-id]").forEach(function (tile) {
             tile.addEventListener("click", function () {
                 toggleWalkInRoom(tile.dataset.walkinRoomId);
             });
@@ -411,15 +687,34 @@
 
     function toggleWalkInRoom(roomId) {
         const room = findWalkInRoom(roomId);
-        if (!room || !room.isSelectable) return;
+        if (!room) return;
+        if (!room.isSelectable) {
+            showAlert(`Phòng ${room.roomNumber} hiện không thể chọn.`, "warning");
+            return;
+        }
 
         if (state.selectedWalkInRooms.has(roomId)) {
             state.selectedWalkInRooms.delete(roomId);
         } else {
+            const group = findWalkInGroup(room.roomTypeId);
+            const selectedForType = getSelectedWalkInRoomsByType(room.roomTypeId).length;
+            const maxSelectable = Number(group?.maxSelectableRooms || 0);
+            if (selectedForType >= maxSelectable) {
+                showAlert(`${group?.roomTypeName || "Loại phòng này"} đã đạt giới hạn chọn vì cần giữ phòng cho đặt trước.`, "warning");
+                markWalkInRoomTypeLocked(room.roomTypeId, true);
+                return;
+            }
+
             state.selectedWalkInRooms.set(roomId, room);
         }
 
         updateWalkInSelectionState();
+    }
+
+    function findWalkInGroup(roomTypeId) {
+        return (state.walkInAvailability?.groups || []).find(function (group) {
+            return group.roomTypeId === roomTypeId;
+        }) || null;
     }
 
     function findWalkInRoom(roomId) {
@@ -433,6 +728,34 @@
         return null;
     }
 
+    function getSelectedWalkInRoomsByType(roomTypeId) {
+        return Array.from(state.selectedWalkInRooms.values()).filter(function (room) {
+            return room.roomTypeId === roomTypeId;
+        });
+    }
+
+    function groupRoomsByFloor(rooms) {
+        const floors = new Map();
+        rooms.forEach(function (room) {
+            const floor = room.floor || 0;
+            if (!floors.has(floor)) {
+                floors.set(floor, []);
+            }
+            floors.get(floor).push(room);
+        });
+
+        return Array.from(floors.entries())
+            .sort(function (a, b) { return a[0] - b[0]; })
+            .map(function ([floor, floorRooms]) {
+                return {
+                    floor,
+                    rooms: floorRooms.sort(function (a, b) {
+                        return String(a.roomNumber).localeCompare(String(b.roomNumber), "vi", { numeric: true });
+                    })
+                };
+            });
+    }
+
     function getWalkInTotal() {
         const nights = state.walkInAvailability?.nights || 0;
         return Array.from(state.selectedWalkInRooms.values())
@@ -443,21 +766,242 @@
 
     function updateWalkInSelectionState() {
         const total = getWalkInTotal();
+        const selectedRooms = Array.from(state.selectedWalkInRooms.values());
+        const selectedCapacity = selectedRooms.reduce(function (sum, room) {
+            return sum + Number(room.capacity || 0);
+        }, 0);
+        const selectedTypes = Array.from(selectedRooms.reduce(function (types, room) {
+            const roomTypeName = formatDisplayText(room.roomTypeName || "Phòng");
+            types.set(roomTypeName, (types.get(roomTypeName) || 0) + 1);
+            return types;
+        }, new Map()).entries())
+            .sort(function (a, b) {
+                return a[0].localeCompare(b[0], "vi", { numeric: true });
+            })
+            .map(function ([roomTypeName, count]) {
+                return `${formatDisplayText(roomTypeName)} x${count}`;
+            });
         elements.walkInRoomGroups?.querySelectorAll("[data-walkin-room-id]").forEach(function (tile) {
             const selected = state.selectedWalkInRooms.has(tile.dataset.walkinRoomId);
             tile.classList.toggle("selected", selected);
             tile.setAttribute("aria-pressed", selected ? "true" : "false");
         });
 
+        (state.walkInAvailability?.groups || []).forEach(function (group) {
+            const selectedForType = getSelectedWalkInRoomsByType(group.roomTypeId).length;
+            markWalkInRoomTypeLocked(group.roomTypeId, selectedForType >= Number(group.maxSelectableRooms || 0));
+            const counter = elements.walkInRoomGroups?.querySelector(`[data-walkin-room-counter="${cssEscape(group.roomTypeId)}"]`);
+            if (counter) {
+                counter.textContent = `${selectedForType}/${Number(group.maxSelectableRooms || 0)} đã chọn`;
+            }
+        });
+
         if (elements.walkInTotalAmount) {
             elements.walkInTotalAmount.textContent = formatMoney(total);
         }
-        if (elements.walkInPaymentAmount && total > 0 && Number(elements.walkInPaymentAmount.value || 0) < total) {
-            elements.walkInPaymentAmount.value = String(total);
+        if (elements.walkInSelectedCount) {
+            elements.walkInSelectedCount.textContent = String(state.selectedWalkInRooms.size);
+        }
+        if (elements.walkInSelectedCapacity) {
+            elements.walkInSelectedCapacity.textContent = String(selectedCapacity);
+        }
+        if (elements.walkInSelectedTypes) {
+            elements.walkInSelectedTypes.textContent = selectedTypes.length > 0
+                ? selectedTypes.join(" · ")
+                : "Chưa chọn phòng";
+        }
+        if (elements.walkInStayNights) {
+            elements.walkInStayNights.textContent = String(state.walkInAvailability?.nights || 0);
+        }
+        if (elements.walkInPaymentDue) {
+            elements.walkInPaymentDue.textContent = formatMoney(total);
+        }
+        if (elements.walkInChangeAmount) {
+            const change = Math.max(Number(elements.walkInPaymentAmount?.value || 0) - total, 0);
+            elements.walkInChangeAmount.textContent = formatMoney(change);
+        }
+        if (elements.walkInGoPaymentBtn) {
+            elements.walkInGoPaymentBtn.disabled = total <= 0;
         }
         if (elements.walkInConfirmBtn) {
-            elements.walkInConfirmBtn.disabled = total <= 0 || Number(elements.walkInPaymentAmount?.value || 0) + 0.01 < total;
+            const method = getWalkInPaymentMethod();
+            elements.walkInConfirmBtn.disabled = total <= 0 ||
+                (method === "cash" && Number(elements.walkInPaymentAmount?.value || 0) + 0.01 < total);
         }
+    }
+
+    function markWalkInRoomTypeLocked(roomTypeId, locked) {
+        const section = elements.walkInRoomGroups?.querySelector(`[data-walkin-room-type-section="${cssEscape(roomTypeId)}"]`);
+        section?.classList.toggle("is-limit-reached", locked);
+    }
+
+    function showWalkInPaymentStep() {
+        if (state.selectedWalkInRooms.size === 0) {
+            showAlert("Chọn ít nhất một phòng trống trước khi thanh toán.", "warning");
+            return;
+        }
+
+        if (elements.walkInPaymentAmount && Number(elements.walkInPaymentAmount.value || 0) <= 0) {
+            elements.walkInPaymentAmount.value = String(getWalkInTotal());
+        }
+        showWalkInView("payment");
+    }
+
+    function showWalkInConfirmStep() {
+        const total = getWalkInTotal();
+        const method = getWalkInPaymentMethod();
+        if (total <= 0 || state.selectedWalkInRooms.size === 0) {
+            showAlert("Chọn ít nhất một phòng trống.", "warning");
+            return;
+        }
+
+        if (method === "cash" && Number(elements.walkInPaymentAmount?.value || 0) + 0.01 < total) {
+            showAlert(`Khách cần đưa đủ ${formatMoney(total)} trước khi xác nhận.`, "warning");
+            return;
+        }
+
+        renderWalkInConfirmSummary();
+        showWalkInView("confirm");
+    }
+
+    function updateWalkInPaymentUi() {
+        const method = getWalkInPaymentMethod();
+        if (elements.walkInPaymentMethod) {
+            elements.walkInPaymentMethod.value = method === "vnpay" ? "VNPAY" : "Tiền mặt";
+        }
+        if (elements.walkInCashBox) {
+            elements.walkInCashBox.hidden = method !== "cash";
+        }
+        if (elements.walkInReviewBtn) {
+            elements.walkInReviewBtn.textContent = method === "vnpay" ? "Xác nhận chuyển VNPay" : "Xem xác nhận";
+        }
+        updateWalkInSelectionState();
+    }
+
+    function getWalkInPaymentMethod() {
+        const checked = Array.from(elements.walkInPaymentChoices || []).find(function (item) {
+            return item.checked;
+        });
+        return checked?.value || "cash";
+    }
+
+    function renderWalkInConfirmSummary() {
+        if (!elements.walkInConfirmSummary) return;
+
+        const rooms = Array.from(state.selectedWalkInRooms.values())
+            .sort(function (a, b) {
+                return Number(a.floor || 0) - Number(b.floor || 0) ||
+                    String(a.roomNumber).localeCompare(String(b.roomNumber), "vi", { numeric: true });
+            });
+        const total = getWalkInTotal();
+        const method = getWalkInPaymentMethod();
+        const paid = method === "vnpay" ? 0 : Number(elements.walkInPaymentAmount?.value || 0);
+        const change = Math.max(paid - total, 0);
+        const nights = state.walkInAvailability?.nights || 0;
+        const guestCount = Number(elements.walkInGuestCount?.value || 1);
+        const roomLines = Array.from(rooms.reduce(function (lines, room) {
+            const key = `${room.roomTypeName || "Phòng"}|${Number(room.pricePerNight || 0)}`;
+            if (!lines.has(key)) {
+                lines.set(key, {
+                    roomTypeName: formatDisplayText(room.roomTypeName || "Phòng"),
+                    pricePerNight: Number(room.pricePerNight || 0),
+                    rooms: []
+                });
+            }
+
+            lines.get(key).rooms.push(room);
+            return lines;
+        }, new Map()).values());
+        const roomsCount = rooms.length;
+        const customerName = formatPersonName(elements.walkInCustomerName?.value.trim() || "Khách vãng lai");
+        const phone = elements.walkInPhone?.value.trim() || "Chưa có SĐT";
+        const identity = elements.walkInIdentity?.value.trim() || "Chưa có CCCD/Hộ chiếu";
+        const paymentLabel = method === "vnpay" ? "VNPay" : "Tiền mặt";
+        const checkInLabel = formatDateLabel(elements.walkInCheckinDate?.value || "");
+        const checkOutLabel = formatDateLabel(elements.walkInCheckoutDate?.value || "");
+
+        elements.walkInConfirmSummary.innerHTML = `
+            <article class="walkin-invoice-card">
+                <header class="walkin-invoice-header">
+                    <div>
+                        <h3>Chi tiết thanh toán</h3>
+                    </div>
+                    <span>${escapeHtml(paymentLabel)}</span>
+                </header>
+                <div class="walkin-invoice-body">
+                    <div class="walkin-invoice-guest">
+                        <div>
+                            <span>Khách hàng</span>
+                            <strong>${escapeHtml(customerName)}</strong>
+                            <small>${escapeHtml(phone)} · ${escapeHtml(identity)} · ${guestCount} khách</small>
+                        </div>
+                        <div>
+                            <span>Phòng</span>
+                            <strong>${rooms.map(function (room) { return escapeHtml(formatDisplayText(room.roomNumber)); }).join(", ")}</strong>
+                            <small>${roomsCount} phòng · ${nights} đêm</small>
+                        </div>
+                    </div>
+
+                    <div class="walkin-invoice-lines">
+                        ${roomLines.map(function (line) {
+                            const lineTotal = line.pricePerNight * line.rooms.length * nights;
+                            const roomNumbers = line.rooms
+                                .map(function (room) { return formatDisplayText(room.roomNumber); })
+                                .sort(function (a, b) { return String(a).localeCompare(String(b), "vi", { numeric: true }); })
+                                .join(", ");
+                            return `
+                                <div class="walkin-invoice-line">
+                                    <div>
+                                        <strong>${escapeHtml(formatDisplayText(line.roomTypeName))} x ${line.rooms.length} phòng</strong>
+                                        <span>Phòng ${escapeHtml(roomNumbers)} · ${formatMoney(line.pricePerNight)} / đêm</span>
+                                    </div>
+                                    <strong>${formatMoney(lineTotal)}</strong>
+                                </div>
+                            `;
+                        }).join("")}
+                    </div>
+
+                    <div class="walkin-invoice-dates">
+                        <div>
+                            <span>Nhận phòng</span>
+                            <strong>${escapeHtml(checkInLabel)}</strong>
+                            <small>Từ 14:00</small>
+                        </div>
+                        <div>
+                            <span>Trả phòng</span>
+                            <strong>${escapeHtml(checkOutLabel)}</strong>
+                            <small>Trước 12:00</small>
+                        </div>
+                    </div>
+
+                    <div class="walkin-invoice-money">
+                        <div class="walkin-invoice-row">
+                            <span>Giá phòng (${roomsCount} phòng x ${nights} đêm)</span>
+                            <strong>${formatMoney(total)}</strong>
+                        </div>
+                        ${method === "cash" ? `
+                            <div class="walkin-invoice-row">
+                                <span>Khách đưa</span>
+                                <strong>${formatMoney(paid)}</strong>
+                            </div>
+                            <div class="walkin-invoice-row">
+                                <span>Tiền thối</span>
+                                <strong>${formatMoney(change)}</strong>
+                            </div>
+                        ` : ""}
+                        <div class="walkin-invoice-total">
+                            <span>Cần thanh toán</span>
+                            <strong>${formatMoney(total)}</strong>
+                        </div>
+                    </div>
+
+                    <div class="walkin-invoice-note">
+                        <i class="bi bi-shield-check"></i>
+                        <span>${method === "vnpay" ? "Sau khi hoàn tất, hệ thống sẽ chuyển sang cổng VNPay để thanh toán." : "Kiểm tra số tiền khách đưa và tiền thối trước khi hoàn tất check-in."}</span>
+                    </div>
+                </div>
+            </article>
+        `;
     }
 
     async function submitWalkInCheckIn() {
@@ -470,12 +1014,13 @@
             showAlert("Chọn ít nhất một phòng trống.", "warning");
             return;
         }
-        if (Number(elements.walkInPaymentAmount?.value || 0) + 0.01 < total) {
+        const method = getWalkInPaymentMethod();
+        if (method === "cash" && Number(elements.walkInPaymentAmount?.value || 0) + 0.01 < total) {
             showAlert(`Khách cần thanh toán đủ ${formatMoney(total)} trước khi check-in.`, "warning");
             return;
         }
 
-        setButtonBusy(elements.walkInConfirmBtn, true, "Đang check-in...");
+        setButtonBusy(elements.walkInConfirmBtn, true, method === "vnpay" ? "Đang tạo VNPay..." : "Đang check-in...");
         try {
             const result = await fetchJson("/Receptionist/WalkInCheckIn", {
                 method: "POST",
@@ -488,10 +1033,11 @@
                     gender: elements.walkInGender?.value || "",
                     nationality: elements.walkInNationality?.value || "",
                     address: elements.walkInAddress?.value || "",
+                    checkInDate: elements.walkInCheckinDate?.value || "",
                     checkOutDate: elements.walkInCheckoutDate?.value || "",
                     guestCount: Number(elements.walkInGuestCount?.value || 1),
                     roomIds: Array.from(state.selectedWalkInRooms.keys()),
-                    paymentAmount: Number(elements.walkInPaymentAmount?.value || 0),
+                    paymentAmount: method === "vnpay" ? 0 : Number(elements.walkInPaymentAmount?.value || 0),
                     paymentMethod: elements.walkInPaymentMethod?.value || "",
                     note: elements.walkInNote?.value || ""
                 })
@@ -502,13 +1048,101 @@
                 return;
             }
 
+            if (result.requiresOnlinePayment && result.paymentUrl) {
+                showAlert("Đã giữ phòng đã chọn. Đang chuyển sang VNPay.", "info");
+                window.location.href = result.paymentUrl;
+                return;
+            }
+
+            renderWalkInDone({
+                bookingCode: result.bookingCode,
+                message: `${result.message} Mã đặt phòng ${result.bookingCode}. Đã thu ${formatMoney(result.grandTotal)}.`,
+                rooms: result.assignedRooms || [],
+                totalAmount: result.grandTotal
+            });
+            showWalkInView("done");
             showAlert(`${result.message} Mã đặt phòng ${result.bookingCode}, đã thu ${formatMoney(result.grandTotal)}.`, "success");
-            resetWalkIn();
         } catch (error) {
             showAlert(error.message, "danger");
         } finally {
             setButtonBusy(elements.walkInConfirmBtn, false);
         }
+    }
+
+    function renderWalkInDone(options) {
+        const booking = options.booking || {};
+        const rooms = options.rooms || booking.assignedRooms || [];
+        const totalAmount = Number(options.totalAmount ?? booking.totalAmount ?? booking.paidAmount ?? 0);
+        const checkInDate = booking.checkInDate || formatDateLabel(elements.walkInCheckinDate?.value || "");
+        const checkOutDate = booking.checkOutDate || formatDateLabel(elements.walkInCheckoutDate?.value || "");
+        const nights = Number(booking.nights || state.walkInAvailability?.nights || 0);
+        const groupedRooms = Array.from(rooms.reduce(function (groups, room) {
+            const typeName = formatDisplayText(room.roomTypeName || "Phòng");
+            if (!groups.has(typeName)) {
+                groups.set(typeName, []);
+            }
+
+            groups.get(typeName).push(room);
+            return groups;
+        }, new Map()).entries())
+            .sort(function (a, b) {
+                return a[0].localeCompare(b[0], "vi", { numeric: true });
+            });
+
+        if (elements.walkInDoneMessage) {
+            elements.walkInDoneMessage.textContent = options.message || "Check-in khách vãng lai thành công.";
+        }
+
+        if (!elements.walkInDoneRooms) {
+            return;
+        }
+
+        elements.walkInDoneRooms.innerHTML = `
+            <div class="walkin-done-meta">
+                <div>
+                    <span>Mã đặt phòng</span>
+                    <strong>${escapeHtml(options.bookingCode || booking.bookingCode || "")}</strong>
+                </div>
+                <div>
+                    <span>Thời gian ở</span>
+                    <strong>${escapeHtml(checkInDate || "-")} - ${escapeHtml(checkOutDate || "-")}</strong>
+                    <small>${nights > 0 ? `${nights} đêm` : "Đã xác nhận"}</small>
+                </div>
+                <div>
+                    <span>Đã thanh toán</span>
+                    <strong>${formatMoney(totalAmount)}</strong>
+                </div>
+            </div>
+            <div class="walkin-done-room-block">
+                <div class="walkin-done-room-heading">
+                    <span>Phòng khách đã nhận</span>
+                    <strong>${rooms.length} phòng</strong>
+                </div>
+                ${rooms.length > 0 ? `
+                    <div class="walkin-done-room-list">
+                        ${groupedRooms.map(function ([typeName, items]) {
+                            const sortedRooms = items.slice().sort(function (a, b) {
+                                return String(a.roomNumber).localeCompare(String(b.roomNumber), "vi", { numeric: true });
+                            });
+
+                            return `
+                                <section class="walkin-done-room-group">
+                                    <div>
+                                        <strong>${escapeHtml(typeName)} x${items.length}</strong>
+                                        <span>${sortedRooms.map(function (room) { return `Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}`; }).join(" · ")}</span>
+                                    </div>
+                                    <div class="walkin-done-room-chips">
+                                        ${sortedRooms.map(function (room) {
+                                            return `<span>${escapeHtml(formatDisplayText(room.roomNumber))}</span>`;
+                                        }).join("")}
+                                    </div>
+                                </section>
+                            `;
+                        }).join("")}
+                    </div>
+                ` : `<div class="walkin-done-empty">Chưa tải được danh sách phòng. Mã đặt phòng đã được ghi nhận.</div>`}
+            </div>
+        `;
     }
 
     async function loadTodayArrivals() {
@@ -549,7 +1183,7 @@
         elements.todayArrivalsList.innerHTML = bookings.map(function (booking) {
             const rooms = (booking.requirements || [])
                 .map(function (item) {
-                    return `${item.requiredRooms} ${escapeHtml(item.roomTypeName)}`;
+                    return `${item.requiredRooms} ${escapeHtml(formatDisplayText(item.roomTypeName))}`;
                 })
                 .join(" · ");
             const statusClass = booking.canCheckIn ? "ready" : "blocked";
@@ -559,8 +1193,8 @@
                 <article class="arrival-card ${statusClass}" data-arrival-code="${escapeHtml(booking.bookingCode)}">
                     <div class="arrival-main">
                         <div class="arrival-code">${escapeHtml(booking.bookingCode)}</div>
-                        <h3>${escapeHtml(booking.customerName)}</h3>
-                        <p>${escapeHtml(booking.phoneNumber || "Chưa có số điện thoại")}</p>
+                        <h3>${escapeHtml(formatPersonName(booking.customerName))}</h3>
+                        <p>${escapeHtml(formatSentenceText(booking.phoneNumber || "Chưa có số điện thoại"))}</p>
                         <div class="arrival-meta">
                             <span><i class="bi bi-calendar-check"></i>${escapeHtml(booking.checkInDate)} - ${escapeHtml(booking.checkOutDate)}</span>
                             <span><i class="bi bi-door-open"></i>${rooms || "Chưa có dòng phòng"}</span>
@@ -601,6 +1235,7 @@
             }
 
             state.roomMap = result;
+            state.roomMapServiceUsage = null;
             renderRoomMap();
             showAlert(result.message, "info");
         } catch (error) {
@@ -614,11 +1249,17 @@
         const counts = state.roomMap.statusCounts || [];
         if (elements.roomMapSummary) {
             elements.roomMapSummary.innerHTML = counts.map(function (item) {
-                return `<span class="room-map-count ${escapeHtml(item.status)}">${escapeHtml(item.statusLabel)}: <strong>${item.count}</strong></span>`;
+                return `<span class="room-map-count ${escapeHtml(item.status)}">${escapeHtml(formatSentenceText(item.statusLabel))}: <strong>${item.count}</strong></span>`;
             }).join("");
         }
 
         const floors = state.roomMap.floors || [];
+        renderRoomMapTypeFilter(floors);
+        const selectedRoom = findRoomMapRoom(state.selectedRoomMapRoomId);
+        if (state.selectedRoomMapRoomId && !selectedRoom) {
+            state.selectedRoomMapRoomId = "";
+            closeRoomMapDetailModal();
+        }
         if (!elements.roomMapFloors) return;
         if (floors.length === 0) {
             elements.roomMapFloors.innerHTML = `<div class="arrival-empty">Chưa có phòng trong hệ thống.</div>`;
@@ -626,9 +1267,14 @@
         }
 
         const filter = state.roomMapFilter || "all";
+        const typeFilter = state.roomMapTypeFilter || "all";
         const html = floors.map(function (floor) {
             const rooms = (floor.rooms || []).filter(function (room) {
-                return filter === "all" || room.status === filter;
+                const matchesStatus = filter === "all" || room.status === filter;
+                const matchesType = typeFilter === "all" || room.roomTypeName === typeFilter;
+                return matchesStatus && matchesType;
+            }).sort(function (a, b) {
+                return String(a.roomNumber).localeCompare(String(b.roomNumber), "vi", { numeric: true });
             });
 
             if (rooms.length === 0) return "";
@@ -649,20 +1295,219 @@
         elements.roomMapFloors.innerHTML = html || `<div class="arrival-empty">Không có phòng phù hợp bộ lọc hiện tại.</div>`;
     }
 
+    function renderRoomMapTypeFilter(floors) {
+        if (!elements.roomMapTypeFilter) return;
+
+        const currentValue = state.roomMapTypeFilter || elements.roomMapTypeFilter.value || "all";
+        const roomTypes = Array.from((floors || []).reduce(function (types, floor) {
+            (floor.rooms || []).forEach(function (room) {
+                if (room.roomTypeName) {
+                    types.add(room.roomTypeName);
+                }
+            });
+            return types;
+        }, new Set()))
+            .sort(function (a, b) {
+                return a.localeCompare(b, "vi", { numeric: true });
+            });
+
+        elements.roomMapTypeFilter.innerHTML = `<option value="all">Tất cả</option>` +
+            roomTypes.map(function (roomTypeName) {
+                return `<option value="${escapeHtml(roomTypeName)}">${escapeHtml(formatDisplayText(roomTypeName))}</option>`;
+            }).join("");
+        elements.roomMapTypeFilter.value = roomTypes.includes(currentValue) ? currentValue : "all";
+        state.roomMapTypeFilter = elements.roomMapTypeFilter.value;
+    }
+
     function renderRoomMapTile(room) {
-        const note = room.status === "occupied" && room.bookingCode
-            ? `<span>${escapeHtml(room.currentGuestName || "Khách đang ở")}</span><span>${escapeHtml(room.bookingCode)} · Trả ${escapeHtml(room.checkOutDate || "")}</span>`
-            : `<span>${escapeHtml(room.roomTypeName)}</span><span>${escapeHtml(room.statusLabel)}</span>`;
+        const checkout = room.checkOutDate
+            ? `<small>Trả ${escapeHtml(room.checkOutDate)}</small>`
+            : `<small class="room-map-empty-line" aria-hidden="true">&nbsp;</small>`;
 
         return `
-            <article class="room-map-tile ${escapeHtml(room.status)}">
-                <div>
-                    <strong>${escapeHtml(room.roomNumber)}</strong>
-                    <small>${escapeHtml(room.roomTypeName)}</small>
+            <article class="room-map-tile ${escapeHtml(room.status)} ${state.selectedRoomMapRoomId === room.roomId ? "selected" : ""}"
+                data-room-map-room-id="${escapeHtml(room.roomId)}"
+                role="button"
+                tabindex="0">
+                <div class="room-map-tile-head">
+                    <strong>${escapeHtml(formatDisplayText(room.roomNumber))}</strong>
                 </div>
-                <div class="room-map-tile-meta">${note}</div>
+                <div class="room-map-tile-meta">
+                    <span>${escapeHtml(formatSentenceText(room.statusLabel))}</span>
+                    ${checkout}
+                    <small>${escapeHtml(formatDisplayText(room.roomTypeName))}</small>
+                </div>
             </article>
         `;
+    }
+
+    async function selectRoomMapRoom(roomId) {
+        const room = findRoomMapRoom(roomId);
+        if (!room) return;
+
+        state.selectedRoomMapRoomId = room.roomId;
+        renderRoomMap();
+        renderRoomMapDetail(room, { loadingServices: Boolean(room.bookingCode) });
+
+        if (!room.bookingCode) {
+            return;
+        }
+
+        try {
+            const [serviceUsage, bookingLookup] = await Promise.all([
+                getRoomMapServiceUsage(),
+                fetchJson(`/Receptionist/Lookup?code=${encodeURIComponent(room.bookingCode)}`)
+            ]);
+            if (state.selectedRoomMapRoomId !== room.roomId) {
+                return;
+            }
+
+            const stay = (serviceUsage.activeStays || []).find(function (item) {
+                return item.bookingCode === room.bookingCode;
+            }) || null;
+            renderRoomMapDetail(room, {
+                stay,
+                booking: bookingLookup.success ? bookingLookup.booking : null
+            });
+        } catch {
+            if (state.selectedRoomMapRoomId === room.roomId) {
+                renderRoomMapDetail(room, { serviceError: true });
+            }
+        }
+    }
+
+    function findRoomMapRoom(roomId) {
+        if (!roomId || !state.roomMap) return null;
+
+        for (const floor of state.roomMap.floors || []) {
+            const room = (floor.rooms || []).find(function (item) {
+                return item.roomId === roomId;
+            });
+            if (room) return room;
+        }
+
+        return null;
+    }
+
+    async function getRoomMapServiceUsage() {
+        if (state.roomMapServiceUsage) {
+            return state.roomMapServiceUsage;
+        }
+
+        state.roomMapServiceUsage = await fetchJson("/Receptionist/ServiceUsage");
+        return state.roomMapServiceUsage;
+    }
+
+    function renderRoomMapDetail(room, options = {}) {
+        if (!elements.roomMapDetailModal || !elements.roomMapDetailBody) return;
+
+        if (!room) {
+            closeRoomMapDetailModal();
+            return;
+        }
+
+        const stay = options.stay || null;
+        const booking = options.booking || null;
+        const serviceLines = stay?.serviceLines || [];
+        const serviceHtml = options.loadingServices
+            ? `<div class="room-map-service-empty">Đang tải dịch vụ...</div>`
+            : options.serviceError
+                ? `<div class="room-map-service-empty">Chưa tải được dịch vụ của phòng này.</div>`
+                : serviceLines.length === 0
+                    ? `<div class="room-map-service-empty">Chưa phát sinh dịch vụ.</div>`
+                    : serviceLines.map(function (line) {
+                        return `
+                            <div class="room-map-service-line">
+                                <span>${escapeHtml(formatDisplayText(line.serviceName))} x${line.quantity}</span>
+                                <strong>${formatMoney(line.total)}</strong>
+                            </div>
+                        `;
+                    }).join("");
+        const bookedRooms = booking?.assignedRooms?.length
+            ? booking.assignedRooms.map(function (item) { return formatDisplayText(item.roomNumber); })
+            : (stay?.roomNumbers || []).map(formatDisplayText);
+        const roomNumbers = bookedRooms.length
+            ? `Phòng ${bookedRooms.map(escapeHtml).join(", ")}`
+            : `Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}`;
+        const guestHtml = room.status === "occupied"
+            ? `
+                <div class="room-map-guest-box">
+                    <div class="room-map-section-title">
+                        <span>Thông tin khách hàng</span>
+                    </div>
+                    <div class="room-map-detail-grid">
+                        <div>
+                            <span>Tên khách hàng</span>
+                            <strong>${escapeHtml(formatPersonName(booking?.customerName || stay?.customerName || room.currentGuestName || "-"))}</strong>
+                        </div>
+                        <div>
+                            <span>CCCD/Hộ chiếu</span>
+                            <strong>${escapeHtml(booking?.identityNumber || "-")}</strong>
+                        </div>
+                        <div>
+                            <span>Số điện thoại</span>
+                            <strong>${escapeHtml(formatSentenceText(booking?.phoneNumber || stay?.phoneNumber || "-"))}</strong>
+                        </div>
+                        <div>
+                            <span>Ngày đặt</span>
+                            <strong>${escapeHtml(booking?.bookingDate || "-")}</strong>
+                        </div>
+                        <div>
+                            <span>Ngày trả</span>
+                            <strong>${escapeHtml(booking?.checkOutDate || stay?.checkOutDate || room.checkOutDate || "-")}</strong>
+                        </div>
+                        <div>
+                            <span>Mã đặt phòng</span>
+                            <strong>${escapeHtml(booking?.bookingCode || room.bookingCode || "-")}</strong>
+                        </div>
+                        <div class="room-map-detail-wide">
+                            <span>Các phòng đang được booking cùng</span>
+                            <strong>${roomNumbers}</strong>
+                        </div>
+                    </div>
+                </div>
+            `
+            : "";
+
+        elements.roomMapDetailBody.innerHTML = `
+            <div class="room-map-detail-head">
+                <div>
+                    <h3>Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}</h3>
+                </div>
+                <span class="room-map-detail-status ${escapeHtml(room.status)}">${escapeHtml(formatSentenceText(room.statusLabel))}</span>
+            </div>
+            <div class="room-map-detail-grid">
+                <div>
+                    <span>Loại phòng</span>
+                    <strong>${escapeHtml(formatDisplayText(room.roomTypeName))}</strong>
+                </div>
+                <div>
+                    <span>Tình trạng phòng</span>
+                    <strong>${escapeHtml(formatSentenceText(room.statusLabel))}</strong>
+                </div>
+            </div>
+            ${guestHtml}
+            <div class="room-map-service-box">
+                <div class="room-map-service-title">
+                    <span>Dịch vụ đã sử dụng</span>
+                </div>
+                ${serviceHtml}
+            </div>
+        `;
+        elements.roomMapDetailModal.hidden = false;
+    }
+
+    function closeRoomMapDetailModal() {
+        if (elements.roomMapDetailModal) {
+            elements.roomMapDetailModal.hidden = true;
+        }
+        if (elements.roomMapDetailBody) {
+            elements.roomMapDetailBody.innerHTML = "";
+        }
+        state.selectedRoomMapRoomId = "";
+        if (state.currentStep === "roomMap") {
+            renderRoomMap();
+        }
     }
 
     async function loadServiceUsage(preferredBookingCode) {
@@ -716,7 +1561,7 @@
 
         elements.serviceStayList.innerHTML = activeStays.map(function (stay) {
             const rooms = (stay.roomNumbers || []).length > 0
-                ? `Phòng ${stay.roomNumbers.map(escapeHtml).join(", ")}`
+                ? `Phòng ${stay.roomNumbers.map(function (roomNumber) { return escapeHtml(formatDisplayText(roomNumber)); }).join(", ")}`
                 : "Chưa gán phòng";
             const serviceLines = (stay.serviceLines || []).slice(0, 3);
             const lineHtml = serviceLines.length === 0
@@ -724,7 +1569,7 @@
                 : serviceLines.map(function (line) {
                     return `
                         <div class="service-line">
-                            <span>${escapeHtml(line.serviceName)} x${line.quantity}</span>
+                            <span>${escapeHtml(formatDisplayText(line.serviceName))} x${line.quantity}</span>
                             <strong>${formatMoney(line.total)}</strong>
                         </div>
                     `;
@@ -734,7 +1579,7 @@
                 <article class="service-stay-card" data-service-stay="${escapeHtml(stay.bookingCode)}">
                     <div class="service-stay-main">
                         <span class="arrival-code">${escapeHtml(stay.bookingCode)}</span>
-                        <h3>${escapeHtml(stay.customerName)}</h3>
+                        <h3>${escapeHtml(formatPersonName(stay.customerName))}</h3>
                         <p>${escapeHtml(rooms)} · Trả ${escapeHtml(stay.checkOutDate)}</p>
                     </div>
                     <div class="service-stay-total">
@@ -760,9 +1605,9 @@
         if (elements.serviceBookingSelect) {
             elements.serviceBookingSelect.innerHTML = activeStays.map(function (stay) {
                 const rooms = (stay.roomNumbers || []).length > 0
-                    ? ` - phòng ${stay.roomNumbers.join(", ")}`
+                    ? ` - phòng ${stay.roomNumbers.map(formatDisplayText).join(", ")}`
                     : "";
-                return `<option value="${escapeHtml(stay.bookingCode)}">${escapeHtml(stay.bookingCode)} - ${escapeHtml(stay.customerName)}${escapeHtml(rooms)}</option>`;
+                return `<option value="${escapeHtml(stay.bookingCode)}">${escapeHtml(stay.bookingCode)} - ${escapeHtml(formatPersonName(stay.customerName))}${escapeHtml(rooms)}</option>`;
             }).join("");
 
             const fallbackCode = activeStays[0]?.bookingCode || "";
@@ -774,7 +1619,7 @@
 
         if (elements.serviceOptionSelect) {
             elements.serviceOptionSelect.innerHTML = services.map(function (service) {
-                return `<option value="${escapeHtml(service.serviceId)}" data-price="${service.unitPrice}">${escapeHtml(service.serviceName)} - ${formatMoney(service.unitPrice)}/${escapeHtml(service.unit)}</option>`;
+                return `<option value="${escapeHtml(service.serviceId)}" data-price="${service.unitPrice}" data-unit="${escapeHtml(formatSentenceText(service.unit))}" data-name="${escapeHtml(formatDisplayText(service.serviceName))}" data-category="${escapeHtml(formatDisplayText(service.category || ""))}">${escapeHtml(formatDisplayText(service.serviceName))} - ${formatMoney(service.unitPrice)}/${escapeHtml(formatSentenceText(service.unit))}</option>`;
             }).join("");
             elements.serviceOptionSelect.disabled = services.length === 0;
         }
@@ -794,10 +1639,35 @@
 
     function renderServiceSelection() {
         const selectedCode = elements.serviceBookingSelect?.value || "";
+        const selectedStay = (state.serviceUsage?.activeStays || []).find(function (stay) {
+            return stay.bookingCode === selectedCode;
+        }) || null;
         elements.serviceStayList?.querySelectorAll("[data-service-stay]").forEach(function (card) {
             card.classList.toggle("selected", card.dataset.serviceStay === selectedCode);
         });
+        renderSelectedServiceStay(selectedStay);
         updateServiceEstimate();
+    }
+
+    function renderSelectedServiceStay(stay) {
+        if (!elements.serviceSelectedStayInfo) return;
+
+        if (!stay) {
+            elements.serviceSelectedStayInfo.innerHTML = `<span>Chưa chọn khách lưu trú.</span>`;
+            return;
+        }
+
+        const rooms = (stay.roomNumbers || []).length > 0
+            ? `Phòng ${stay.roomNumbers.map(function (roomNumber) { return escapeHtml(formatDisplayText(roomNumber)); }).join(", ")}`
+            : "Chưa gán phòng";
+        elements.serviceSelectedStayInfo.innerHTML = `
+            <div>
+                <span>Đang ghi nhận cho</span>
+                <strong>${escapeHtml(formatPersonName(stay.customerName))}</strong>
+                <small>${escapeHtml(stay.bookingCode)} · ${rooms} · Trả ${escapeHtml(stay.checkOutDate)}</small>
+            </div>
+            <strong>${formatMoney(stay.serviceTotal || 0)}</strong>
+        `;
     }
 
     function updateServiceEstimate() {
@@ -807,6 +1677,16 @@
         const price = Number(option?.dataset.price || 0);
         const quantity = Math.max(Number(elements.serviceQuantityInput?.value || 0), 0);
         elements.serviceLineEstimate.textContent = formatMoney(price * quantity);
+        if (elements.serviceSelectedServiceInfo) {
+            const serviceName = option?.dataset.name || "Chưa chọn dịch vụ";
+            const unit = option?.dataset.unit || "";
+            const category = option?.dataset.category || "Dịch vụ";
+            elements.serviceSelectedServiceInfo.innerHTML = `
+                <span>${escapeHtml(category)}</span>
+                <strong>${escapeHtml(serviceName)}</strong>
+                <small>${formatMoney(price)} / ${escapeHtml(unit)} · Số lượng ${quantity || 0}</small>
+            `;
+        }
     }
 
     async function addServiceUsage(event) {
@@ -847,6 +1727,7 @@
                 elements.serviceNoteInput.value = "";
             }
 
+            state.roomMapServiceUsage = null;
             await loadServiceUsage(result.bookingCode || bookingCode);
             showAlert(`${result.message} Tổng dịch vụ: ${formatMoney(result.serviceTotal)}.`, "success");
         } catch (error) {
@@ -905,7 +1786,7 @@
 
         elements.checkoutStayList.innerHTML = stays.map(function (stay) {
             const rooms = (stay.roomNumbers || []).length > 0
-                ? `Phòng ${stay.roomNumbers.map(escapeHtml).join(", ")}`
+                ? `Phòng ${stay.roomNumbers.map(function (roomNumber) { return escapeHtml(formatDisplayText(roomNumber)); }).join(", ")}`
                 : "Chưa gán phòng";
             const remainingClass = stay.remainingAmount > 0 ? "due" : "paid";
 
@@ -913,7 +1794,7 @@
                 <article class="checkout-stay-card ${remainingClass} ${stay.bookingCode === selectedCode ? "selected" : ""}" data-checkout-stay="${escapeHtml(stay.bookingCode)}">
                     <div class="service-stay-main">
                         <span class="arrival-code">${escapeHtml(stay.bookingCode)}</span>
-                        <h3>${escapeHtml(stay.customerName)}</h3>
+                        <h3>${escapeHtml(formatPersonName(stay.customerName))}</h3>
                         <p>${escapeHtml(rooms)} · ${escapeHtml(stay.checkInDate)} - ${escapeHtml(stay.checkOutDate)}</p>
                     </div>
                     <div class="checkout-stay-money">
@@ -949,6 +1830,10 @@
             elements.checkoutDetail.classList.add("checkout-detail-empty");
             if (elements.checkoutBookingCode) elements.checkoutBookingCode.value = "";
             if (elements.checkoutPaymentAmount) elements.checkoutPaymentAmount.value = "0";
+            if (elements.checkoutReceiptEmail) elements.checkoutReceiptEmail.value = "";
+            if (elements.checkoutSendEmail) elements.checkoutSendEmail.checked = false;
+            if (elements.checkoutPrintInvoice) elements.checkoutPrintInvoice.checked = true;
+            syncCheckoutEmailField();
             if (elements.confirmCheckoutBtn) elements.confirmCheckoutBtn.disabled = true;
             return;
         }
@@ -959,10 +1844,10 @@
         const roomsHtml = roomLines.length === 0
             ? `<div class="checkout-line muted">Chưa có dòng phòng.</div>`
             : roomLines.map(function (line) {
-                const room = line.roomNumber ? ` · Phòng ${escapeHtml(line.roomNumber)}` : "";
+                const room = line.roomNumber ? ` · Phòng ${escapeHtml(formatDisplayText(line.roomNumber))}` : "";
                 return `
                     <div class="checkout-line">
-                        <span>${escapeHtml(line.roomTypeName)}${room}</span>
+                        <span>${escapeHtml(formatDisplayText(line.roomTypeName))}${room}</span>
                         <strong>${formatMoney(line.total)}</strong>
                     </div>
                 `;
@@ -972,7 +1857,7 @@
             : serviceLines.map(function (line) {
                 return `
                     <div class="checkout-line">
-                        <span>${escapeHtml(line.serviceName)} x${line.quantity}</span>
+                        <span>${escapeHtml(formatDisplayText(line.serviceName))} x${line.quantity}</span>
                         <strong>${formatMoney(line.total)}</strong>
                     </div>
                 `;
@@ -982,8 +1867,8 @@
             <div class="checkout-guest-box">
                 <div>
                     <span class="arrival-code">${escapeHtml(stay.bookingCode)}</span>
-                    <h4>${escapeHtml(stay.customerName)}</h4>
-                    <p>${escapeHtml(stay.phoneNumber || "Chưa có số điện thoại")}</p>
+                    <h4>${escapeHtml(formatPersonName(stay.customerName))}</h4>
+                    <p>${escapeHtml(formatSentenceText(stay.phoneNumber || "Chưa có số điện thoại"))}</p>
                 </div>
                 <div>
                     <span>${stay.nights} đêm</span>
@@ -1015,6 +1900,16 @@
         if (elements.checkoutNote) {
             elements.checkoutNote.value = "";
         }
+        if (elements.checkoutReceiptEmail) {
+            elements.checkoutReceiptEmail.value = stay.email || "";
+        }
+        if (elements.checkoutSendEmail) {
+            elements.checkoutSendEmail.checked = Boolean(stay.email);
+        }
+        if (elements.checkoutPrintInvoice) {
+            elements.checkoutPrintInvoice.checked = true;
+        }
+        syncCheckoutEmailField();
         if (elements.confirmCheckoutBtn) {
             elements.confirmCheckoutBtn.disabled = false;
         }
@@ -1027,6 +1922,10 @@
         const paymentAmount = Number(elements.checkoutPaymentAmount?.value || 0);
         const paymentMethod = elements.checkoutPaymentMethod?.value || "";
         const note = elements.checkoutNote?.value || "";
+        const sendReceiptEmail = Boolean(elements.checkoutSendEmail?.checked);
+        const printInvoice = Boolean(elements.checkoutPrintInvoice?.checked);
+        const receiptEmail = (elements.checkoutReceiptEmail?.value || "").trim();
+        const selectedStay = getSelectedCheckoutStay();
 
         if (!bookingCode) {
             showAlert("Chọn khách cần check-out trước.", "warning");
@@ -1039,6 +1938,17 @@
         }
 
         setButtonBusy(elements.confirmCheckoutBtn, true, "Đang check-out...");
+        let printWindow = null;
+        if (printInvoice && selectedStay) {
+            printWindow = window.open("", "_blank", "width=820,height=900");
+            if (printWindow) {
+                printWindow.document.write("<!doctype html><title>Đang tạo hóa đơn</title><body style=\"font-family:Arial,sans-serif;padding:28px\">Đang tạo hóa đơn...</body>");
+                printWindow.document.close();
+            } else {
+                showAlert("Trình duyệt đang chặn cửa sổ in hóa đơn.", "warning");
+            }
+        }
+
         try {
             const result = await fetchJson("/Receptionist/Checkout", {
                 method: "POST",
@@ -1047,13 +1957,25 @@
                     bookingCode,
                     paymentAmount,
                     paymentMethod,
-                    note
+                    note,
+                    sendReceiptEmail,
+                    receiptEmail,
+                    printInvoice
                 })
             });
 
             if (!result.success) {
                 showAlert(result.message || "Check-out thất bại.", "danger");
                 return;
+            }
+
+            if (printInvoice && selectedStay && printWindow) {
+                printCheckoutInvoice(selectedStay, {
+                    paymentAmount,
+                    paymentMethod,
+                    receiptEmail,
+                    result
+                }, printWindow);
             }
 
             state.selectedCheckoutCode = "";
@@ -1077,10 +1999,108 @@
         `;
     }
 
+    function syncCheckoutEmailField() {
+        if (!elements.checkoutReceiptEmail) return;
+
+        const enabled = Boolean(elements.checkoutSendEmail?.checked);
+        elements.checkoutReceiptEmail.classList.toggle("disabled", !enabled);
+    }
+
+    function printCheckoutInvoice(stay, options, existingWindow) {
+        const roomLines = stay.roomLines || [];
+        const serviceLines = stay.serviceLines || [];
+        const rows = roomLines.concat(serviceLines).map(function (line) {
+            const name = line.serviceName
+                ? `${formatDisplayText(line.serviceName)} x${line.quantity || 1}`
+                : `${formatDisplayText(line.roomTypeName)}${line.roomNumber ? " - Phòng " + formatDisplayText(line.roomNumber) : ""}`;
+            return `
+                <tr>
+                    <td>${escapeHtml(name)}</td>
+                    <td>${formatMoney(line.unitPrice || 0)}</td>
+                    <td>${formatMoney(line.total || 0)}</td>
+                </tr>
+            `;
+        }).join("") || `<tr><td colspan="3">Không có dòng hóa đơn.</td></tr>`;
+
+        const paidAmount = options?.result?.paidAmount ?? stay.paidAmount;
+        const remainingAmount = options?.result?.remainingAmount ?? stay.remainingAmount;
+        const printWindow = existingWindow || window.open("", "_blank", "width=820,height=900");
+        if (!printWindow) {
+            showAlert("Trình duyệt đang chặn cửa sổ in hóa đơn.", "warning");
+            return;
+        }
+
+        printWindow.document.write(`
+            <!doctype html>
+            <html>
+            <head>
+                <title>Hóa đơn ${escapeHtml(stay.bookingCode)}</title>
+                <style>
+                    body { margin: 0; background: #f4f7fb; color: #0f172a; font-family: Arial, sans-serif; }
+                    .invoice { max-width: 760px; margin: 24px auto; background: #fff; border: 1px solid #dbe4ef; border-radius: 18px; overflow: hidden; }
+                    .head { display: flex; justify-content: space-between; gap: 24px; padding: 26px; border-bottom: 1px solid #e5edf6; }
+                    h1 { margin: 6px 0 0; font-size: 28px; }
+                    .brand { font-weight: 800; font-size: 18px; }
+                    .muted { color: #64748b; }
+                    .body { padding: 24px 26px; }
+                    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-bottom: 20px; }
+                    .item span { display: block; color: #64748b; font-size: 13px; }
+                    .item strong { font-size: 15px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { padding: 11px 10px; border-bottom: 1px solid #edf2f7; text-align: left; }
+                    th:nth-child(2), th:nth-child(3), td:nth-child(2), td:nth-child(3) { text-align: right; }
+                    .total { margin-top: 18px; margin-left: auto; width: 320px; }
+                    .total div { display: flex; justify-content: space-between; padding: 8px 0; }
+                    .total .strong { font-weight: 800; font-size: 18px; border-top: 1px solid #e2e8f0; margin-top: 6px; padding-top: 12px; }
+                    @media print { body { background: #fff; } .invoice { margin: 0; border: 0; border-radius: 0; } }
+                </style>
+            </head>
+            <body>
+                <main class="invoice">
+                    <section class="head">
+                        <div>
+                            <div class="brand">Venus Hotel</div>
+                            <h1>Hóa đơn trả phòng</h1>
+                            <div class="muted">${escapeHtml(new Date().toLocaleString("vi-VN"))}</div>
+                        </div>
+                        <div style="text-align:right">
+                            <div class="muted">Mã đặt phòng</div>
+                            <strong>${escapeHtml(stay.bookingCode)}</strong>
+                        </div>
+                    </section>
+                    <section class="body">
+                        <div class="grid">
+                            <div class="item"><span>Khách hàng</span><strong>${escapeHtml(formatPersonName(stay.customerName))}</strong></div>
+                            <div class="item"><span>Số điện thoại</span><strong>${escapeHtml(stay.phoneNumber || "-")}</strong></div>
+                            <div class="item"><span>Email</span><strong>${escapeHtml(options?.receiptEmail || stay.email || "-")}</strong></div>
+                            <div class="item"><span>Ngày ở</span><strong>${escapeHtml(stay.checkInDate)} - ${escapeHtml(stay.checkOutDate)}</strong></div>
+                            <div class="item"><span>Số đêm</span><strong>${stay.nights}</strong></div>
+                            <div class="item"><span>Phương thức</span><strong>${escapeHtml(options?.paymentMethod || "-")}</strong></div>
+                        </div>
+                        <table>
+                            <thead><tr><th>Nội dung</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                        <section class="total">
+                            <div><span>Tiền phòng</span><strong>${formatMoney(stay.roomTotal)}</strong></div>
+                            <div><span>Dịch vụ</span><strong>${formatMoney(stay.serviceTotal)}</strong></div>
+                            <div><span>Đã thanh toán</span><strong>${formatMoney(paidAmount)}</strong></div>
+                            <div><span>Còn lại</span><strong>${formatMoney(remainingAmount)}</strong></div>
+                            <div class="strong"><span>Tổng hóa đơn</span><strong>${formatMoney(stay.grandTotal)}</strong></div>
+                        </section>
+                    </section>
+                </main>
+                <script>window.addEventListener("load", function () { window.print(); });<\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
     function renderBooking(booking) {
         elements.guestDetails.innerHTML = [
-            detailRow("Họ tên", booking.customerName),
-            detailRow("Số điện thoại", booking.phoneNumber || "Chưa có"),
+            detailRow("Họ tên", formatPersonName(booking.customerName)),
+            detailRow("Số điện thoại", formatSentenceText(booking.phoneNumber || "Chưa có")),
             detailRow("Email", booking.email || "Chưa có"),
             detailRow("CCCD", booking.identityNumber || "Chưa có")
         ].join("");
@@ -1092,14 +2112,14 @@
             detailRow("Số đêm", `${booking.nights}`),
             detailRow("Tổng thanh toán", formatMoney(booking.totalAmount)),
             detailRowHtml("Đã thanh toán", `<span class="paid-chip"><i class="bi bi-check-circle-fill"></i>${formatMoney(booking.paidAmount)}</span>`),
-            detailRow("Trạng thái booking", booking.bookingStatus),
-            detailRow("Trạng thái hóa đơn", booking.invoiceStatus)
+            detailRow("Trạng thái booking", formatSentenceText(booking.bookingStatus)),
+            detailRow("Trạng thái hóa đơn", formatSentenceText(booking.invoiceStatus))
         ].join("");
 
         elements.roomRequirements.innerHTML = booking.requirements.map(function (item) {
             return `
                 <div class="requirement-item">
-                    <strong>${escapeHtml(item.roomTypeName)} <small>(${escapeHtml(item.roomTypeId)})</small></strong>
+                    <strong>${escapeHtml(formatDisplayText(item.roomTypeName))}</strong>
                     <span>${item.requiredRooms} phòng - ${item.guests} khách</span>
                 </div>
             `;
@@ -1147,10 +2167,10 @@
                             data-room-type-id="${escapeHtml(room.roomTypeId)}"
                             ${disabled}
                             aria-pressed="false">
-                        <strong>${escapeHtml(room.roomNumber)}</strong>
+                        <strong>${escapeHtml(formatDisplayText(room.roomNumber))}</strong>
                         <small>Tầng ${room.floor}</small>
-                        <small>${escapeHtml(room.roomTypeName)}</small>
-                        <small>${escapeHtml(room.statusLabel)}</small>
+                        <small>${escapeHtml(formatDisplayText(room.roomTypeName))}</small>
+                        <small>${escapeHtml(formatSentenceText(room.statusLabel))}</small>
                     </button>
                 `;
             }).join("");
@@ -1158,7 +2178,7 @@
             return `
                 <section class="room-type-section" data-room-type-section="${escapeHtml(group.roomTypeId)}" data-required="${group.requiredRooms}">
                     <div class="room-type-header">
-                        <strong>${escapeHtml(group.roomTypeName)} <small>(${escapeHtml(group.roomTypeId)})</small></strong>
+                        <strong>${escapeHtml(formatDisplayText(group.roomTypeName))}</strong>
                         <span class="room-counter" data-room-counter="${escapeHtml(group.roomTypeId)}">0/${group.requiredRooms} đã chọn</span>
                     </div>
                     <div class="room-grid">${rooms || "<p>Không có phòng thuộc loại này.</p>"}</div>
@@ -1228,8 +2248,8 @@
 
         elements.confirmDetails.innerHTML = [
             confirmRow("Mã đặt phòng", state.booking.bookingCode),
-            confirmRow("Khách hàng", state.booking.customerName),
-            confirmRow("Số điện thoại", state.booking.phoneNumber || "Chưa có"),
+            confirmRow("Khách hàng", formatPersonName(state.booking.customerName)),
+            confirmRow("Số điện thoại", formatSentenceText(state.booking.phoneNumber || "Chưa có")),
             confirmRow("Ngày ở", `${state.booking.checkInDate} - ${state.booking.checkOutDate}`),
             confirmRow("Đã thanh toán", formatMoney(state.booking.paidAmount))
         ].join("");
@@ -1265,8 +2285,8 @@
             elements.assignedRooms.innerHTML = (result.assignedRooms || []).map(function (room) {
                 return `
                     <div class="selected-room">
-                        <strong>Phòng ${escapeHtml(room.roomNumber)}</strong>
-                        <span>${escapeHtml(room.roomTypeName)} (${escapeHtml(room.roomTypeId)})</span>
+                        <strong>Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}</strong>
+                        <span>${escapeHtml(formatDisplayText(room.roomTypeName))}</span>
                     </div>
                 `;
             }).join("");
@@ -1298,11 +2318,25 @@
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 240, height: 240 } },
                 async function (decodedText) {
-                    await stopScanner();
+                    try {
+                        await stopScanner();
+                    } catch {
+                        state.scannerRunning = false;
+                    }
+
+                    if (state.currentStep !== "scan") {
+                        return;
+                    }
+
                     elements.bookingCodeInput.value = decodedText;
                     lookupBooking(decodedText);
                 });
             state.scannerRunning = true;
+            if (state.currentStep !== "scan") {
+                await stopScanner();
+                return;
+            }
+
             elements.scannerFrame.classList.add("is-active");
             elements.startScannerBtn.disabled = true;
             elements.stopScannerBtn.disabled = false;
@@ -1373,8 +2407,8 @@
             .map(function (room) {
                 return `
                     <div class="selected-room">
-                        <strong>Phòng ${escapeHtml(room.roomNumber)}</strong>
-                        <span>${escapeHtml(room.roomTypeName)} (${escapeHtml(room.roomTypeId)}) - Tầng ${room.floor}</span>
+                        <strong>Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}</strong>
+                        <span>${escapeHtml(formatDisplayText(room.roomTypeName))} - Tầng ${room.floor}</span>
                     </div>
                 `;
             }).join("");
@@ -1437,6 +2471,24 @@
         }).format(value || 0);
     }
 
+    function formatInputDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    function ensureWalkInDateOrder() {
+        const checkinDate = elements.walkInCheckinDate?.value || "";
+        if (!checkinDate || !elements.walkInCheckoutDate) return;
+
+        if (!elements.walkInCheckoutDate.value || elements.walkInCheckoutDate.value <= checkinDate) {
+            const nextDate = new Date(`${checkinDate}T00:00:00`);
+            nextDate.setDate(nextDate.getDate() + 1);
+            elements.walkInCheckoutDate.value = formatInputDate(nextDate);
+        }
+    }
+
     function formatDateLabel(value) {
         if (!value) return "";
 
@@ -1446,6 +2498,40 @@
         }
 
         return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function formatSentenceText(value) {
+        const text = String(value ?? "").trim();
+        if (!shouldNormalizeUppercase(text)) return text;
+
+        const lower = text.toLocaleLowerCase("vi-VN");
+        return lower.replace(/^(\P{L}*)(\p{L})/u, function (_, prefix, letter) {
+            return `${prefix}${letter.toLocaleUpperCase("vi-VN")}`;
+        });
+    }
+
+    function formatPersonName(value) {
+        const text = String(value ?? "").trim();
+        if (!shouldNormalizeUppercase(text)) return text;
+
+        return text.toLocaleLowerCase("vi-VN").replace(/\p{L}[\p{L}'-]*/gu, function (word) {
+            return word.charAt(0).toLocaleUpperCase("vi-VN") + word.slice(1);
+        });
+    }
+
+    function formatDisplayText(value) {
+        const text = String(value ?? "").trim();
+        if (!shouldNormalizeUppercase(text)) return text;
+
+        return text.toLocaleLowerCase("vi-VN").replace(/\p{L}[\p{L}'-]*/gu, function (word) {
+            return word.charAt(0).toLocaleUpperCase("vi-VN") + word.slice(1);
+        });
+    }
+
+    function shouldNormalizeUppercase(text) {
+        return /[\p{L}]/u.test(text) &&
+            /[\p{Lu}]/u.test(text) &&
+            !/[\p{Ll}]/u.test(text);
     }
 
     function escapeHtml(value) {

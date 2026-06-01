@@ -55,12 +55,10 @@
         <main class="reception-main">
             <header class="reception-header">
                 <div>
-                    <p class="eyebrow">Front desk</p>
-                    <h1>Check-in khách đặt phòng</h1>
+                    <h1 id="receptionHeaderTitle">Check-in khách đặt phòng</h1>
                 </div>
                 <div class="header-status">
                     <i class="bi bi-shield-check"></i>
-                    <span>Reception desk</span>
                 </div>
                 <button type="button" class="btn btn-outline-secondary header-refresh" id="refreshCheckInBtn">
                     <i class="bi bi-arrow-clockwise"></i>
@@ -94,123 +92,151 @@
             <div class="alert-area" id="alertArea" aria-live="polite"></div>
 
             <section class="reception-panel" data-step-panel="walkIn">
-                <div class="tool-panel">
-                    <div class="panel-heading room-heading">
-                        <div>
-                            <p class="eyebrow">Walk-in</p>
-                            <h2>Check-in khách vãng lai</h2>
-                        </div>
-                        <button type="button" class="btn btn-outline-secondary" id="walkInResetBtn">
-                            <i class="bi bi-arrow-clockwise"></i>
-                            Làm mới
-                        </button>
-                    </div>
-                    <div class="walkin-flow">
-                        <form id="walkInForm" class="service-form walkin-form" data-walkin-view="intake">
+                <div class="walkin-flow">
+                        <form id="walkInForm" class="service-form walkin-form" data-walkin-view="info">
                             <div>
-                                <p class="eyebrow">Guest</p>
                                 <h3>Thông tin khách</h3>
                             </div>
-                            <label for="walkInCustomerName">Họ và tên</label>
-                            <input id="walkInCustomerName" class="form-control" autocomplete="off" placeholder="Nguyễn Văn A" />
-                            <div class="service-form-row">
-                                <div>
-                                    <label for="walkInPhone">Số điện thoại</label>
-                                    <input id="walkInPhone" class="form-control" autocomplete="off" />
-                                </div>
-                                <div>
-                                    <label for="walkInIdentity">CCCD/Hộ chiếu</label>
-                                    <input id="walkInIdentity" class="form-control" autocomplete="off" />
-                                </div>
+                            <div class="walkin-field">
+                                <label for="walkInCustomerName">Họ và tên</label>
+                                <input id="walkInCustomerName" class="form-control" autocomplete="off" placeholder="Nguyễn Văn A" />
                             </div>
-                            <label for="walkInEmail">Email</label>
-                            <input id="walkInEmail" class="form-control" type="email" autocomplete="off" />
-                            <div class="service-form-row">
-                                <div>
-                                    <label for="walkInGuestCount">Số khách</label>
-                                    <input id="walkInGuestCount" class="form-control" type="number" min="1" step="1" value="1" />
-                                </div>
-                                <div>
-                                    <label for="walkInCheckoutDate">Ngày trả phòng</label>
-                                    <input id="walkInCheckoutDate" class="form-control" type="date" />
-                                </div>
+                            <div class="walkin-field">
+                                <label for="walkInPhone">Số điện thoại</label>
+                                <input id="walkInPhone" class="form-control" autocomplete="off" />
                             </div>
-                            <div class="service-form-row">
-                                <div>
-                                    <label for="walkInGender">Giới tính</label>
-                                    <select id="walkInGender" class="form-select">
-                                        <option value="">Không chọn</option>
-                                        <option value="Nam">Nam</option>
-                                        <option value="Nữ">Nữ</option>
-                                        <option value="Khác">Khác</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="walkInNationality">Quốc tịch</label>
-                                    <input id="walkInNationality" class="form-control" value="Việt Nam" />
-                                </div>
+                            <div class="walkin-field">
+                                <label for="walkInIdentity">CCCD/Hộ chiếu</label>
+                                <input id="walkInIdentity" class="form-control" autocomplete="off" />
                             </div>
-                            <label for="walkInAddress">Địa chỉ</label>
-                            <input id="walkInAddress" class="form-control" autocomplete="off" />
-                            <label for="walkInNote">Ghi chú</label>
-                            <textarea id="walkInNote" class="form-control" rows="3" placeholder="Yêu cầu đặc biệt hoặc ghi chú nội bộ"></textarea>
-                            <button type="submit" class="btn btn-primary" id="walkInLoadRoomsBtn">
-                                <i class="bi bi-search"></i>
-                                Tìm phòng trống
+                            <div class="walkin-field">
+                                <label for="walkInGuestCount">Số khách</label>
+                                <input id="walkInGuestCount" class="form-control" type="number" min="1" step="1" value="1" />
+                            </div>
+                            <div class="walkin-field">
+                                <label for="walkInCheckinDate">Ngày nhận phòng</label>
+                                <input id="walkInCheckinDate" class="form-control" type="date" />
+                            </div>
+                            <div class="walkin-field">
+                                <label for="walkInCheckoutDate">Ngày trả phòng</label>
+                                <input id="walkInCheckoutDate" class="form-control" type="date" />
+                            </div>
+                            <div class="walkin-field walkin-span-2">
+                                <label for="walkInNote">Ghi chú</label>
+                                <textarea id="walkInNote" class="form-control" rows="2" placeholder="Yêu cầu đặc biệt hoặc ghi chú nội bộ"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary walkin-span-2" id="walkInLoadRoomsBtn">
+                                Tiếp tục chọn phòng
+                                <i class="bi bi-arrow-right"></i>
                             </button>
                         </form>
 
-                        <div class="walkin-booking-panel" data-walkin-view="booking" hidden>
-                            <div class="walkin-guest-summary" id="walkInGuestSummary"></div>
-                            <button type="button" class="btn btn-outline-secondary walkin-edit-btn" id="walkInEditGuestBtn">
-                                <i class="bi bi-pencil-square"></i>
-                                Sửa thông tin khách
-                            </button>
-                        </div>
-
-                        <div class="checkout-detail-panel walkin-room-panel" data-walkin-view="booking" hidden>
+                        <div class="checkout-detail-panel walkin-room-panel" data-walkin-view="rooms" hidden>
                             <div class="panel-heading room-heading">
                                 <div>
-                                    <p class="eyebrow">Rooms</p>
-                                    <h3>Chọn phòng & thu tiền</h3>
+                                    <h3>Chọn phòng</h3>
                                 </div>
                                 <div class="legend">
                                     <span><i class="legend-dot available"></i>Trống</span>
                                     <span><i class="legend-dot selected"></i>Đang chọn</span>
-                                    <span><i class="legend-dot reserved"></i>Giữ đặt trước</span>
+                                    <span><i class="legend-dot reserved"></i>Hết lượt chọn</span>
                                 </div>
+                            </div>
+                            <div class="walkin-booking-panel compact">
+                                <div class="walkin-guest-summary" id="walkInGuestSummary"></div>
+                                <button type="button" class="btn btn-outline-secondary walkin-edit-btn" id="walkInEditGuestBtn">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Sửa thông tin
+                                </button>
                             </div>
                             <div id="walkInRoomSummary" class="checkout-detail-empty">Nhập ngày trả phòng để tải phòng trống.</div>
                             <div id="walkInRoomGroups" class="room-groups"></div>
-                            <div class="checkout-total-box">
-                                <div class="checkout-money-row strong">
-                                    <span>Tổng tiền cần thu</span>
-                                    <strong id="walkInTotalAmount">0đ</strong>
+                            <div class="walkin-selection-bar">
+                                <div>
+                                    <strong><span id="walkInSelectedCount">0</span> phòng đã chọn</strong>
+                                    <div id="walkInSelectedTypes" class="walkin-selected-types">Chưa chọn phòng</div>
+                                    <span>Đáp ứng <span id="walkInSelectedCapacity">0</span> khách · <span id="walkInStayNights">0</span> đêm · <span id="walkInTotalAmount">0đ</span></span>
+                                </div>
+                                <button type="button" class="btn btn-primary" id="walkInGoPaymentBtn" disabled>Thanh toán</button>
+                            </div>
+                        </div>
+
+                        <div class="checkout-detail-panel walkin-payment-panel" data-walkin-view="payment" hidden>
+                            <div class="walkin-payment-heading">
+                                <h3>Thanh toán</h3>
+                            </div>
+                            <div class="walkin-payment-overview">
+                                <div class="walkin-payment-due-card">
+                                    <span>Cần thanh toán</span>
+                                    <strong id="walkInPaymentDue">0đ</strong>
+                                    <small>Tổng tiền phòng cho các phòng đã chọn.</small>
+                                </div>
+                                <div class="walkin-payment-method-card">
+                                    <h4>Phương thức thanh toán</h4>
+                                    <div class="walkin-payment-options">
+                                        <label class="walkin-payment-option">
+                                            <input type="radio" name="walkInPaymentChoice" value="cash" checked />
+                                            <span>
+                                                <strong>Tiền mặt</strong>
+                                                <small>Nhập số tiền khách đưa và kiểm tra tiền thối.</small>
+                                            </span>
+                                        </label>
+                                        <label class="walkin-payment-option">
+                                            <input type="radio" name="walkInPaymentChoice" value="vnpay" />
+                                            <span>
+                                                <strong>VNPay</strong>
+                                                <small>Giữ phòng đã chọn và chuyển sang cổng VNPay.</small>
+                                            </span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                            <label for="walkInPaymentAmount">Số tiền khách thanh toán</label>
-                            <input id="walkInPaymentAmount" class="form-control" type="number" min="0" step="1000" value="0" />
-                            <label for="walkInPaymentMethod">Phương thức</label>
-                            <select id="walkInPaymentMethod" class="form-select">
-                                <option value="Tiền mặt">Tiền mặt</option>
-                                <option value="Chuyển khoản">Chuyển khoản</option>
-                                <option value="Thẻ">Thẻ</option>
-                                <option value="QR">QR</option>
-                            </select>
-                            <button type="button" class="btn btn-success" id="walkInConfirmBtn" disabled>
-                                <i class="bi bi-check2-circle"></i>
-                                Thu tiền & check-in
+                            <input id="walkInPaymentMethod" type="hidden" value="Tiền mặt" />
+                            <div class="walkin-cash-box" id="walkInCashBox">
+                                <div class="walkin-payment-field">
+                                    <label for="walkInPaymentAmount">Số tiền khách đưa</label>
+                                    <input id="walkInPaymentAmount" class="form-control" type="number" min="0" step="1000" value="0" />
+                                </div>
+                                <div class="checkout-total-box walkin-change-box">
+                                    <div class="checkout-money-row strong"><span>Tiền thối</span><strong id="walkInChangeAmount">0đ</strong></div>
+                                </div>
+                            </div>
+                            <div class="action-row">
+                                <button type="button" class="btn btn-outline-secondary" data-walkin-back="rooms">Quay lại</button>
+                                <button type="button" class="btn btn-primary" id="walkInReviewBtn">Xem xác nhận</button>
+                            </div>
+                        </div>
+
+                        <div class="checkout-detail-panel walkin-confirm-panel" data-walkin-view="confirm" hidden>
+                            <div>
+                                <h3>Xác nhận check-in</h3>
+                            </div>
+                            <div id="walkInConfirmSummary" class="walkin-confirm-summary"></div>
+                            <div class="action-row">
+                                <button type="button" class="btn btn-outline-secondary" data-walkin-back="payment">Quay lại</button>
+                                <button type="button" class="btn btn-success" id="walkInConfirmBtn" disabled>
+                                    <i class="bi bi-check2-circle"></i>
+                                    Hoàn tất
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="success-panel walkin-done-panel" data-walkin-view="done" hidden>
+                            <i class="bi bi-check2-circle"></i>
+                            <h2>Hoàn tất check-in vãng lai</h2>
+                            <p id="walkInDoneMessage">Check-in khách vãng lai thành công.</p>
+                            <div id="walkInDoneRooms" class="walkin-done-summary"></div>
+                            <button type="button" class="btn btn-primary" id="walkInNewBtn">
+                                Check-in khách mới
                             </button>
                         </div>
                     </div>
-                </div>
             </section>
 
             <section class="reception-panel" data-step-panel="today">
                 <div class="tool-panel">
                     <div class="panel-heading room-heading">
                         <div>
-                            <p class="eyebrow">Arrivals</p>
                             <h2>Khách đến hôm nay</h2>
                         </div>
                         <div class="today-summary" id="todayArrivalsSummary">Đang tải...</div>
@@ -223,7 +249,6 @@
                 <div class="tool-panel">
                     <div class="panel-heading room-heading">
                         <div>
-                            <p class="eyebrow">Room map</p>
                             <h2>Sơ đồ phòng</h2>
                         </div>
                         <button type="button" class="btn btn-outline-secondary" id="roomMapRefreshBtn">
@@ -233,14 +258,33 @@
                     </div>
                     <div class="room-map-toolbar">
                         <div id="roomMapSummary" class="room-map-summary"></div>
-                        <div class="room-map-filters" role="group" aria-label="Lọc trạng thái phòng">
-                            <button type="button" class="active" data-room-map-filter="all">Tất cả</button>
-                            <button type="button" data-room-map-filter="available">Trống</button>
-                            <button type="button" data-room-map-filter="occupied">Đang sử dụng</button>
-                            <button type="button" data-room-map-filter="maintenance">Bảo trì</button>
+                        <div class="room-map-controls">
+                            <label class="room-map-type-filter" for="roomMapTypeFilter">
+                                <span>Loại phòng</span>
+                                <select id="roomMapTypeFilter" class="form-select form-select-sm">
+                                    <option value="all">Tất cả</option>
+                                </select>
+                            </label>
+                            <div class="room-map-filters" role="group" aria-label="Lọc trạng thái phòng">
+                                <button type="button" class="active" data-room-map-filter="all">Tất cả</button>
+                                <button type="button" data-room-map-filter="available">Trống</button>
+                                <button type="button" data-room-map-filter="occupied">Đang sử dụng</button>
+                                <button type="button" data-room-map-filter="maintenance">Bảo trì</button>
+                            </div>
                         </div>
                     </div>
                     <div id="roomMapFloors" class="room-map-floors"></div>
+                    <div id="roomMapDetailModal" class="room-map-modal" hidden>
+                        <div class="room-map-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="roomMapDetailTitle">
+                            <div class="room-map-modal-header">
+                                <h3 id="roomMapDetailTitle">Chi tiết phòng</h3>
+                                <button type="button" class="room-map-modal-close" id="roomMapDetailClose" aria-label="Đóng">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <div id="roomMapDetailBody" class="room-map-modal-body"></div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -248,7 +292,6 @@
                 <div class="tool-panel">
                     <div class="panel-heading room-heading">
                         <div>
-                            <p class="eyebrow">Services</p>
                             <h2>Sử dụng dịch vụ</h2>
                         </div>
                         <button type="button" class="btn btn-outline-secondary" id="serviceUsageRefreshBtn">
@@ -268,14 +311,15 @@
 
                         <form id="serviceUsageForm" class="service-form">
                             <div>
-                                <p class="eyebrow">Add service</p>
                                 <h3>Ghi nhận dịch vụ</h3>
                             </div>
+                            <div id="serviceSelectedStayInfo" class="service-selected-box"></div>
                             <label for="serviceBookingSelect">Booking / phòng</label>
                             <select id="serviceBookingSelect" class="form-select form-select-lg"></select>
 
                             <label for="serviceOptionSelect">Dịch vụ</label>
                             <select id="serviceOptionSelect" class="form-select form-select-lg"></select>
+                            <div id="serviceSelectedServiceInfo" class="service-selected-box service-selected-box-muted"></div>
 
                             <div class="service-form-row">
                                 <div>
@@ -304,7 +348,6 @@
                 <div class="tool-panel">
                     <div class="panel-heading room-heading">
                         <div>
-                            <p class="eyebrow">Departure</p>
                             <h2>Check-out khách lưu trú</h2>
                         </div>
                         <button type="button" class="btn btn-outline-secondary" id="checkoutRefreshBtn">
@@ -324,7 +367,6 @@
 
                         <div class="checkout-detail-panel">
                             <div>
-                                <p class="eyebrow">Invoice</p>
                                 <h3>Hóa đơn trả phòng</h3>
                             </div>
                             <div id="checkoutDetail" class="checkout-detail-empty">Chọn một khách để xem hóa đơn.</div>
@@ -346,6 +388,22 @@
                                 <label for="checkoutNote">Ghi chú</label>
                                 <textarea id="checkoutNote" class="form-control" rows="3" placeholder="Ví dụ: khách đã kiểm tra minibar, phòng ổn"></textarea>
 
+                                <div class="checkout-receipt-options">
+                                    <label class="checkout-receipt-option" for="checkoutSendEmail">
+                                        <input id="checkoutSendEmail" type="checkbox" checked />
+                                        <span>Gửi hóa đơn qua mail</span>
+                                    </label>
+                                    <label class="checkout-receipt-option" for="checkoutPrintInvoice">
+                                        <input id="checkoutPrintInvoice" type="checkbox" checked />
+                                        <span>In hóa đơn</span>
+                                    </label>
+                                </div>
+
+                                <div class="checkout-email-field">
+                                    <label for="checkoutReceiptEmail">Email nhận hóa đơn</label>
+                                    <input id="checkoutReceiptEmail" class="form-control" type="email" placeholder="example@email.com" autocomplete="email" />
+                                </div>
+
                                 <button type="submit" class="btn btn-success btn-lg" id="confirmCheckoutBtn" disabled>
                                     <i class="bi bi-check2-circle"></i>
                                     Xác nhận check-out
@@ -358,10 +416,9 @@
 
             <section class="reception-panel active" data-step-panel="scan">
                 <div class="scan-grid">
-                    <div class="tool-panel">
+                    <div class="tool-panel checkin-scan-card">
                         <div class="panel-heading">
                             <div>
-                                <p class="eyebrow">QR code</p>
                                 <h2>Quét mã đặt phòng</h2>
                             </div>
                             <i class="bi bi-camera"></i>
@@ -385,10 +442,9 @@
                         </div>
                     </div>
 
-                    <div class="tool-panel">
+                    <div class="tool-panel checkin-lookup-card">
                         <div class="panel-heading">
                             <div>
-                                <p class="eyebrow">Manual</p>
                                 <h2>Nhập mã thủ công</h2>
                             </div>
                             <i class="bi bi-keyboard"></i>
@@ -407,10 +463,9 @@
 
             <section class="reception-panel" data-step-panel="details">
                 <div class="section-grid">
-                    <div class="tool-panel">
+                    <div class="tool-panel checkin-info-card">
                         <div class="panel-heading">
                             <div>
-                                <p class="eyebrow">Guest profile</p>
                                 <h2>Thông tin khách</h2>
                             </div>
                             <i class="bi bi-person-vcard"></i>
@@ -418,10 +473,9 @@
                         <div id="guestDetails" class="details-list"></div>
                     </div>
 
-                    <div class="tool-panel">
+                    <div class="tool-panel checkin-info-card">
                         <div class="panel-heading">
                             <div>
-                                <p class="eyebrow">Booking</p>
                                 <h2>Thông tin đặt phòng</h2>
                             </div>
                             <i class="bi bi-receipt"></i>
@@ -446,13 +500,11 @@
                 <div class="tool-panel">
                     <div class="panel-heading room-heading">
                         <div>
-                            <p class="eyebrow">Room assignment</p>
                             <h2>Chọn phòng theo loại đã đặt</h2>
                         </div>
                         <div class="legend">
                             <span><i class="legend-dot available"></i>Trống</span>
                             <span><i class="legend-dot selected"></i>Đang chọn</span>
-                            <span><i class="legend-dot reserved"></i>Giữ đặt trước</span>
                             <span><i class="legend-dot blocked"></i>Không khả dụng</span>
                         </div>
                     </div>
@@ -472,20 +524,18 @@
 
             <section class="reception-panel" data-step-panel="confirm">
                 <div class="section-grid">
-                    <div class="tool-panel">
+                    <div class="tool-panel checkin-info-card">
                         <div class="panel-heading">
                             <div>
-                                <p class="eyebrow">Final check</p>
                                 <h2>Xác nhận trước check-in</h2>
                             </div>
                             <i class="bi bi-clipboard-check"></i>
                         </div>
                         <div id="confirmDetails" class="confirm-list"></div>
                     </div>
-                    <div class="tool-panel">
+                    <div class="tool-panel checkin-info-card">
                         <div class="panel-heading">
                             <div>
-                                <p class="eyebrow">Selected rooms</p>
                                 <h2>Phòng sẽ giao khách</h2>
                             </div>
                             <i class="bi bi-door-open"></i>

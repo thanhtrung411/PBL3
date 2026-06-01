@@ -9,6 +9,8 @@ public class ReceptionistCheckInRequest
 
 public class ReceptionistWalkInAvailabilityRequest
 {
+    public DateOnly CheckInDate { get; set; }
+
     public DateOnly CheckOutDate { get; set; }
 }
 
@@ -43,6 +45,8 @@ public class ReceptionistWalkInCheckInRequest
 
     public string? Address { get; set; }
 
+    public DateOnly CheckInDate { get; set; }
+
     public DateOnly CheckOutDate { get; set; }
 
     public int GuestCount { get; set; }
@@ -69,6 +73,10 @@ public class ReceptionistWalkInCheckInResult
     public string InvoiceCode { get; set; } = string.Empty;
 
     public decimal GrandTotal { get; set; }
+
+    public bool RequiresOnlinePayment { get; set; }
+
+    public string PaymentUrl { get; set; } = string.Empty;
 
     public List<ReceptionistAssignedRoomDto> AssignedRooms { get; set; } = new();
 }
@@ -146,6 +154,12 @@ public class ReceptionistCheckoutRequest
     public string? PaymentMethod { get; set; }
 
     public string? Note { get; set; }
+
+    public bool SendReceiptEmail { get; set; } = true;
+
+    public string? ReceiptEmail { get; set; }
+
+    public bool PrintInvoice { get; set; } = true;
 }
 
 public class ReceptionistCheckoutResult
@@ -202,6 +216,8 @@ public class ReceptionistActiveStayDto
     public string CustomerName { get; set; } = string.Empty;
 
     public string? PhoneNumber { get; set; }
+
+    public string? Email { get; set; }
 
     public string CheckInDate { get; set; } = string.Empty;
 
@@ -322,6 +338,8 @@ public class ReceptionistBookingDto
 
     public string? IdentityNumber { get; set; }
 
+    public string BookingDate { get; set; } = string.Empty;
+
     public string CheckInDate { get; set; } = string.Empty;
 
     public string CheckOutDate { get; set; } = string.Empty;
@@ -341,6 +359,8 @@ public class ReceptionistBookingDto
     public string CheckInMessage { get; set; } = string.Empty;
 
     public List<ReceptionistRoomTypeRequirementDto> Requirements { get; set; } = new();
+
+    public List<ReceptionistAssignedRoomDto> AssignedRooms { get; set; } = new();
 }
 
 public class ReceptionistRoomTypeRequirementDto
@@ -361,6 +381,14 @@ public class ReceptionistRoomGroupDto
     public string RoomTypeName { get; set; } = string.Empty;
 
     public int RequiredRooms { get; set; }
+
+    public int MaxSelectableRooms { get; set; }
+
+    public int ReservedForBookingCount { get; set; }
+
+    public decimal PricePerNight { get; set; }
+
+    public int Capacity { get; set; }
 
     public List<ReceptionistRoomDto> Rooms { get; set; } = new();
 }
@@ -384,6 +412,8 @@ public class ReceptionistRoomDto
     public bool IsSelectable { get; set; }
 
     public decimal PricePerNight { get; set; }
+
+    public int Capacity { get; set; }
 
     public string? BookingCode { get; set; }
 

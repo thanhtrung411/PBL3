@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PBL3.Models;
 using PBL3.Services.Interfaces;
 using PBL3.Services.Receptionist;
 using System.Security.Claims;
@@ -10,10 +11,14 @@ namespace PBL3.Controllers;
 public class ReceptionistController : Controller
 {
     private readonly IReceptionistCheckInService _receptionistCheckInService;
+    private readonly IVnPayService _vnPayService;
 
-    public ReceptionistController(IReceptionistCheckInService receptionistCheckInService)
+    public ReceptionistController(
+        IReceptionistCheckInService receptionistCheckInService,
+        IVnPayService vnPayService)
     {
         _receptionistCheckInService = receptionistCheckInService;
+        _vnPayService = vnPayService;
     }
 
     [HttpGet]
@@ -99,11 +104,16 @@ public class ReceptionistController : Controller
 
     [HttpGet]
     public async Task<IActionResult> WalkInAvailability(
+        DateOnly checkInDate,
         DateOnly checkOutDate,
         CancellationToken cancellationToken)
     {
         var result = await _receptionistCheckInService.GetWalkInAvailabilityAsync(
-            new ReceptionistWalkInAvailabilityRequest { CheckOutDate = checkOutDate },
+            new ReceptionistWalkInAvailabilityRequest
+            {
+                CheckInDate = checkInDate,
+                CheckOutDate = checkOutDate
+            },
             cancellationToken);
         return Ok(result);
     }
@@ -116,6 +126,46 @@ public class ReceptionistController : Controller
         request ??= new ReceptionistWalkInCheckInRequest();
         request.EmployeeId = User.FindFirstValue("EmployeeId");
         var result = await _receptionistCheckInService.WalkInCheckInAsync(request, cancellationToken);
+        if (result.Success && result.RequiresOnlinePayment)
+        {
+            var paymentStart = _vnPayService.CreatePaymentUrl(new VnPayPaymentRequest
+            {
+                BookingCode = result.BookingCode,
+                Amount = result.GrandTotal,
+                OrderInfo = $"WALKIN_VNPAY_PENDING Thanh toan check-in vang lai {result.BookingCode}",
+                IpAddress = GetClientIpAddress(),
+                ReturnUrl = ResolveCurrentHostVnPayReturnUrl()
+            });
+
+            if (!paymentStart.Success || string.IsNullOrWhiteSpace(paymentStart.PaymentUrl))
+            {
+                await _receptionistCheckInService.CancelWalkInPendingPaymentAsync(result.BookingCode, cancellationToken);
+                result.Success = false;
+                result.RequiresOnlinePayment = false;
+                result.Message = paymentStart.ErrorMessage ?? "Không tạo được thanh toán VNPay. Các phòng đã chọn đã được hủy giữ.";
+            }
+            else
+            {
+                result.PaymentUrl = paymentStart.PaymentUrl;
+            }
+        }
+
         return Ok(result);
+    }
+
+    private string GetClientIpAddress()
+    {
+        var forwarded = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(forwarded))
+        {
+            return forwarded.Split(',')[0].Trim();
+        }
+
+        return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+    }
+
+    private string ResolveCurrentHostVnPayReturnUrl()
+    {
+        return Url.Action("VnPayReturn", "Payment", null, Request.Scheme, Request.Host.Value) ?? "/Payment/VnPayReturn";
     }
 }

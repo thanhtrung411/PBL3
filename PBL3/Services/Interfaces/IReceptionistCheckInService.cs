@@ -25,4 +25,6 @@ public interface IReceptionistCheckInService
     Task<ReceptionistWalkInAvailabilityResult> GetWalkInAvailabilityAsync(ReceptionistWalkInAvailabilityRequest request, CancellationToken cancellationToken = default);
 
     Task<ReceptionistWalkInCheckInResult> WalkInCheckInAsync(ReceptionistWalkInCheckInRequest request, CancellationToken cancellationToken = default);
+
+    Task CancelWalkInPendingPaymentAsync(string bookingCode, CancellationToken cancellationToken = default);
 }
