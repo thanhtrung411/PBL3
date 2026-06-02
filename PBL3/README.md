@@ -51,7 +51,6 @@ Các màn hình admin template mới được merge ở root như:
 - `/Promotion`
 - `/Report`
 - `/Service`
-- `/Facility`
 
 đang là template/dashboard mẫu, không coi là CRUD thật hoặc nghiệp vụ đã hoàn chỉnh.
 

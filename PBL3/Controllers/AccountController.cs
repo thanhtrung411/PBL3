@@ -130,6 +130,111 @@ namespace PBL3.Controllers
             return RedirectToAction(nameof(Login));
         }
 
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Settings()
+        {
+            var account = await GetCurrentAccountAsync();
+            if (account == null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            var employee = account.MaNvNavigation;
+            return View(new AccountSettingsViewModel
+            {
+                AccountId = account.MaTk.Trim(),
+                EmployeeId = account.MaNv.Trim(),
+                Username = account.TenDangNhap.Trim(),
+                FullName = employee.HoTen.Trim(),
+                Gender = employee.GioiTinh?.Trim(),
+                BirthDate = employee.NgaySinh,
+                Phone = employee.SoDienThoai?.Trim(),
+                Email = employee.Email?.Trim(),
+                Address = employee.DiaChi?.Trim(),
+                RoleName = account.MaVaiTroNavigation.TenVaiTro.Trim()
+            });
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Settings(AccountSettingsViewModel model)
+        {
+            var account = await GetCurrentAccountAsync();
+            if (account == null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            model.AccountId = account.MaTk.Trim();
+            model.EmployeeId = account.MaNv.Trim();
+            model.RoleName = account.MaVaiTroNavigation.TenVaiTro.Trim();
+
+            if (!string.IsNullOrWhiteSpace(model.NewPassword) ||
+                !string.IsNullOrWhiteSpace(model.ConfirmPassword))
+            {
+                if (!string.Equals(model.NewPassword, model.ConfirmPassword, StringComparison.Ordinal))
+                {
+                    ModelState.AddModelError(nameof(model.ConfirmPassword), "Mật khẩu xác nhận không khớp.");
+                }
+            }
+
+            var username = model.Username.Trim();
+            var usernameExists = await _context.TaiKhoans
+                .AnyAsync(x => x.TenDangNhap == username && x.MaTk != account.MaTk);
+            if (usernameExists)
+            {
+                ModelState.AddModelError(nameof(model.Username), "Tên đăng nhập đã tồn tại.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Phone))
+            {
+                var phone = model.Phone.Trim();
+                var phoneExists = await _context.NhanViens
+                    .AnyAsync(x => x.SoDienThoai == phone && x.MaNv != account.MaNv);
+                if (phoneExists)
+                {
+                    ModelState.AddModelError(nameof(model.Phone), "Số điện thoại đã tồn tại.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Email))
+            {
+                var email = model.Email.Trim();
+                var emailExists = await _context.NhanViens
+                    .AnyAsync(x => x.Email == email && x.MaNv != account.MaNv);
+                if (emailExists)
+                {
+                    ModelState.AddModelError(nameof(model.Email), "Email đã tồn tại.");
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            account.TenDangNhap = username;
+            if (!string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                account.MatKhau = _passwordHasher.HashPassword(account, model.NewPassword);
+            }
+
+            var employee = account.MaNvNavigation;
+            employee.HoTen = model.FullName.Trim();
+            employee.GioiTinh = model.Gender?.Trim();
+            employee.NgaySinh = model.BirthDate;
+            employee.SoDienThoai = model.Phone?.Trim();
+            employee.Email = model.Email?.Trim();
+            employee.DiaChi = model.Address?.Trim();
+
+            await _context.SaveChangesAsync();
+            await RefreshSignInAsync(account);
+            TempData["SettingsSuccess"] = "Đã cập nhật thông tin tài khoản.";
+            return RedirectToAction(nameof(Settings));
+        }
+
         [AllowAnonymous]
         public IActionResult AccessDenied()
         {
@@ -182,6 +287,47 @@ namespace PBL3.Controllers
             account.MatKhau = _passwordHasher.HashPassword(account, submittedPassword);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private async Task<TaiKhoan?> GetCurrentAccountAsync()
+        {
+            var accountId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(accountId))
+            {
+                return null;
+            }
+
+            return await _context.TaiKhoans
+                .Include(x => x.MaNvNavigation)
+                .Include(x => x.MaVaiTroNavigation)
+                .FirstOrDefaultAsync(x => x.MaTk == accountId);
+        }
+
+        private async Task RefreshSignInAsync(TaiKhoan account)
+        {
+            var displayName = string.IsNullOrWhiteSpace(account.MaNvNavigation?.HoTen)
+                ? account.TenDangNhap
+                : account.MaNvNavigation.HoTen;
+            var roleName = (account.MaVaiTroNavigation?.TenVaiTro ?? account.MaVaiTro).Trim();
+            var roleCode = account.MaVaiTro.Trim();
+            var roleKey = GetCanonicalRoleKey(roleName, roleCode);
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, account.MaTk.Trim()),
+                new(ClaimTypes.Name, displayName),
+                new(ClaimTypes.Role, roleKey),
+                new("Username", account.TenDangNhap.Trim()),
+                new("EmployeeId", account.MaNv.Trim())
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+            var authenticateResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                authenticateResult.Properties ?? new AuthenticationProperties());
         }
 
         private static bool IsPasswordHash(string? password)

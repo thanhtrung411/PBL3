@@ -42,7 +42,7 @@
         <div class="weekday-multiplier-grid">
             @foreach (var weekday in Model.PriceOverview.WeekdayPrices)
             {
-                <label class="weekday-multiplier-card">
+                <label class="weekday-multiplier-card @(weekday.IsChanged ? "is-changed" : "")">
                     <span>@weekday.DayLabel</span>
                     <input type="number"
                            min="0.1"
@@ -67,20 +67,55 @@
         }
         else
         {
-            <div class="holiday-price-list">
+            <div class="holiday-price-list" data-current-holiday-list>
                 @foreach (var holiday in Model.PriceOverview.HolidayPrices)
                 {
-                    <div class="holiday-price-row">
+                    var holidayMultiplier = holiday.Multiplier.ToString("0.####", CultureInfo.InvariantCulture);
+                    var holidayStartLabel = holiday.StartDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
+                    <div class="holiday-price-row" data-holiday-price-id="@holiday.PriceId">
                         <div>
                             <strong>@holiday.StartDate.ToString("dd/MM/yyyy") - @holiday.EndDate.ToString("dd/MM/yyyy")</strong>
                             <small>@holiday.Note</small>
                         </div>
-                        <span>x@holiday.Multiplier.ToString("0.####")</span>
-                        <b>@holiday.Price.ToString("N0")đ</b>
+                        <span>x@(holidayMultiplier)</span>
+                        <button type="button"
+                                class="btn btn-outline-danger btn-sm holiday-delete-btn"
+                                data-delete-holiday-price="@holiday.PriceId"
+                                aria-label="Xóa giá ngày lễ @holidayStartLabel">
+                            <i class="bi bi-trash"></i>
+                            Xóa
+                        </button>
+                        <b>@holiday.Price.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) đ</b>
                     </div>
                 }
             </div>
         }
+    </section>
+
+    <section class="price-editor-section">
+        <div class="price-editor-title">
+            <i class="bi bi-clock-history"></i>
+            <span>Lịch sử giá ngày lễ</span>
+        </div>
+        @if (Model.PriceOverview.HolidayPriceHistory.Count == 0)
+        {
+            <div class="empty-room-state py-3" data-holiday-history-empty>Chưa có lịch sử giá ngày lễ.</div>
+        }
+        <div class="holiday-price-list" data-holiday-history-list>
+            @foreach (var holiday in Model.PriceOverview.HolidayPriceHistory)
+            {
+                var holidayMultiplier = holiday.Multiplier.ToString("0.####", CultureInfo.InvariantCulture);
+                <div class="holiday-price-row is-history">
+                    <div>
+                        <strong>@holiday.StartDate.ToString("dd/MM/yyyy") - @holiday.EndDate.ToString("dd/MM/yyyy")</strong>
+                        <small>@holiday.Note</small>
+                    </div>
+                    <span>x@(holidayMultiplier)</span>
+                    <em>@holiday.StatusLabel</em>
+                    <b>@holiday.Price.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) đ</b>
+                </div>
+            }
+            </div>
     </section>
 </form>
 

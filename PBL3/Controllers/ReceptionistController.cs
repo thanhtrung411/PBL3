@@ -41,6 +41,17 @@ public class ReceptionistController : Controller
         return Ok(result);
     }
 
+    [HttpPost]
+    public async Task<IActionResult> RoomMaintenance(
+        [FromBody] RoomMaintenanceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _receptionistCheckInService.SetRoomMaintenanceAsync(
+            request ?? new RoomMaintenanceRequest(),
+            cancellationToken);
+        return Ok(result);
+    }
+
     [HttpGet]
     public async Task<IActionResult> ServiceUsage(CancellationToken cancellationToken)
     {

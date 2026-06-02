@@ -97,6 +97,7 @@ builder.Services.AddScoped<IBangGiaPhongService, BangGiaPhongService>();
 builder.Services.AddScoped<ILinkAnhService, LinkAnhService>();
 builder.Services.AddScoped<IDatPhongService, DatPhongService>();
 builder.Services.AddScoped<IHoaDonService, HoaDonService>();
+builder.Services.AddScoped<IInvoicePromotionService, InvoicePromotionService>();
 builder.Services.AddScoped<IChiTietHoaDonService, ChiTietHoaDonService>();
 builder.Services.AddScoped<IPublicBookingService, PublicBookingService>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
@@ -130,12 +131,6 @@ app.MapControllerRoute(
     name: "admin-dashboard",
     pattern: "Admin/{action=Index}/{id?}",
     defaults: new { controller = "Home" })
-    .RequireAuthorization(AdminPolicyName);
-
-app.MapAreaControllerRoute(
-    name: "source-crud",
-    areaName: "Admin",
-    pattern: "Source/{controller=Admin}/{action=Index}/{id?}")
     .RequireAuthorization(AdminPolicyName);
 
 app.MapControllerRoute(
@@ -279,7 +274,6 @@ sealed class AdminAuthorizationConvention : IControllerModelConvention
     {
         "BookingManagement",
         "Customer",
-        "Facility",
         "Home",
         "Invoice",
         "LoaiPhongs",

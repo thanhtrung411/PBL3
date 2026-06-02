@@ -1,182 +1,160 @@
-﻿@* @{
-    Layout = "_AdminLayout";
-    ViewData["Title"] = "Quản lý khách hàng";
-}
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3 class="mb-1 fw-bold">Quản lý khách hàng</h3>
-        <p class="text-muted mb-0">Theo dõi thông tin và lịch sử khách hàng</p>
-    </div>
-    <button class="btn btn-dark px-4"><i class="bi bi-person-plus"></i> Thêm khách hàng</button>
-</div>
-
-<!-- Stats -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card-custom text-center py-4">
-            <div class="text-muted small mb-2">Tổng khách hàng</div>
-            <div class="fw-bold display-6">50</div>
-            <div class="small text-muted mt-2">Khách hàng</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom text-center py-4">
-            <div class="text-muted small mb-2">VIP Platinum</div>
-            <div class="fw-bold display-6 text-primary">10</div>
-            <div class="small text-muted mt-2">Khách hàng</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom text-center py-4">
-            <div class="text-muted small mb-2">VIP Gold</div>
-            <div class="fw-bold display-6 text-warning">25</div>
-            <div class="small text-muted mt-2">Khách hàng</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom text-center py-4">
-            <div class="text-muted small mb-2">Khách mới</div>
-            <div class="fw-bold display-6 text-success">15</div>
-            <div class="small text-muted mt-2">Khách hàng</div>
-        </div>
-    </div>
-</div>
-
-<div class="d-flex w-100 gap-2 mb-4">
-    <div class="input-group flex-grow-1">
-        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-        <input type="text" class="form-control bg-white border-start-0 py-2" placeholder="Tìm kiếm theo tên, email, số điện thoại,...">
-    </div>
-    <button class="btn btn-primary px-4"><i class="bi bi-download"></i> Xuất file</button>
-</div>
-
-<!-- Table -->
-<div class="card-custom p-0 overflow-hidden border">
-    <div class="p-3 bg-light border-bottom fw-bold text-dark d-flex justify-content-between align-items-center">
-        <span>Danh sách khách hàng</span>
-    </div>
-    <div class="table-responsive p-3">
-        <table class="table-custom mb-0 w-100 align-middle">
-            <thead class="bg-light">
-                <tr>
-                    <th>Khách hàng</th>
-                    <th>Liên hệ</th>
-                    <th class="text-center">Tổng số phòng</th>
-                    <th class="text-end">Tổng chi tiêu</th>
-                    <th class="text-center">Hạng VIP</th>
-                    <th class="text-center">Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 40px; height: 40px;">NV</div>
-                            <div>
-                                <div class="fw-bold">Nguyễn Văn A</div>
-                                <small class="text-muted">ID: CU0001</small>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div><i class="bi bi-telephone text-muted me-2"></i> 0912453482</div>
-                        <div><i class="bi bi-envelope text-muted me-2"></i> nguyenvana@gmail.com</div>
-                    </td>
-                    <td class="text-center fw-bold">5</td>
-                    <td class="text-end fw-bold">15,000,000đ</td>
-                    <td class="text-center">
-                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Gold</span>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 40px; height: 40px;">TT</div>
-                            <div>
-                                <div class="fw-bold">Trần Thị B</div>
-                                <small class="text-muted">ID: CU0002</small>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div><i class="bi bi-telephone text-muted me-2"></i> 0905642357</div>
-                        <div><i class="bi bi-envelope text-muted me-2"></i> tranthib@gmail.com</div>
-                    </td>
-                    <td class="text-center fw-bold">12</td>
-                    <td class="text-end fw-bold">28,000,000đ</td>
-                    <td class="text-center">
-                        <span class="badge" style="background-color: #6b7280; color: white; padding: 0.5rem 1rem; border-radius: 999px;">Platinum</span>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 40px; height: 40px;">LV</div>
-                            <div>
-                                <div class="fw-bold">Lê Văn C</div>
-                                <small class="text-muted">ID: CU0003</small>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div><i class="bi bi-telephone text-muted me-2"></i> 0932365421</div>
-                        <div><i class="bi bi-envelope text-muted me-2"></i> levanc@gmail.com</div>
-                    </td>
-                    <td class="text-center fw-bold">2</td>
-                    <td class="text-end fw-bold">4,200,000đ</td>
-                    <td class="text-center">
-                        <span class="badge bg-secondary px-3 py-2 rounded-pill">Silver</span>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center fw-bold text-secondary" style="width: 40px; height: 40px;">PT</div>
-                            <div>
-                                <div class="fw-bold">Phạm Thị D</div>
-                                <small class="text-muted">ID: CU0004</small>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div><i class="bi bi-telephone text-muted me-2"></i> 0387214482</div>
-                        <div><i class="bi bi-envelope text-muted me-2"></i> phamthid@gmail.com</div>
-                    </td>
-                    <td class="text-center fw-bold">8</td>
-                    <td class="text-end fw-bold">19,800,000đ</td>
-                    <td class="text-center">
-                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Gold</span>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-icon-only"><i class="bi bi-eye"></i></button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
- *@
-
-
-
-
-
-
+@model PBL3.Models.AdminCustomerManagementViewModel
+@using System.Globalization
+@using System.Text.Json
 
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý khách hàng";
+    var bookingHistoryJson = JsonSerializer.Serialize(Model.Customers.ToDictionary(x => x.CustomerId, x => x.BookingHistory));
 }
+
+<style>
+    .customer-detail-dialog {
+        max-width: 1040px;
+    }
+
+    .customer-detail-content {
+        border-radius: 14px;
+        color: #1f2937;
+    }
+
+    .customer-detail-content .modal-header,
+    .customer-detail-content .modal-body,
+    .customer-detail-content .modal-footer {
+        padding-left: 22px;
+        padding-right: 22px;
+    }
+
+    .customer-detail-title {
+        font-size: 1.15rem;
+        letter-spacing: 0;
+    }
+
+    .customer-detail-subtitle,
+    .customer-detail-label,
+    .booking-history-table {
+        font-size: 0.82rem;
+    }
+
+    .customer-detail-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    .customer-detail-avatar {
+        width: 46px;
+        height: 46px;
+        flex: 0 0 46px;
+    }
+
+    .customer-detail-name {
+        font-size: 1.2rem;
+        line-height: 1.15;
+    }
+
+    .customer-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .customer-detail-card {
+        min-height: 70px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 10px 12px;
+    }
+
+    .customer-detail-label {
+        color: #6b7280;
+        margin-bottom: 4px;
+    }
+
+    .customer-detail-value {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #111827;
+        word-break: break-word;
+    }
+
+    .customer-detail-metric {
+        min-width: 130px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 10px 12px;
+    }
+
+    .customer-detail-metric .metric-value {
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+
+    .booking-history-panel {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 14px;
+    }
+
+    .booking-history-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: #f8fafc;
+        padding: 12px 14px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .booking-history-search {
+        max-width: 360px;
+    }
+
+    .booking-history-table th,
+    .booking-history-table td {
+        padding: 10px 12px;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .booking-history-empty {
+        padding: 18px;
+        color: #6b7280;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    @@media (max-width: 992px) {
+        .customer-detail-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .customer-detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .customer-detail-hero,
+        .booking-history-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .booking-history-search {
+            max-width: none;
+        }
+    }
+</style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex gap-2 flex-grow-1 me-3">
@@ -191,14 +169,33 @@
             <option value="Vàng">Vàng</option>
             <option value="Bạch Kim">Bạch Kim</option>
         </select>
+        <select id="sortSelect" class="form-select bg-white" style="min-width: 190px; max-width: 240px;">
+            <option value="name-asc">Tên A-Z</option>
+            <option value="name-desc">Tên Z-A</option>
+            <option value="spend-desc">Chi tiêu cao nhất</option>
+            <option value="spend-asc">Chi tiêu thấp nhất</option>
+            <option value="bookings-desc">Đặt nhiều nhất</option>
+            <option value="bookings-asc">Đặt ít nhất</option>
+            <option value="last-desc">Đặt gần nhất</option>
+            <option value="tier-desc">Hạng cao nhất</option>
+        </select>
     </div>
 </div>
 
-<!-- Stats -->
+@if (TempData["CustomerSuccess"] is string successMessage)
+{
+    <div class="alert alert-success border-0 fw-semibold">@successMessage</div>
+}
+
+@if (TempData["CustomerError"] is string errorMessage)
+{
+    <div class="alert alert-danger border-0 fw-semibold">@errorMessage</div>
+}
+
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-4 col-lg">
         <div class="card-custom p-3 border">
-            <div id="totalCustomersCount" class="fw-bold fs-3 text-dark">6</div>
+            <div id="totalCustomersCount" class="fw-bold fs-3 text-dark">@Model.TotalCount</div>
             <div class="text-muted small">Tổng khách hàng</div>
         </div>
     </div>
@@ -206,7 +203,7 @@
         <div class="card-custom p-3 border">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-star text-muted"></i>
-                <div id="tierRegularCount" class="fw-bold fs-3 text-dark">1</div>
+                <div id="tierRegularCount" class="fw-bold fs-3 text-dark">@Model.RegularCount</div>
             </div>
             <div class="text-muted small">Thường</div>
         </div>
@@ -215,7 +212,7 @@
         <div class="card-custom p-3 border">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-star text-secondary"></i>
-                <div id="tierSilverCount" class="fw-bold fs-3 text-dark">2</div>
+                <div id="tierSilverCount" class="fw-bold fs-3 text-dark">@Model.SilverCount</div>
             </div>
             <div class="text-muted small">Bạc</div>
         </div>
@@ -224,7 +221,7 @@
         <div class="card-custom p-3 border">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-star text-warning"></i>
-                <div id="tierGoldCount" class="fw-bold fs-3 text-dark">2</div>
+                <div id="tierGoldCount" class="fw-bold fs-3 text-dark">@Model.GoldCount</div>
             </div>
             <div class="text-muted small">Vàng</div>
         </div>
@@ -233,14 +230,13 @@
         <div class="card-custom p-3 border">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-star" style="color: #a855f7;"></i>
-                <div id="tierPlatinumCount" class="fw-bold fs-3 text-dark">1</div>
+                <div id="tierPlatinumCount" class="fw-bold fs-3 text-dark">@Model.PlatinumCount</div>
             </div>
             <div class="text-muted small">Bạch Kim</div>
         </div>
     </div>
 </div>
 
-<!-- Table -->
 <div class="card-custom p-0 overflow-hidden border">
     <div class="table-responsive p-3">
         <table class="table-custom mb-0 w-100 align-middle">
@@ -253,196 +249,188 @@
                     <th class="text-end">Tổng chi tiêu</th>
                     <th class="text-center">Đặt gần nhất</th>
                     <th class="text-center">Hạng thành viên</th>
-                    <th class="text-center" style="width: 140px;">Thao tác</th>
+                    <th class="text-center" style="width: 170px;">Thao tác</th>
                 </tr>
             </thead>
             <tbody id="customerList">
-                <!-- Row 1 -->
-                <tr class="customer-item" data-name="Nguyễn Văn A" data-email="nguyenvana@email.com" data-phone="0901234567" data-tier="Vàng" data-gender="Nam" data-idcard="001095012345" data-address="Hà Nội">
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 40px; height: 40px;">
-                                <i class="bi bi-person fs-5"></i>
-                            </div>
-                            <span class="fw-bold text-dark">Nguyễn Văn A</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="text-muted small"><i class="bi bi-envelope me-2"></i>nguyenvana@email.com</div>
-                        <div class="text-muted small mt-1"><i class="bi bi-telephone me-2"></i>0901234567</div>
-                    </td>
-                    <td>
-                        <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i> Hà Nội</span>
-                    </td>
-                    <td class="text-center fw-bold text-dark">12</td>
-                    <td class="text-end fw-bold text-dark">15.0M</td>
-                    <td class="text-center text-muted small">05/02/2026</td>
-                    <td class="text-center">
-                        <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 border border-warning rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Vàng</span>
-                    </td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-icon-only border btn-edit-customer" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                            <button class="btn btn-icon-only border text-danger btn-delete-customer" title="Xóa"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <!-- Row 2 -->
-                <tr class="customer-item" data-name="Trần Thị B" data-email="tranthib@email.com" data-phone="0907654321" data-tier="Bạch Kim" data-gender="Nữ" data-idcard="002096054321" data-address="TP. Hồ Chí Minh">
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 40px; height: 40px;">
-                                <i class="bi bi-person fs-5"></i>
-                            </div>
-                            <span class="fw-bold text-dark">Trần Thị B</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="text-muted small"><i class="bi bi-envelope me-2"></i>tranthib@email.com</div>
-                        <div class="text-muted small mt-1"><i class="bi bi-telephone me-2"></i>0907654321</div>
-                    </td>
-                    <td>
-                        <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i> TP. Hồ Chí Minh</span>
-                    </td>
-                    <td class="text-center fw-bold text-dark">25</td>
-                    <td class="text-end fw-bold text-dark">35.0M</td>
-                    <td class="text-center text-muted small">04/02/2026</td>
-                    <td class="text-center">
-                        <span class="badge px-2 py-1 border rounded-pill" style="font-size: 11px; background-color: #f3e8ff; color: #a855f7; border-color: #d8b4fe !important;"><i class="bi bi-star-fill me-1"></i> Bạch Kim</span>
-                    </td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-icon-only border btn-edit-customer" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                            <button class="btn btn-icon-only border text-danger btn-delete-customer" title="Xóa"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <!-- Row 3 -->
-                <tr class="customer-item" data-name="Lê Văn C" data-email="levanc@email.com" data-phone="0912345678" data-tier="Bạc" data-gender="Nam" data-idcard="003097001122" data-address="Đà Nẵng">
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 40px; height: 40px;">
-                                <i class="bi bi-person fs-5"></i>
-                            </div>
-                            <span class="fw-bold text-dark">Lê Văn C</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="text-muted small"><i class="bi bi-envelope me-2"></i>levanc@email.com</div>
-                        <div class="text-muted small mt-1"><i class="bi bi-telephone me-2"></i>0912345678</div>
-                    </td>
-                    <td>
-                        <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i> Đà Nẵng</span>
-                    </td>
-                    <td class="text-center fw-bold text-dark">5</td>
-                    <td class="text-end fw-bold text-dark">7.0M</td>
-                    <td class="text-center text-muted small">06/02/2026</td>
-                    <td class="text-center">
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 border border-secondary rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Bạc</span>
-                    </td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-icon-only border btn-edit-customer" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                            <button class="btn btn-icon-only border text-danger btn-delete-customer" title="Xóa"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <!-- Row 4 -->
-                <tr class="customer-item" data-name="Phạm Thị D" data-email="phamthid@email.com" data-phone="0923456789" data-tier="Thường" data-gender="Nữ" data-idcard="004098003344" data-address="Hải Phòng">
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 40px; height: 40px;">
-                                <i class="bi bi-person fs-5"></i>
-                            </div>
-                            <span class="fw-bold text-dark">Phạm Thị D</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="text-muted small"><i class="bi bi-envelope me-2"></i>phamthid@email.com</div>
-                        <div class="text-muted small mt-1"><i class="bi bi-telephone me-2"></i>0923456789</div>
-                    </td>
-                    <td>
-                        <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i> Hải Phòng</span>
-                    </td>
-                    <td class="text-center fw-bold text-dark">3</td>
-                    <td class="text-end fw-bold text-dark">2.5M</td>
-                    <td class="text-center text-muted small">07/02/2026</td>
-                    <td class="text-center">
-                        <span class="badge bg-light text-muted px-2 py-1 border rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Thường</span>
-                    </td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-icon-only border btn-edit-customer" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                            <button class="btn btn-icon-only border text-danger btn-delete-customer" title="Xóa"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <!-- Row 5 -->
-                <tr class="customer-item" data-name="Hoàng Văn E" data-email="hoangvane@email.com" data-phone="0934567890" data-tier="Bạc" data-gender="Nam" data-idcard="005099005566" data-address="Cần Thơ">
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 40px; height: 40px;">
-                                <i class="bi bi-person fs-5"></i>
-                            </div>
-                            <span class="fw-bold text-dark">Hoàng Văn E</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="text-muted small"><i class="bi bi-envelope me-2"></i>hoangvane@email.com</div>
-                        <div class="text-muted small mt-1"><i class="bi bi-telephone me-2"></i>0934567890</div>
-                    </td>
-                    <td>
-                        <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i> Cần Thơ</span>
-                    </td>
-                    <td class="text-center fw-bold text-dark">8</td>
-                    <td class="text-end fw-bold text-dark">10.0M</td>
-                    <td class="text-center text-muted small">03/02/2026</td>
-                    <td class="text-center">
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 border border-secondary rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Bạc</span>
-                    </td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-icon-only border btn-edit-customer" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                            <button class="btn btn-icon-only border text-danger btn-delete-customer" title="Xóa"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                <!-- Row 6 -->
-                <tr class="customer-item" data-name="Đặng Thị F" data-email="dangthif@email.com" data-phone="0945678901" data-tier="Vàng" data-gender="Nữ" data-idcard="006094007788" data-address="Đà Nẵng">
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 40px; height: 40px;">
-                                <i class="bi bi-person fs-5"></i>
-                            </div>
-                            <span class="fw-bold text-dark">Đặng Thị F</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="text-muted small"><i class="bi bi-envelope me-2"></i>dangthif@email.com</div>
-                        <div class="text-muted small mt-1"><i class="bi bi-telephone me-2"></i>0945678901</div>
-                    </td>
-                    <td>
-                        <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i> Đà Nẵng</span>
-                    </td>
-                    <td class="text-center fw-bold text-dark">15</td>
-                    <td class="text-end fw-bold text-dark">20M</td>
-                    <td class="text-center text-muted small">01/02/2026</td>
-                    <td class="text-center">
-                        <span class="badge bg-warning bg-opacity-10 text-warning px-2 py-1 border border-warning rounded-pill" style="font-size: 11px;"><i class="bi bi-star-fill me-1"></i> Vàng</span>
-                    </td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-icon-only border btn-edit-customer" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                            <button class="btn btn-icon-only border text-danger btn-delete-customer" title="Xóa"><i class="bi bi-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
+                @if (Model.Customers.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">Chưa có dữ liệu khách hàng.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var customer in Model.Customers)
+                    {
+                        <tr class="customer-item"
+                            style="cursor: pointer;"
+                            data-id="@customer.CustomerId"
+                            data-name="@customer.CustomerName"
+                            data-email="@customer.Email"
+                            data-phone="@customer.Phone"
+                            data-tier="@customer.MemberTier"
+                            data-tier-rank="@customer.MemberTierRank"
+                            data-gender="@customer.Gender"
+                            data-idcard="@customer.IdentityNumber"
+                            data-address="@customer.Address"
+                            data-nationality="@customer.Nationality"
+                            data-birthdate="@customer.BirthDateLabel"
+                            data-bookings="@customer.BookingCount"
+                            data-spend="@customer.TotalSpend.ToString(CultureInfo.InvariantCulture)"
+                            data-spend-label="@customer.TotalSpendLabel"
+                            data-last-booking="@customer.LastBookingSortValue"
+                            data-last-booking-label="@customer.LastBookingLabel">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 40px; height: 40px;">
+                                        @customer.Initials
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@customer.CustomerName</div>
+                                        <small class="text-muted">ID: @customer.CustomerId</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-muted small"><i class="bi bi-envelope me-2"></i>@(string.IsNullOrWhiteSpace(customer.Email) ? "Chưa có email" : customer.Email)</div>
+                                <div class="text-muted small mt-1"><i class="bi bi-telephone me-2"></i>@(string.IsNullOrWhiteSpace(customer.Phone) ? "Chưa có SĐT" : customer.Phone)</div>
+                            </td>
+                            <td>
+                                <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i> @(string.IsNullOrWhiteSpace(customer.Address) ? "Chưa có địa chỉ" : customer.Address)</span>
+                            </td>
+                            <td class="text-center fw-bold text-dark">@customer.BookingCount</td>
+                            <td class="text-end fw-bold text-dark">@customer.TotalSpendLabel</td>
+                            <td class="text-center text-muted small">@customer.LastBookingLabel</td>
+                            <td class="text-center">
+                                <span class="badge @customer.MemberTierClass px-2 py-1 rounded-pill" style="font-size: 11px; @customer.MemberTierStyle">
+                                    <i class="bi bi-star-fill me-1"></i> @customer.MemberTier
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-icon-only border btn-view-customer" title="Chi tiết"><i class="bi bi-eye text-primary"></i></button>
+                                    <button class="btn btn-icon-only border btn-edit-customer" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
+                                    <form asp-action="Delete" method="post" class="delete-customer-form d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@customer.CustomerId">
+                                        <button type="submit" class="btn btn-icon-only border text-danger btn-delete-customer" title="Xóa"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
     </div>
 </div>
 
-<!-- Edit Customer Modal -->
+<div class="modal fade" id="customerDetailModal" tabindex="-1" aria-labelledby="customerDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl customer-detail-dialog">
+        <div class="modal-content border-0 shadow-lg customer-detail-content">
+            <div class="modal-header border-0 pb-2">
+                <div>
+                    <h5 class="modal-title fw-bold customer-detail-title" id="customerDetailModalLabel">
+                        <i class="bi bi-person-vcard text-primary me-2"></i>Chi tiết khách hàng
+                    </h5>
+                    <div class="text-muted customer-detail-subtitle mt-1" id="detailCustomerCode"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="customer-detail-hero">
+                    <div class="d-flex align-items-center gap-3">
+                        <div id="detailCustomerAvatar" class="customer-detail-avatar bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold"></div>
+                        <div>
+                            <div id="detailCustomerName" class="customer-detail-name fw-bold mb-1"></div>
+                            <div id="detailCustomerTier"></div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <div class="customer-detail-metric">
+                            <div class="customer-detail-label">Số lần đặt</div>
+                            <div id="detailCustomerBookings" class="metric-value text-dark"></div>
+                        </div>
+                        <div class="customer-detail-metric">
+                            <div class="customer-detail-label">Tổng chi tiêu</div>
+                            <div id="detailCustomerSpend" class="metric-value text-dark"></div>
+                        </div>
+                        <div class="customer-detail-metric">
+                            <div class="customer-detail-label">Đặt gần nhất</div>
+                            <div id="detailCustomerLastBooking" class="metric-value text-dark"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="customer-detail-grid">
+                    <div class="customer-detail-card">
+                        <div class="customer-detail-label">Email</div>
+                        <div class="customer-detail-value" id="detailCustomerEmail"></div>
+                    </div>
+                    <div class="customer-detail-card">
+                        <div class="customer-detail-label">Số điện thoại</div>
+                        <div class="customer-detail-value" id="detailCustomerPhone"></div>
+                    </div>
+                    <div class="customer-detail-card">
+                        <div class="customer-detail-label">Giới tính</div>
+                        <div class="customer-detail-value" id="detailCustomerGender"></div>
+                    </div>
+                    <div class="customer-detail-card">
+                        <div class="customer-detail-label">Ngày sinh</div>
+                        <div class="customer-detail-value" id="detailCustomerBirthDate"></div>
+                    </div>
+                    <div class="customer-detail-card">
+                        <div class="customer-detail-label">CMND/CCCD/Hộ chiếu</div>
+                        <div class="customer-detail-value" id="detailCustomerIdCard"></div>
+                    </div>
+                    <div class="customer-detail-card">
+                        <div class="customer-detail-label">Quốc tịch</div>
+                        <div class="customer-detail-value" id="detailCustomerNationality"></div>
+                    </div>
+                    <div class="customer-detail-card" style="grid-column: span 2;">
+                        <div class="customer-detail-label">Địa chỉ</div>
+                        <div class="customer-detail-value" id="detailCustomerAddress"></div>
+                    </div>
+                </div>
+
+                <div class="booking-history-panel">
+                    <div class="booking-history-header">
+                        <div>
+                            <div class="fw-bold text-dark">Lịch sử đặt phòng</div>
+                            <div class="text-muted small">Tìm theo mã đặt, mã phòng, ngày đặt hoặc ngày trả.</div>
+                        </div>
+                        <div class="input-group booking-history-search">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" id="detailBookingSearch" class="form-control bg-white border-start-0" placeholder="Tìm giao dịch...">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0 booking-history-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã đặt</th>
+                                    <th>Ngày đặt</th>
+                                    <th>Ngày nhận</th>
+                                    <th>Ngày trả</th>
+                                    <th>Mã phòng</th>
+                                    <th class="text-end">Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailBookingHistoryList"></tbody>
+                        </table>
+                    </div>
+                    <div id="detailBookingHistoryEmpty" class="booking-history-empty d-none">Không có giao dịch phù hợp.</div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-2">
+                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="customerEditModal" tabindex="-1" aria-labelledby="customerEditModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
@@ -452,16 +440,19 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body px-4 py-3">
-                <form id="editCustomerForm">
+            <form asp-action="Edit" method="post" id="editCustomerForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="MaKh" id="editCustomerId">
+                <div class="modal-body px-4 py-3">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Họ và tên</label>
-                            <input type="text" class="form-control" id="editCustomerName" required disabled style="border-radius: 8px;">
+                            <input type="text" class="form-control customer-edit-field" name="HoTen" id="editCustomerName" required disabled style="border-radius: 8px;">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Giới tính</label>
-                            <select class="form-select" id="editCustomerGender" required disabled style="border-radius: 8px;">
+                            <select class="form-select customer-edit-field" name="GioiTinh" id="editCustomerGender" disabled style="border-radius: 8px;">
+                                <option value="">Chưa chọn</option>
                                 <option value="Nam">Nam</option>
                                 <option value="Nữ">Nữ</option>
                                 <option value="Khác">Khác</option>
@@ -469,28 +460,32 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">CMND/CCCD/Hộ chiếu</label>
-                            <input type="text" class="form-control" id="editCustomerIdCard" required disabled style="border-radius: 8px;">
+                            <input type="text" class="form-control customer-edit-field" name="Cccd" id="editCustomerIdCard" disabled style="border-radius: 8px;">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Số điện thoại</label>
-                            <input type="tel" class="form-control" id="editCustomerPhone" required disabled style="border-radius: 8px;">
+                            <input type="tel" class="form-control customer-edit-field" name="SoDienThoai" id="editCustomerPhone" disabled style="border-radius: 8px;">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Email</label>
-                            <input type="email" class="form-control" id="editCustomerEmail" required disabled style="border-radius: 8px;">
+                            <input type="email" class="form-control customer-edit-field" name="Email" id="editCustomerEmail" disabled style="border-radius: 8px;">
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Quốc tịch</label>
+                            <input type="text" class="form-control customer-edit-field" name="QuocTich" id="editCustomerNationality" disabled style="border-radius: 8px;">
+                        </div>
+                        <div class="col-12">
                             <label class="form-label small fw-semibold">Địa chỉ thường trú</label>
-                            <input type="text" class="form-control" id="editCustomerAddress" required disabled style="border-radius: 8px;">
+                            <input type="text" class="form-control customer-edit-field" name="DiaChi" id="editCustomerAddress" disabled style="border-radius: 8px;">
                         </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0 px-4 pb-4 pt-2">
-                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
-                <button type="button" class="btn btn-primary px-4" id="btnUnlockEdit" style="border-radius: 8px;">Chỉnh sửa</button>
-                <button type="button" class="btn btn-dark px-4" id="btnSaveCustomer" style="border-radius: 8px;" disabled>Lưu</button>
-            </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-2">
+                    <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal" style="border-radius: 8px;">Đóng</button>
+                    <button type="button" class="btn btn-primary px-4" id="btnUnlockEdit" style="border-radius: 8px;">Chỉnh sửa</button>
+                    <button type="submit" class="btn btn-dark px-4" id="btnSaveCustomer" style="border-radius: 8px;" disabled>Lưu</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -498,168 +493,207 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const customerBookingHistory = @Html.Raw(bookingHistoryJson);
+
         function removeVietnameseTones(str) {
-        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-        str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-        str = str.replace(/đ/g, "d");
-        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
-        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
-        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
-        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
-        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
-        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
-        str = str.replace(/Đ/g, "D");
-        return str;
+            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+            str = str.replace(/đ/g, "d");
+            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+            str = str.replace(/Đ/g, "D");
+            return str;
         }
 
-        $(document).ready(function() {
-        var activeRow = null;
+        $(document).ready(function () {
+            var activeBookingHistory = [];
 
-        function filterCustomers() {
-        var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
-        var tierObj = $('#tierFilter').val();
+            function applyCustomerControls() {
+                var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
+                var tierObj = $('#tierFilter').val();
+                var sortObj = $('#sortSelect').val();
+                var rows = $('.customer-item').get();
 
-        $('.customer-item').each(function() {
-        var name = removeVietnameseTones($(this).data('name').toLowerCase());
-        var email = removeVietnameseTones($(this).data('email').toLowerCase());
-        var phone = removeVietnameseTones($(this).data('phone').toLowerCase());
-        var tier = $(this).data('tier');
+                rows.sort(function (left, right) {
+                    var a = $(left);
+                    var b = $(right);
 
-        var matchSearch = name.includes(searchObj) || email.includes(searchObj) || phone.includes(searchObj);
-        var matchTier = (tierObj === 'all' || tier === tierObj);
+                    switch (sortObj) {
+                        case 'name-desc':
+                            return compareText(b.data('name'), a.data('name'));
+                        case 'spend-desc':
+                            return compareNumber(b.data('spend'), a.data('spend'));
+                        case 'spend-asc':
+                            return compareNumber(a.data('spend'), b.data('spend'));
+                        case 'bookings-desc':
+                            return compareNumber(b.data('bookings'), a.data('bookings'));
+                        case 'bookings-asc':
+                            return compareNumber(a.data('bookings'), b.data('bookings'));
+                        case 'last-desc':
+                            return compareNumber(b.data('last-booking'), a.data('last-booking'));
+                        case 'tier-desc':
+                            return compareNumber(b.data('tier-rank'), a.data('tier-rank')) || compareText(a.data('name'), b.data('name'));
+                        default:
+                            return compareText(a.data('name'), b.data('name'));
+                    }
+                });
 
-        if (matchSearch && matchTier) {
-        $(this).show();
-        } else {
-        $(this).hide();
-        }
-        });
-        }
+                $('#customerList').append(rows);
 
-        $('#searchInput').on('input', filterCustomers);
-        $('#tierFilter').on('change', filterCustomers);
+                $('.customer-item').each(function () {
+                    var name = removeVietnameseTones(String($(this).data('name') || '').toLowerCase());
+                    var email = removeVietnameseTones(String($(this).data('email') || '').toLowerCase());
+                    var phone = removeVietnameseTones(String($(this).data('phone') || '').toLowerCase());
+                    var tier = $(this).data('tier');
 
-        // Open Edit Modal
-        $(document).on('click', '.btn-edit-customer', function(e) {
-        e.preventDefault();
-        activeRow = $(this).closest('.customer-item');
+                    var matchSearch = name.includes(searchObj) || email.includes(searchObj) || phone.includes(searchObj);
+                    var matchTier = (tierObj === 'all' || tier === tierObj);
 
-        $('#editCustomerName').val(activeRow.data('name'));
-        $('#editCustomerGender').val(activeRow.data('gender') || 'Nam');
-        $('#editCustomerIdCard').val(activeRow.data('idcard') || '');
-        $('#editCustomerPhone').val(activeRow.data('phone'));
-        $('#editCustomerEmail').val(activeRow.data('email'));
-        $('#editCustomerAddress').val(activeRow.data('address'));
+                    $(this).toggle(matchSearch && matchTier);
+                });
+            }
 
-        // Reset disabled states
-        $('#editCustomerForm input, #editCustomerForm select').prop('disabled', true);
-        $('#btnSaveCustomer').prop('disabled', true);
-        $('#btnUnlockEdit').prop('disabled', false).show();
+            function compareText(left, right) {
+                return String(left || '').localeCompare(String(right || ''), 'vi', { sensitivity: 'base' });
+            }
 
-        var editModal = new bootstrap.Modal(document.getElementById('customerEditModal'));
-        editModal.show();
-        });
+            function compareNumber(left, right) {
+                return Number(left || 0) - Number(right || 0);
+            }
 
-        // Unlock editing inside Modal
-        $('#btnUnlockEdit').click(function() {
-        $('#editCustomerForm input, #editCustomerForm select').prop('disabled', false);
-        $('#btnSaveCustomer').prop('disabled', false);
-        $(this).prop('disabled', true);
-        });
+            function fallback(value, label) {
+                return value ? value : label;
+            }
 
-        // Save customer details
-        $('#btnSaveCustomer').click(function() {
-        var form = $('#editCustomerForm')[0];
-        if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-        }
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
 
-        var name = $('#editCustomerName').val();
-        var gender = $('#editCustomerGender').val();
-        var idcard = $('#editCustomerIdCard').val();
-        var phone = $('#editCustomerPhone').val();
-        var email = $('#editCustomerEmail').val();
-        var address = $('#editCustomerAddress').val();
+            function renderBookingHistory() {
+                var keyword = removeVietnameseTones($('#detailBookingSearch').val().toLowerCase().trim());
+                var rows = activeBookingHistory.filter(function (item) {
+                    var searchText = removeVietnameseTones(String(item.SearchText || '').toLowerCase());
+                    return !keyword || searchText.includes(keyword);
+                });
 
-        // Update data attributes on active row
-        activeRow.data('name', name);
-        activeRow.data('gender', gender);
-        activeRow.data('idcard', idcard);
-        activeRow.data('phone', phone);
-        activeRow.data('email', email);
-        activeRow.data('address', address);
+                var html = rows.map(function (item) {
+                    return '<tr>' +
+                        '<td class="fw-bold text-dark">' + escapeHtml(item.BookingCode) + '</td>' +
+                        '<td>' + escapeHtml(item.BookingDateLabel) + '</td>' +
+                        '<td>' + escapeHtml(item.CheckInLabel) + '</td>' +
+                        '<td>' + escapeHtml(item.CheckOutLabel) + '</td>' +
+                        '<td>' + escapeHtml(item.RoomCodes) + '</td>' +
+                        '<td class="text-end fw-semibold">' + escapeHtml(item.TotalLabel) + '</td>' +
+                        '<td><span class="badge bg-light text-dark border rounded-pill">' + escapeHtml(item.StatusLabel) + '</span></td>' +
+                        '</tr>';
+                }).join('');
 
-        // Update visible row values
-        activeRow.find('td:nth-child(1) .fw-bold').text(name);
-        activeRow.find('td:nth-child(2) div:nth-child(1)').html('<i class="bi bi-envelope me-2"></i>' + email);
-        activeRow.find('td:nth-child(2) div:nth-child(2)').html('<i class="bi bi-telephone me-2"></i>' + phone);
-        activeRow.find('td:nth-child(3) span').html('<i class="bi bi-geo-alt me-1"></i> ' + address);
+                $('#detailBookingHistoryList').html(html);
+                $('#detailBookingHistoryEmpty').toggleClass('d-none', rows.length > 0);
+            }
 
-        // Hide modal
-        bootstrap.Modal.getInstance(document.getElementById('customerEditModal')).hide();
+            $('#searchInput').on('input', applyCustomerControls);
+            $('#tierFilter').on('change', applyCustomerControls);
+            $('#sortSelect').on('change', applyCustomerControls);
+            $('#detailBookingSearch').on('input', renderBookingHistory);
 
-        // Update statistics
-        updateStats();
+            $(document).on('click', '.btn-view-customer', function (e) {
+                e.preventDefault();
+                var row = $(this).closest('.customer-item');
+                var tierText = row.data('tier') || '';
+                var tierClass = row.find('td:nth-child(7) .badge').attr('class') || 'badge bg-light text-muted border px-2 py-1 rounded-pill';
+                var tierStyle = row.find('td:nth-child(7) .badge').attr('style') || '';
+                var initials = row.find('td:nth-child(1) .rounded-circle').text().trim();
 
-        Swal.fire({
-        title: 'Đã cập nhật!',
-        text: 'Thông tin khách hàng đã được lưu thành công.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-        });
-        });
+                $('#detailCustomerAvatar').text(initials);
+                $('#detailCustomerCode').text('Mã khách hàng: ' + row.data('id'));
+                $('#detailCustomerName').text(row.data('name'));
+                $('#detailCustomerTier').html('<span class="' + tierClass + '" style="' + tierStyle + '">' + tierText + '</span>');
+                $('#detailCustomerEmail').text(fallback(row.data('email'), 'Chưa có email'));
+                $('#detailCustomerPhone').text(fallback(row.data('phone'), 'Chưa có số điện thoại'));
+                $('#detailCustomerGender').text(fallback(row.data('gender'), 'Chưa có'));
+                $('#detailCustomerBirthDate').text(fallback(row.data('birthdate'), 'Chưa có'));
+                $('#detailCustomerIdCard').text(fallback(row.data('idcard'), 'Chưa có'));
+                $('#detailCustomerNationality').text(fallback(row.data('nationality'), 'Chưa có'));
+                $('#detailCustomerAddress').text(fallback(row.data('address'), 'Chưa có địa chỉ'));
+                $('#detailCustomerBookings').text(row.data('bookings') || 0);
+                $('#detailCustomerSpend').text(row.data('spend-label') || '0 đ');
+                $('#detailCustomerLastBooking').text(row.data('last-booking-label') || 'Chưa đặt');
+                $('#detailBookingSearch').val('');
+                activeBookingHistory = customerBookingHistory[String(row.data('id'))] || [];
+                renderBookingHistory();
 
-        // Delete customer row
-        $(document).on('click', '.btn-delete-customer', function(e) {
-        e.preventDefault();
-        var row = $(this).closest('.customer-item');
-        var name = row.data('name');
+                new bootstrap.Modal(document.getElementById('customerDetailModal')).show();
+            });
 
-        Swal.fire({
-        title: 'Xác nhận xóa?',
-        text: `Bạn có chắc chắn muốn xóa khách hàng "${name}" không?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#212529',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Xác nhận',
-        cancelButtonText: 'Hủy'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        row.remove();
-        updateStats();
+            $(document).on('click', '.customer-item', function (e) {
+                if ($(e.target).closest('button, form, input, select, a').length) {
+                    return;
+                }
 
-        Swal.fire({
-        title: 'Đã xóa!',
-        text: 'Khách hàng đã được xóa khỏi danh sách.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-        });
-        }
-        });
-        });
+                $(this).find('.btn-view-customer').trigger('click');
+            });
 
-        // Helper function to update page stats card
-        function updateStats() {
-        var total = $('.customer-item').length;
-        var regular = $('.customer-item[data-tier="Thường"]').length;
-        var silver = $('.customer-item[data-tier="Bạc"]').length;
-        var gold = $('.customer-item[data-tier="Vàng"]').length;
-        var platinum = $('.customer-item[data-tier="Bạch Kim"]').length;
+            $(document).on('click', '.btn-edit-customer', function (e) {
+                e.preventDefault();
+                var row = $(this).closest('.customer-item');
 
-        $('#totalCustomersCount').text(total);
-        $('#tierRegularCount').text(regular);
-        $('#tierSilverCount').text(silver);
-        $('#tierGoldCount').text(gold);
-        $('#tierPlatinumCount').text(platinum);
-        }
+                $('#editCustomerId').val(row.data('id'));
+                $('#editCustomerName').val(row.data('name'));
+                $('#editCustomerGender').val(row.data('gender') || '');
+                $('#editCustomerIdCard').val(row.data('idcard') || '');
+                $('#editCustomerPhone').val(row.data('phone') || '');
+                $('#editCustomerEmail').val(row.data('email') || '');
+                $('#editCustomerAddress').val(row.data('address') || '');
+                $('#editCustomerNationality').val(row.data('nationality') || '');
+
+                $('.customer-edit-field').prop('disabled', true);
+                $('#btnSaveCustomer').prop('disabled', true);
+                $('#btnUnlockEdit').prop('disabled', false).show();
+
+                new bootstrap.Modal(document.getElementById('customerEditModal')).show();
+            });
+
+            $('#btnUnlockEdit').click(function () {
+                $('.customer-edit-field').prop('disabled', false);
+                $('#btnSaveCustomer').prop('disabled', false);
+                $(this).prop('disabled', true);
+            });
+
+            $('.delete-customer-form').on('submit', function (e) {
+                e.preventDefault();
+                var form = this;
+                var row = $(form).closest('.customer-item');
+                var name = row.data('name');
+
+                Swal.fire({
+                    title: 'Xác nhận xóa?',
+                    text: `Bạn có chắc chắn muốn xóa khách hàng "${name}" không?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#212529',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Xác nhận',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
         });
     </script>
 }

@@ -1,669 +1,995 @@
-﻿@functions {
-    public class RoomItem
-    {
-        public string Number { get; set; } = string.Empty;
-        public string Type { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string? Guest { get; set; }
-        public string? CheckOut { get; set; }
-    }
-}
+@model PBL3.Services.Receptionist.ReceptionistRoomMapResult
+
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý phòng";
 
-    var rooms = new List<RoomItem>();
+    var roomTypes = Model.Floors
+        .SelectMany(x => x.Rooms)
+        .Select(x => x.RoomTypeName)
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(x => x)
+        .ToList();
 
-    void AddRoom(string number, string type, string status, string? guest = null, string? checkout = null)
+    string StatusLabel(string status) => status switch
     {
-        rooms.Add(new RoomItem { Number = number, Type = type, Status = status, Guest = guest, CheckOut = checkout });
-    }
-
-    // Tầng 1: Standard (101-108)
-    AddRoom("101", "Standard", "Có khách", "Nguyễn Văn A", "12:00");
-    AddRoom("102", "Standard", "Trống");
-    AddRoom("103", "Standard", "Bảo trì");
-    AddRoom("104", "Standard", "Có khách", "Trần Thị B", "12:00");
-    for (int i = 5; i <= 8; i++) AddRoom($"10{i}", "Standard", "Trống");
-
-    // Tầng 2: Deluxe (201-208)
-    AddRoom("201", "Deluxe", "Trống");
-    AddRoom("202", "Deluxe", "Có khách", "Nguyễn Văn B", "12:00");
-    AddRoom("203", "Deluxe", "Dọn dẹp");
-    AddRoom("204", "Deluxe", "Trống");
-    for (int i = 5; i <= 8; i++) AddRoom($"20{i}", "Deluxe", "Trống");
-
-    // Tầng 3: Suit (301-308)
-    AddRoom("301", "Suit", "Có khách", "Lê Văn C", "12:00");
-    AddRoom("302", "Suit", "Trống");
-    for (int i = 3; i <= 8; i++) AddRoom($"30{i}", "Suit", "Trống");
-
-    // Tầng 4: Presidential (401-402)
-    AddRoom("401", "Presidential", "Có khách", "Phạm Thị D", "12:00");
-    AddRoom("402", "Presidential", "Dọn dẹp");
+        "available" => "Trống",
+        "occupied" => "Đang sử dụng",
+        "maintenance" => "Bảo trì",
+        _ => status
+    };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3 class="mb-1 fw-bold">Quản lý phòng</h3>
-        <p class="text-muted mb-0">Theo dõi và quản lý trạng thái tất cả phòng</p>
-    </div>
-    <button class="btn btn-dark px-4" data-bs-toggle="modal" data-bs-target="#addRoomModal"><i class="bi bi-plus"></i> Thêm phòng mới</button>
-</div>
+@section Styles {
+    <style>
+        .room-admin-page {
+            color: #142033;
+        }
 
-<!-- Filters -->
-<div class="card-custom mb-4 py-3">
-    <div class="row align-items-center">
-        <div class="col-md-6">
-            <div class="input-group flex-nowrap">
-                <span class="input-group-text bg-light border-end-0" id="addon-wrapping"><i class="bi bi-search"></i></span>
-                <input type="text" id="searchInput" class="form-control bg-light border-start-0" placeholder="Tìm kiếm phòng, tên khách..." aria-label="Search" aria-describedby="addon-wrapping">
+        .room-admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .room-admin-header h1 {
+            margin: 0;
+            color: #111827;
+            font-size: clamp(1.85rem, 3vw, 2.6rem);
+            font-weight: 850;
+            letter-spacing: 0;
+            line-height: 1.08;
+        }
+
+        .room-admin-header p {
+            margin: 8px 0 0;
+            color: #66758a;
+            font-weight: 560;
+        }
+
+        .room-admin-panel {
+            border: 1px solid #dfe7f0;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 16px 38px rgba(20, 32, 51, 0.08);
+            padding: 20px;
+        }
+
+        .room-admin-search {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #dfe7f0;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 0 14px;
+            margin-bottom: 16px;
+        }
+
+        .room-admin-search i {
+            color: #66758a;
+        }
+
+        .room-admin-search input {
+            width: 100%;
+            border: 0;
+            outline: none;
+            color: #142033;
+            font-weight: 560;
+        }
+
+        .room-map-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .room-map-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .room-map-type-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .room-map-type-filter span {
+            color: #66758a;
+            font-size: 0.84rem;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+        .room-map-type-filter select {
+            width: 160px;
+            min-height: 34px;
+            border-radius: 999px;
+            color: #142033;
+            font-size: 0.86rem;
+            font-weight: 780;
+        }
+
+        .room-map-summary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .room-map-count {
+            border-radius: 999px;
+            background: #f4f7fb;
+            color: #66758a;
+            font-size: 0.86rem;
+            font-weight: 800;
+            padding: 7px 11px;
+        }
+
+        .room-map-count.available {
+            background: #e9f8f0;
+            color: #168a55;
+        }
+
+        .room-map-count.occupied {
+            background: #eaf2ff;
+            color: #1f6feb;
+        }
+
+        .room-map-count.maintenance {
+            background: #fff5df;
+            color: #9d741f;
+        }
+
+        .room-map-filters {
+            display: inline-flex;
+            gap: 6px;
+            padding: 5px;
+            border: 1px solid #dfe7f0;
+            border-radius: 999px;
+            background: #f8fbff;
+        }
+
+        .room-map-filters button {
+            min-height: 34px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: #66758a;
+            font-size: 0.86rem;
+            font-weight: 800;
+            padding: 6px 11px;
+        }
+
+        .room-map-filters button.active {
+            background: #ffffff;
+            color: #1f6feb;
+            box-shadow: 0 6px 14px rgba(20, 32, 51, 0.08);
+        }
+
+        .room-map-floors {
+            display: grid;
+            gap: 14px;
+        }
+
+        .room-map-floor {
+            display: grid;
+            gap: 10px;
+            border: 1px solid #e7eef6;
+            border-radius: 10px;
+            background: #fbfdff;
+            padding: 12px;
+        }
+
+        .room-map-floor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .room-map-floor-header h3 {
+            margin: 0;
+            color: #142033;
+            font-size: 1rem;
+            font-weight: 850;
+        }
+
+        .room-map-floor-header span {
+            color: #66758a;
+            font-size: 0.86rem;
+            font-weight: 800;
+        }
+
+        .room-map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 116px);
+            gap: 8px;
+            justify-content: start;
+        }
+
+        .room-map-tile {
+            width: 116px;
+            min-height: 88px;
+            display: grid;
+            gap: 7px;
+            align-content: space-between;
+            text-align: left;
+            border: 1px solid #dfe8f2;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 9px 10px;
+            box-shadow: 0 6px 14px rgba(20, 32, 51, 0.04);
+            cursor: pointer;
+        }
+
+        .room-map-tile:hover,
+        .room-map-tile:focus-visible,
+        .room-map-tile.selected {
+            border-color: #1f6feb;
+            box-shadow: 0 8px 18px rgba(31, 111, 235, 0.14);
+            outline: none;
+        }
+
+        .room-map-tile.available {
+            border-color: #bfe6d2;
+            background: #f7fdf9;
+        }
+
+        .room-map-tile.occupied {
+            border-color: #bfd6ff;
+            background: #f7fbff;
+        }
+
+        .room-map-tile.maintenance {
+            border-color: #f2dda8;
+            background: #fffdf8;
+        }
+
+        .room-map-tile strong,
+        .room-map-tile small,
+        .room-map-tile-meta span {
+            display: block;
+        }
+
+        .room-map-tile strong {
+            color: #142033;
+            font-size: 1.04rem;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .room-map-tile small,
+        .room-map-tile-meta span {
+            color: #66758a;
+            font-size: 0.76rem;
+            font-weight: 750;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+
+        .room-map-tile-meta span {
+            color: #142033;
+            font-weight: 850;
+        }
+
+        .room-map-tile-meta {
+            display: grid;
+            gap: 2px;
+        }
+
+        .room-map-empty-line {
+            min-height: 0.95rem;
+        }
+
+        .room-map-modal[hidden] {
+            display: none !important;
+        }
+
+        .room-map-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1050;
+            display: grid;
+            place-items: center;
+            background: rgba(15, 23, 42, 0.54);
+            padding: 24px;
+        }
+
+        .room-map-modal-dialog {
+            width: min(760px, 100%);
+            max-height: min(720px, calc(100vh - 48px));
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 28px 72px rgba(15, 23, 42, 0.34);
+        }
+
+        .room-map-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            border-bottom: 1px solid #e7eef6;
+            padding: 18px 22px;
+        }
+
+        .room-map-modal-header h3 {
+            margin: 0;
+            color: #142033;
+            font-size: 1.12rem;
+            font-weight: 900;
+        }
+
+        .room-map-modal-close {
+            width: 38px;
+            height: 38px;
+            display: inline-grid;
+            place-items: center;
+            border: 0;
+            border-radius: 999px;
+            background: #f4f7fb;
+            color: #142033;
+        }
+
+        .room-map-modal-body {
+            overflow: auto;
+            display: grid;
+            gap: 14px;
+            padding: 20px 22px 22px;
+        }
+
+        .room-map-detail-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .room-map-detail-head h3 {
+            margin: 0;
+            color: #142033;
+            font-size: 1.08rem;
+            font-weight: 900;
+        }
+
+        .room-map-detail-status {
+            border-radius: 999px;
+            background: #edf2f7;
+            color: #66758a;
+            font-size: 0.82rem;
+            font-weight: 880;
+            padding: 6px 10px;
+            white-space: nowrap;
+        }
+
+        .room-map-detail-status.available {
+            background: #e9f8f0;
+            color: #168a55;
+        }
+
+        .room-map-detail-status.occupied {
+            background: #eaf2ff;
+            color: #1f6feb;
+        }
+
+        .room-map-detail-status.maintenance {
+            background: #fff5df;
+            color: #9d741f;
+        }
+
+        .room-map-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .room-map-guest-box {
+            display: grid;
+            gap: 10px;
+        }
+
+        .room-map-section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .room-map-section-title span {
+            color: #142033;
+            font-size: 0.98rem;
+            font-weight: 900;
+        }
+
+        .room-map-detail-grid > div {
+            min-width: 0;
+            border: 1px solid #edf2f7;
+            border-radius: 8px;
+            background: #fbfdff;
+            padding: 10px;
+        }
+
+        .room-map-detail-grid span {
+            display: block;
+            color: #66758a;
+            font-size: 0.82rem;
+            font-weight: 760;
+        }
+
+        .room-map-detail-grid strong {
+            display: block;
+            color: #142033;
+            font-size: 0.94rem;
+            font-weight: 500;
+            overflow-wrap: anywhere;
+        }
+
+        .room-map-detail-grid > .room-map-detail-wide {
+            grid-column: 1 / -1;
+        }
+
+        .room-map-service-box {
+            display: grid;
+            gap: 8px;
+            border-top: 1px solid #edf2f7;
+            padding-top: 12px;
+        }
+
+        .room-map-service-title,
+        .room-map-service-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .room-map-service-title span,
+        .room-map-service-empty {
+            color: #66758a;
+            font-size: 0.82rem;
+            font-weight: 760;
+        }
+
+        .room-map-service-line {
+            border: 1px solid #edf2f7;
+            border-radius: 8px;
+            background: #fbfdff;
+            padding: 9px 10px;
+        }
+
+        .room-map-service-line span,
+        .room-map-service-line strong {
+            color: #142033;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .room-map-service-line strong {
+            white-space: nowrap;
+        }
+
+        .room-map-service-empty {
+            border: 1px dashed #cfdced;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .room-map-maintenance-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #edf2f7;
+            padding-top: 12px;
+        }
+
+        .room-map-maintenance-btn {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 0;
+            border-radius: 8px;
+            color: #ffffff;
+            font-weight: 820;
+            padding: 9px 14px;
+        }
+
+        .room-map-maintenance-btn.to-maintenance {
+            background: #9d741f;
+        }
+
+        .room-map-maintenance-btn.to-available {
+            background: #168a55;
+        }
+
+        .room-map-empty {
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            background: #fbfdff;
+            color: #66758a;
+            font-weight: 760;
+            padding: 34px 16px;
+            text-align: center;
+        }
+    </style>
+}
+
+<div class="room-admin-page">
+    <header class="room-admin-header">
+        <div>
+            <h1>Quản lý phòng</h1>
+            <p>Sơ đồ phòng theo dữ liệu hiện tại của lễ tân.</p>
+        </div>
+        <a class="btn btn-dark px-4" asp-controller="LoaiPhongs" asp-action="Index">
+            <i class="bi bi-layers"></i>
+            Quản lý loại phòng
+        </a>
+    </header>
+
+    <section class="room-admin-panel">
+        <label class="room-admin-search" for="roomMapSearch">
+            <i class="bi bi-search"></i>
+            <input id="roomMapSearch" type="search" placeholder="Tìm theo số phòng, khách, mã đặt phòng..." autocomplete="off" />
+        </label>
+
+        <div class="room-map-toolbar">
+            <div class="room-map-summary">
+                @foreach (var count in Model.StatusCounts)
+                {
+                    <span class="room-map-count @count.Status">@StatusLabel(count.Status): <strong>@count.Count</strong></span>
+                }
+            </div>
+            <div class="room-map-controls">
+                <label class="room-map-type-filter" for="roomMapTypeFilter">
+                    <span>Loại phòng</span>
+                    <select id="roomMapTypeFilter" class="form-select form-select-sm">
+                        <option value="all">Tất cả</option>
+                        @foreach (var roomType in roomTypes)
+                        {
+                            <option value="@roomType">@roomType</option>
+                        }
+                    </select>
+                </label>
+                <div class="room-map-filters" role="group" aria-label="Lọc trạng thái phòng">
+                    <button type="button" class="active" data-room-map-filter="all">Tất cả</button>
+                    <button type="button" data-room-map-filter="available">Trống</button>
+                    <button type="button" data-room-map-filter="occupied">Đang sử dụng</button>
+                    <button type="button" data-room-map-filter="maintenance">Bảo trì</button>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <select id="filterType" class="form-select bg-light text-muted">
-                <option value="">Loại phòng</option>
-                <option>Standard</option>
-                <option>Deluxe</option>
-                <option>Suit</option>
-                <option>Presidential</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select id="filterStatus" class="form-select bg-light text-muted">
-                <option value="">Trạng thái</option>
-                <option>Trống</option>
-                <option>Có khách</option>
-                <option>Bảo trì</option>
-                <option>Dọn dẹp</option>
-            </select>
-        </div>
-    </div>
-</div>
 
-<!-- Summary Cards -->
-<div class="row g-3 mb-4">
-    <div class="col">
-        <div class="card-custom text-center py-3">
-            <div class="text-muted small mb-1">Standard</div>
-            <div class="fw-bold fs-4">2/8</div>
-            <div class="small text-muted mt-1">Giá: 800,000đ /đêm</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card-custom text-center py-3">
-            <div class="text-muted small mb-1">Deluxe</div>
-            <div class="fw-bold fs-4">1/8</div>
-            <div class="small text-muted mt-1">Giá: 1,500,000đ /đêm</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card-custom text-center py-3">
-            <div class="text-muted small mb-1">Suit</div>
-            <div class="fw-bold fs-4">1/8</div>
-            <div class="small text-muted mt-1">Giá: 2,500,000đ /đêm</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card-custom text-center py-3">
-            <div class="text-muted small mb-1">Presidential</div>
-            <div class="fw-bold fs-4">1/2</div>
-            <div class="small text-muted mt-1">Giá: 5,000,000đ /đêm</div>
-        </div>
-    </div>
-</div>
-
-<!-- Rooms Grid -->
-<div class="row g-4" id="rooms-grid">
-    @foreach (var room in rooms)
-    {
-        <div class="col-md-3">
-            <div class="card-custom bg-light p-3 position-relative d-flex flex-column room-card" id="room-card-@room.Number" style="min-height: 260px;">
-                <button class="btn btn-icon-only position-absolute top-0 end-0 m-2"><i class="bi bi-gear"></i></button>
-                <div class="fw-bold mb-2">@room.Number</div>
-
-                <div class="text-center mb-2 status-container">
-                    @if (room.Status == "Có khách")
-                    {
-                        <span class="badge-status badge-occupied">Có khách</span>
-                    }
-                    else if (room.Status == "Trống")
-                    {
-                        <span class="badge-status badge-empty">Trống</span>
-                    }
-                    else if (room.Status == "Bảo trì")
-                    {
-                        <span class="badge-status badge-maintenance">Bảo trì</span>
-                    }
-                    else if (room.Status == "Dọn dẹp")
-                    {
-                        <span class="badge-status badge-cleaning">Dọn dẹp</span>
-                    }
-                    else if (room.Status == "Đã giữ")
-                    {
-                        <span class="badge-status badge-reserved">Đã giữ</span>
-                    }
-                </div>
-
-                <div class="d-flex flex-column flex-grow-1 justify-content-center guest-info-container">
-                    <div class="text-center text-muted small mb-1">@room.Type</div>
-
-                    @if (!string.IsNullOrEmpty(room.Guest))
-                    {
-                        <div class="text-center fw-bold mb-1 guest-name">@room.Guest</div>
-                        <div class="text-center small text-muted mb-3 checkout-time">Check-out: @room.CheckOut</div>
-                    }
-                </div>
-
-                <div class="action-container mt-auto">
-                    @if (room.Status == "Có khách")
-                    {
-                        <button class="btn btn-dark w-100 btn-checkout" data-room="@room.Number" data-guest="@room.Guest" data-checkout="@room.CheckOut">Trả phòng</button>
-                    }
-                    else if (room.Status == "Trống")
-                    {
-                        <button class="btn btn-dark w-100 btn-book-room" data-room="@room.Number">Đặt phòng</button>
-                    }
-                    else if (room.Status == "Bảo trì")
-                    {
-                        <button class="btn shadow-sm bg-white text-dark w-100 border-0 btn-finish-task" data-room="@room.Number" data-status="available">Hoàn tất bảo trì</button>
-                    }
-                    else if (room.Status == "Dọn dẹp")
-                    {
-                        <div class="d-grid gap-2">
-                            <button class="btn shadow-sm bg-white text-dark border-0 btn-finish-task" data-room="@room.Number" data-status="available">Hoàn thành dọn dẹp</button>
-                            <button class="btn btn-sm btn-outline-danger border-0 btn-report-damage" data-room="@room.Number">Báo hư hỏng (Bảo trì)</button>
-                        </div>
-                    }
-                    else if (room.Status == "Đã giữ")
-                    {
-                        <button class="btn btn-dark w-100 btn-checkin" data-room="@room.Number">Nhận phòng (Check-in)</button>
-                    }
-                </div>
-            </div>
-        </div>
-    }
-</div>
-
-<!-- Book Room Modal -->
-<div class="modal fade" id="bookRoomModal" tabindex="-1" aria-labelledby="bookRoomModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="bookRoomModalLabel">Đặt phòng</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="bookRoomForm">
-                    <input type="hidden" id="bookRoomNumber" name="roomNumber" />
-
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <h6 class="fw-bold border-bottom pb-2">Thông tin khách hàng</h6>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="guestName" class="form-label">Họ và tên</label>
-                            <input type="text" class="form-control" id="guestName" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="guestId" class="form-label">CMND/CCCD/Hộ chiếu</label>
-                            <input type="text" class="form-control" id="guestId" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="guestPhone" class="form-label">Số điện thoại</label>
-                            <input type="tel" class="form-control" id="guestPhone" required>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="guestNationality" class="form-label">Quốc tịch</label>
-                            <input type="text" class="form-control" id="guestNationality" value="Việt Nam">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="guestGender" class="form-label">Giới tính</label>
-                            <select class="form-select" id="guestGender">
-                                <option value="Nam">Nam</option>
-                                <option value="Nữ">Nữ</option>
-                                <option value="Khác">Khác</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="guestEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="guestEmail" placeholder="example@email.com">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="guestAddress" class="form-label">Địa chỉ thường trú</label>
-                            <input type="text" class="form-control" id="guestAddress" placeholder="Nhập địa chỉ thường trú">
-                        </div>
-
-                        <div class="col-md-12 mb-3 mt-2">
-                            <h6 class="fw-bold border-bottom pb-2">Thông tin đặt phòng</h6>
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label for="guestCount" class="form-label">Số lượng khách</label>
-                            <input type="number" class="form-control" id="guestCount" value="1" min="1">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="checkInDate" class="form-label">Ngày nhận phòng</label>
-                            <input type="date" class="form-control" id="checkInDate" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="checkOutDate" class="form-label">Ngày trả phòng</label>
-                            <input type="date" class="form-control" id="checkOutDate" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="checkInTime" class="form-label">Giờ nhận phòng</label>
-                            <input type="time" class="form-control" id="checkInTime" value="14:00">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="checkOutTime" class="form-label">Giờ trả phòng dự kiến</label>
-                            <input type="time" class="form-control" id="checkOutTime" value="12:00">
-                        </div>
-                        <div class="col-md-12 mb-3">
-                            <label for="bookingNotes" class="form-label">Ghi chú đặc biệt</label>
-                            <textarea class="form-control" id="bookingNotes" rows="2"></textarea>
-                        </div>
+        <div id="roomMapFloors" class="room-map-floors">
+            @foreach (var floor in Model.Floors)
+            {
+                <section class="room-map-floor" data-room-map-floor>
+                    <div class="room-map-floor-header">
+                        <h3>Tầng @floor.Floor</h3>
+                        <span data-room-map-floor-count>@floor.Rooms.Count phòng</span>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
-                <button type="button" class="btn btn-outline-dark" id="btnBookFuture">Đặt trước (Giữ phòng)</button>
-                <button type="button" class="btn btn-dark" id="btnSubmitBookRoom">Nhận phòng ngay</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Room Modal -->
-<div class="modal fade" id="addRoomModal" tabindex="-1" aria-labelledby="addRoomModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border: none; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
-            <!-- Header -->
-            <div class="modal-header border-0 px-4 pt-4 pb-2">
-                <div>
-                    <h5 class="modal-title fw-bold fs-5" id="addRoomModalLabel">
-                        <i class="bi bi-plus-circle-fill text-primary me-2"></i>Thêm phòng mới
-                    </h5>
-                    <p class="text-muted small mb-0 mt-1">Nhập thông tin phòng cần thêm vào hệ thống</p>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <!-- Body -->
-            <div class="modal-body px-4 py-3">
-                <form id="addRoomForm">
-                    <div class="row g-3">
-                        <!-- Số phòng -->
-                        <div class="col-md-6">
-                            <label for="roomNo" class="form-label fw-semibold text-dark">Số phòng <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="roomNo" required placeholder="VD: 501"
-                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                        </div>
-                        <!-- Loại phòng -->
-                        <div class="col-md-6">
-                            <label for="roomType" class="form-label fw-semibold text-dark">Loại phòng <span class="text-danger">*</span></label>
-                            <select class="form-select" id="roomType" required
-                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                <option value="Standard">Standard</option>
-                                <option value="Deluxe">Deluxe</option>
-                                <option value="Suit">Suit</option>
-                                <option value="Presidential">Presidential</option>
-                            </select>
-                        </div>
-                        <!-- Tầng -->
-                        <div class="col-md-6">
-                            <label for="roomFloor" class="form-label fw-semibold text-dark">Tầng <span class="text-danger">*</span></label>
-                            <select class="form-select" id="roomFloor" required
-                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                <option value="1">Tầng 1</option>
-                                <option value="2">Tầng 2</option>
-                                <option value="3">Tầng 3</option>
-                                <option value="4">Tầng 4</option>
-                                <option value="5">Tầng 5</option>
-                            </select>
-                        </div>
-                        <!-- Trạng thái -->
-                        <div class="col-md-6">
-                            <label for="roomStatus" class="form-label fw-semibold text-dark">Trạng thái <span class="text-danger">*</span></label>
-                            <select class="form-select" id="roomStatus" required
-                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                <option value="Trống" selected>Trống</option>
-                                <option value="Bảo trì">Bảo trì</option>
-                            </select>
-                        </div>
-                        <!-- Ghi chú -->
-                        <div class="col-12">
-                            <label for="roomNote" class="form-label fw-semibold text-dark">Ghi chú</label>
-                            <textarea class="form-control" id="roomNote" rows="3" placeholder="Nhập ghi chú về phòng (nếu có)..."
-                                      style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; resize: vertical; transition: all 0.2s;"></textarea>
-                        </div>
+                    <div class="room-map-grid">
+                        @foreach (var room in floor.Rooms.OrderBy(x => x.RoomNumber, StringComparer.OrdinalIgnoreCase))
+                        {
+                            <article class="room-map-tile @room.Status"
+                                     data-room-map-room
+                                     data-room-map-room-id="@room.RoomId"
+                                     data-room-number="@room.RoomNumber"
+                                     data-room-type="@room.RoomTypeName"
+                                     data-room-floor="@room.Floor"
+                                     data-room-status="@room.Status"
+                                     data-room-status-label="@StatusLabel(room.Status)"
+                                     data-room-guest="@room.CurrentGuestName"
+                                     data-room-booking="@room.BookingCode"
+                                     data-room-checkout="@room.CheckOutDate"
+                                     role="button"
+                                     tabindex="0">
+                                <div class="room-map-tile-head">
+                                    <strong>@room.RoomNumber</strong>
+                                </div>
+                                <div class="room-map-tile-meta">
+                                    <span>@StatusLabel(room.Status)</span>
+                                    @if (!string.IsNullOrWhiteSpace(room.CheckOutDate))
+                                    {
+                                        <small>Trả @room.CheckOutDate</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="room-map-empty-line" aria-hidden="true">&nbsp;</small>
+                                    }
+                                    <small>@room.RoomTypeName</small>
+                                </div>
+                            </article>
+                        }
                     </div>
-                </form>
-            </div>
-            <!-- Footer -->
-            <div class="modal-footer border-0 px-4 pb-4 pt-2">
-                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal"
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    Huỷ
+                </section>
+            }
+        </div>
+
+        <div id="roomMapEmptyState" class="room-map-empty" hidden>Không có phòng phù hợp bộ lọc hiện tại.</div>
+    </section>
+
+    <div id="roomMapDetailModal" class="room-map-modal" hidden>
+        <div class="room-map-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="roomMapDetailTitle">
+            <div class="room-map-modal-header">
+                <h3 id="roomMapDetailTitle">Chi tiết phòng</h3>
+                <button type="button" class="room-map-modal-close" id="roomMapDetailClose" aria-label="Đóng">
+                    <i class="bi bi-x-lg"></i>
                 </button>
-                <button type="button" class="btn btn-dark px-4" id="btnSubmitAddRoom"
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    <i class="bi bi-check-lg me-1"></i>Lưu phòng
-                </button>
             </div>
+            <div id="roomMapDetailBody" class="room-map-modal-body"></div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $(document).ready(function() {
+        (function () {
+            const searchInput = document.getElementById("roomMapSearch");
+            const typeFilter = document.getElementById("roomMapTypeFilter");
+            const statusButtons = Array.from(document.querySelectorAll("[data-room-map-filter]"));
+            const rooms = Array.from(document.querySelectorAll("[data-room-map-room]"));
+            const floors = Array.from(document.querySelectorAll("[data-room-map-floor]"));
+            const emptyState = document.getElementById("roomMapEmptyState");
+            const detailModal = document.getElementById("roomMapDetailModal");
+            const detailBody = document.getElementById("roomMapDetailBody");
+            const detailClose = document.getElementById("roomMapDetailClose");
+            let statusFilter = "all";
+            let selectedRoomElement = null;
+            let serviceUsageCache = null;
 
-        // =============================================
-        // SEARCH & FILTER FUNCTIONALITY
-        // =============================================
-        function filterRooms() {
-        var searchVal = $('#searchInput').val().toLowerCase().trim();
-        var typeVal   = $('#filterType').val().toLowerCase().trim();
-        var statusVal = $('#filterStatus').val().toLowerCase().trim();
+            function normalizeText(value) {
+                return (value || "")
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/đ/g, "d");
+            }
 
-        $('.room-card').each(function() {
-        var card       = $(this);
-        var roomNumber = card.find('.fw-bold').first().text().toLowerCase();
-        var guestName  = (card.find('.guest-name').text() || '').toLowerCase();
-        var roomType   = (card.find('.guest-info-container .text-muted.small').first().text() || '').toLowerCase();
-        var statusText = (card.find('.status-container .badge-status').text() || '').toLowerCase();
+            function renderRoomMap() {
+                const keyword = normalizeText(searchInput?.value);
+                const selectedType = typeFilter?.value || "all";
+                let visibleRooms = 0;
 
-        var matchSearch = !searchVal ||
-        roomNumber.includes(searchVal) ||
-        guestName.includes(searchVal);
+                rooms.forEach(function (room) {
+                    const haystack = normalizeText([
+                        room.dataset.roomNumber,
+                        room.dataset.roomType,
+                        room.dataset.roomStatusLabel,
+                        room.dataset.roomGuest,
+                        room.dataset.roomBooking
+                    ].join(" "));
+                    const visible = (!keyword || haystack.includes(keyword)) &&
+                        (statusFilter === "all" || room.dataset.roomStatus === statusFilter) &&
+                        (selectedType === "all" || room.dataset.roomType === selectedType);
+                    room.hidden = !visible;
+                    if (visible) visibleRooms += 1;
+                });
 
-        var matchType   = !typeVal   || roomType.includes(typeVal);
-        var matchStatus = !statusVal || statusText.includes(statusVal);
+                floors.forEach(function (floor) {
+                    const floorRooms = Array.from(floor.querySelectorAll("[data-room-map-room]"));
+                    const visibleCount = floorRooms.filter(room => !room.hidden).length;
+                    const label = floor.querySelector("[data-room-map-floor-count]");
+                    if (label) label.textContent = `${visibleCount} phòng`;
+                    floor.hidden = visibleCount === 0;
+                });
 
-        // Show/hide the parent col-md-3 wrapper
-        if (matchSearch && matchType && matchStatus) {
-        card.closest('.col-md-3').show();
-        } else {
-        card.closest('.col-md-3').hide();
-        }
-        });
+                if (emptyState) emptyState.hidden = visibleRooms > 0;
+            }
 
-        // Show "no results" message if all hidden
-        var visibleCount = $('.room-card').closest('.col-md-3:visible').length;
-        if (visibleCount === 0) {
-        if ($('#no-results').length === 0) {
-        $('#rooms-grid').append('<div id="no-results" class="col-12 text-center text-muted py-5"><i class="bi bi-search fs-1 d-block mb-3"></i>Không tìm thấy phòng phù hợp.</div>');
-        }
-        } else {
-        $('#no-results').remove();
-        }
-        }
+            function openRoomDetail(room) {
+                if (!detailModal || !detailBody) return;
+                rooms.forEach(item => item.classList.remove("selected"));
+                room.classList.add("selected");
+                selectedRoomElement = room;
 
-        // Trigger filter on any input/change
-        $('#searchInput').on('input', filterRooms);
-        $('#filterType').on('change', filterRooms);
-        $('#filterStatus').on('change', filterRooms);
+                const roomDto = roomElementToDetail(room);
+                const hasBooking = Boolean(roomDto.bookingCode);
+                renderRoomDetail(roomDto, { loadingServices: hasBooking && roomDto.status === "occupied" });
 
-        // =============================================
-        // CHECKOUT FUNCTIONALITY
-        // =============================================
-        $(document).on('click', '.btn-checkout', function(e) {
-        e.preventDefault();
-        var btn = $(this);
-        var roomNumber = btn.data('room');
-        var guestName = btn.data('guest');
-        var checkoutTime = btn.data('checkout');
+                if (!hasBooking || roomDto.status !== "occupied") return;
 
-        Swal.fire({
-        title: 'Xác nhận trả phòng?',
-        text: `Bạn có chắc muốn trả phòng ${roomNumber} không? Khách: ${guestName}, Check-out: ${checkoutTime}`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#212529',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Xác nhận trả phòng',
-        cancelButtonText: 'Huỷ'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        // Disable button and show loading
-        var originalText = btn.html();
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                Promise.all([
+                    getRoomMapServiceUsage(),
+                    fetchJson(`@Url.Action("Lookup", "Receptionist")?code=${encodeURIComponent(roomDto.bookingCode)}`)
+                ])
+                    .then(function ([serviceUsage, bookingLookup]) {
+                        if (selectedRoomElement !== room) return;
+                        const stay = (serviceUsage.activeStays || [])
+                            .find(item => item.bookingCode === roomDto.bookingCode);
+                        renderRoomDetail(roomDto, {
+                            stay,
+                            booking: bookingLookup.success ? bookingLookup.booking : null
+                        });
+                    })
+                    .catch(function () {
+                        if (selectedRoomElement !== room) return;
+                        renderRoomDetail(roomDto, { serviceError: true });
+                    });
+            }
 
-        $.ajax({
-        url: '@Url.Action("Checkout", "Room")',
-        type: 'POST',
-        data: { roomNumber: roomNumber },
-        success: function(res) {
-        if (res.success) {
-        // Update UI
-        var card = $('#room-card-' + roomNumber);
+            function roomElementToDetail(room) {
+                return {
+                    roomId: room.dataset.roomMapRoomId || "",
+                    roomNumber: room.dataset.roomNumber || "",
+                    roomTypeName: room.dataset.roomType || "",
+                    floor: room.dataset.roomFloor || "",
+                    status: room.dataset.roomStatus || "",
+                    statusLabel: room.dataset.roomStatusLabel || "",
+                    currentGuestName: room.dataset.roomGuest || "",
+                    bookingCode: room.dataset.roomBooking || "",
+                    checkOutDate: room.dataset.roomCheckout || ""
+                };
+            }
 
-        // Update status badge to "Dọn dẹp" as per new requirement
-        var statusContainer = card.find('.status-container');
-        statusContainer.html('<span class="badge-status badge-cleaning">Dọn dẹp</span>');
+            async function getRoomMapServiceUsage() {
+                if (serviceUsageCache) return serviceUsageCache;
+                serviceUsageCache = await fetchJson("@Url.Action("ServiceUsage", "Receptionist")");
+                return serviceUsageCache;
+            }
 
-        // Remove guest info
-        card.find('.guest-name').remove();
-        card.find('.checkout-time').remove();
+            function renderRoomDetail(room, options = {}) {
+                const stay = options.stay || null;
+                const booking = options.booking || null;
+                const serviceLines = stay?.serviceLines || [];
+                const serviceHtml = options.loadingServices
+                    ? `<div class="room-map-service-empty">Đang tải dịch vụ...</div>`
+                    : options.serviceError
+                        ? `<div class="room-map-service-empty">Chưa tải được dịch vụ của phòng này.</div>`
+                        : serviceLines.length === 0
+                            ? `<div class="room-map-service-empty">Chưa phát sinh dịch vụ.</div>`
+                            : serviceLines.map(function (line) {
+                                return `
+                                    <div class="room-map-service-line">
+                                        <span>${escapeHtml(formatDisplayText(line.serviceName))} x${line.quantity}</span>
+                                        <strong>${formatMoney(line.total)}</strong>
+                                    </div>
+                                `;
+                            }).join("");
+                const bookedRooms = booking?.assignedRooms?.length
+                    ? booking.assignedRooms.map(item => formatDisplayText(item.roomNumber))
+                    : (stay?.roomNumbers || []).map(formatDisplayText);
+                const roomNumbers = bookedRooms.length
+                    ? `Phòng ${bookedRooms.map(escapeHtml).join(", ")}`
+                    : `Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}`;
+                const canSetMaintenance = room.status === "available";
+                const canCancelMaintenance = room.status === "maintenance";
+                const maintenanceActionHtml = canSetMaintenance || canCancelMaintenance
+                    ? `
+                        <div class="room-map-maintenance-actions">
+                            <button type="button"
+                                    class="room-map-maintenance-btn ${canSetMaintenance ? "to-maintenance" : "to-available"}"
+                                    data-room-maintenance-toggle
+                                    data-room-id="${escapeHtml(room.roomId)}"
+                                    data-maintenance="${canSetMaintenance ? "true" : "false"}">
+                                <i class="bi ${canSetMaintenance ? "bi-tools" : "bi-check2-circle"}"></i>
+                                ${canSetMaintenance ? "Bảo trì phòng" : "Hủy bảo trì"}
+                            </button>
+                        </div>`
+                    : "";
+                const guestHtml = room.status === "occupied"
+                    ? `
+                        <div class="room-map-guest-box">
+                            <div class="room-map-section-title">
+                                <span>Thông tin khách hàng</span>
+                            </div>
+                            <div class="room-map-detail-grid">
+                                <div>
+                                    <span>Tên khách hàng</span>
+                                    <strong>${escapeHtml(formatPersonName(booking?.customerName || stay?.customerName || room.currentGuestName || "-"))}</strong>
+                                </div>
+                                <div>
+                                    <span>CCCD/Hộ chiếu</span>
+                                    <strong>${escapeHtml(booking?.identityNumber || "-")}</strong>
+                                </div>
+                                <div>
+                                    <span>Số điện thoại</span>
+                                    <strong>${escapeHtml(formatSentenceText(booking?.phoneNumber || stay?.phoneNumber || "-"))}</strong>
+                                </div>
+                                <div>
+                                    <span>Ngày đặt</span>
+                                    <strong>${escapeHtml(booking?.bookingDate || "-")}</strong>
+                                </div>
+                                <div>
+                                    <span>Ngày trả</span>
+                                    <strong>${escapeHtml(booking?.checkOutDate || stay?.checkOutDate || room.checkOutDate || "-")}</strong>
+                                </div>
+                                <div>
+                                    <span>Mã đặt phòng</span>
+                                    <strong>${escapeHtml(booking?.bookingCode || room.bookingCode || "-")}</strong>
+                                </div>
+                                <div class="room-map-detail-wide">
+                                    <span>Các phòng đang được booking cùng</span>
+                                    <strong>${roomNumbers}</strong>
+                                </div>
+                            </div>
+                        </div>`
+                    : "";
 
-        // Update button to "Hoàn thành dọn dẹp" and "Báo hư hỏng"
-        var actionContainer = card.find('.action-container');
-        actionContainer.html(`
-        <div class="d-grid gap-2">
-        <button class="btn shadow-sm bg-white text-dark border-0 btn-finish-task" data-room="${roomNumber}" data-status="available">Hoàn thành dọn dẹp</button>
-        <button class="btn btn-sm btn-outline-danger border-0 btn-report-damage" data-room="${roomNumber}">Báo hư hỏng (Bảo trì)</button>
-        </div>
-        `);
+                detailBody.innerHTML = `
+                    <div class="room-map-detail-head">
+                        <div>
+                            <h3>Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}</h3>
+                        </div>
+                        <span class="room-map-detail-status ${escapeHtml(room.status)}">${escapeHtml(formatSentenceText(room.statusLabel))}</span>
+                    </div>
+                    <div class="room-map-detail-grid">
+                        <div>
+                            <span>Loại phòng</span>
+                            <strong>${escapeHtml(formatDisplayText(room.roomTypeName))}</strong>
+                        </div>
+                        <div>
+                            <span>Tình trạng phòng</span>
+                            <strong>${escapeHtml(formatSentenceText(room.statusLabel))}</strong>
+                        </div>
+                    </div>
+                    ${guestHtml}
+                    <div class="room-map-service-box">
+                        <div class="room-map-service-title">
+                            <span>Dịch vụ đã sử dụng</span>
+                        </div>
+                        ${serviceHtml}
+                    </div>
+                    ${maintenanceActionHtml}
+                `;
+                detailModal.hidden = false;
+            }
 
-        Swal.fire('Thành công!', 'Trả phòng thành công. Phòng đã chuyển sang trạng thái dọn dẹp.', 'success');
-        } else {
-        btn.prop('disabled', false).html(originalText);
-        Swal.fire('Lỗi!', 'Có lỗi xảy ra, vui lòng thử lại.', 'error');
-        }
-        },
-        error: function() {
-        btn.prop('disabled', false).html(originalText);
-        Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error');
-        }
-        });
-        }
-        });
-        });
+            async function fetchJson(url, options) {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error("Không thể kết nối máy chủ. Vui lòng thử lại.");
+                }
 
-        // =============================================
-        // FINISH TASK (CLEANING / MAINTENANCE)
-        // =============================================
-        $(document).on('click', '.btn-finish-task', function(e) {
-        e.preventDefault();
-        var btn = $(this);
-        var roomNumber = btn.data('room');
-        var status = btn.data('status');
-        var taskName = btn.text().toLowerCase();
+                return response.json();
+            }
 
-        Swal.fire({
-        title: 'Xác nhận ' + taskName + '?',
-        text: `Phòng ${roomNumber} sẽ chuyển sang trạng thái Trống.`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#212529',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Xác nhận',
-        cancelButtonText: 'Huỷ'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        var originalText = btn.html();
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+            async function toggleRoomMaintenance(button) {
+                const roomId = button.dataset.roomId || "";
+                const maintenance = button.dataset.maintenance === "true";
+                const confirmMessage = maintenance
+                    ? "Chuyển phòng này sang trạng thái bảo trì?"
+                    : "Hủy bảo trì và chuyển phòng về trạng thái trống?";
+                if (!roomId || !confirm(confirmMessage)) return;
 
-        $.ajax({
-        url: '@Url.Action("FinishTask", "Room")',
-        type: 'POST',
-        data: { roomNumber: roomNumber, status: status },
-        success: function(res) {
-        if (res.success) {
-        var card = $('#room-card-' + roomNumber);
-        card.find('.status-container').html('<span class="badge-status badge-empty">Trống</span>');
+                button.disabled = true;
+                const originalHtml = button.innerHTML;
+                button.innerHTML = "Đang cập nhật...";
+                try {
+                    const response = await fetch("@Url.Action("Maintenance", "Room")", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ roomId, maintenance })
+                    });
+                    if (!response.ok) throw new Error("Không thể cập nhật phòng.");
+                    const result = await response.json();
+                    if (!result.success) {
+                        alert(result.message || "Không thể cập nhật phòng.");
+                        button.disabled = false;
+                        button.innerHTML = originalHtml;
+                        return;
+                    }
 
-        // Ensure guest info is removed
-        card.find('.guest-name').remove();
-        card.find('.checkout-time').remove();
+                    location.reload();
+                } catch (error) {
+                    alert(error.message || "Không thể cập nhật phòng.");
+                    button.disabled = false;
+                    button.innerHTML = originalHtml;
+                }
+            }
 
-        card.find('.action-container').html(`<button class="btn btn-dark w-100 btn-book-room" data-room="${roomNumber}">Đặt phòng</button>`);
-        Swal.fire('Thành công!', 'Phòng đã sẵn sàng đón khách.', 'success');
-        } else {
-        btn.prop('disabled', false).html(originalText);
-        Swal.fire('Lỗi!', 'Có lỗi xảy ra, vui lòng thử lại.', 'error');
-        }
-        },
-        error: function() {
-        btn.prop('disabled', false).html(originalText);
-        Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error');
-        }
-        });
-        }
-        });
-        });
+            function closeRoomDetail() {
+                if (detailModal) detailModal.hidden = true;
+                if (detailBody) detailBody.innerHTML = "";
+                selectedRoomElement = null;
+                rooms.forEach(item => item.classList.remove("selected"));
+            }
 
-        // =============================================
-        // REPORT DAMAGE (MAINTENANCE)
-        // =============================================
-        $(document).on('click', '.btn-report-damage', function(e) {
-        e.preventDefault();
-        var btn = $(this);
-        var roomNumber = btn.data('room');
+            function formatMoney(value) {
+                return new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                    maximumFractionDigits: 0
+                }).format(value || 0);
+            }
 
-        Swal.fire({
-        title: 'Báo phòng hư hỏng?',
-        text: `Chuyển phòng ${roomNumber} sang trạng thái bảo trì?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Xác nhận bảo trì',
-        cancelButtonText: 'Huỷ'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        $.ajax({
-        url: '@Url.Action("FinishTask", "Room")', // Reuse task endpoint
-        type: 'POST',
-        data: { roomNumber: roomNumber, status: 'maintenance' },
-        success: function(res) {
-        if (res.success) {
-        var card = $('#room-card-' + roomNumber);
-        card.find('.status-container').html('<span class="badge-status badge-maintenance">Bảo trì</span>');
-        card.find('.action-container').html(`<button class="btn shadow-sm bg-white text-dark w-100 border-0 btn-finish-task" data-room="${roomNumber}" data-status="available">Hoàn tất bảo trì</button>`);
-        Swal.fire('Đã cập nhật!', 'Phòng đã chuyển sang trạng thái bảo trì.', 'success');
-        }
-        }
-        });
-        }
-        });
-        });
+            function formatSentenceText(value) {
+                const text = String(value ?? "").trim();
+                if (!shouldNormalizeUppercase(text)) return text;
 
-        // =============================================
-        // ADD NEW ROOM - Form focus styles
-        // =============================================
-        $('#addRoomForm .form-control, #addRoomForm .form-select').on('focus', function () {
-        $(this).css({
-        'border-color': '#3b82f6',
-        'box-shadow': '0 0 0 3px rgba(59, 130, 246, 0.15)'
-        });
-        }).on('blur', function () {
-        $(this).css({
-        'border-color': '#e5e7eb',
-        'box-shadow': 'none'
-        });
-        });
+                const lower = text.toLocaleLowerCase("vi-VN");
+                return lower.replace(/^(\P{L}*)(\p{L})/u, function (_, prefix, letter) {
+                    return `${prefix}${letter.toLocaleUpperCase("vi-VN")}`;
+                });
+            }
 
-        // Reset form on modal close
-        $('#addRoomModal').on('hidden.bs.modal', function () {
-        $('#addRoomForm')[0].reset();
-        });
+            function formatPersonName(value) {
+                const text = String(value ?? "").trim();
+                if (!shouldNormalizeUppercase(text)) return text;
 
-        // =============================================
-        // ADD NEW ROOM - Save handler
-        // =============================================
-        $('#btnSubmitAddRoom').click(function() {
-        var form = $('#addRoomForm')[0];
-        if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-        }
+                return text.toLocaleLowerCase("vi-VN").replace(/\p{L}[\p{L}'-]*/gu, function (word) {
+                    return word.charAt(0).toLocaleUpperCase("vi-VN") + word.slice(1);
+                });
+            }
 
-        bootstrap.Modal.getInstance(document.getElementById('addRoomModal')).hide();
-        Swal.fire({
-        title: 'Thành công!',
-        text: 'Đã lưu phòng mới vào hệ thống.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-        }).then(() => {
-        location.reload();
-        });
-        });
+            function formatDisplayText(value) {
+                const text = String(value ?? "").trim();
+                if (!shouldNormalizeUppercase(text)) return text;
 
-        // =============================================
-        // BOOK ROOM FUNCTIONALITY
-        // =============================================
-        $(document).on('click', '.btn-book-room', function(e) {
-        e.preventDefault();
-        var roomNumber = $(this).data('room');
-        $('#bookRoomNumber').val(roomNumber);
-        $('#bookRoomForm')[0].reset();
+                return text.toLocaleLowerCase("vi-VN").replace(/\p{L}[\p{L}'-]*/gu, function (word) {
+                    return word.charAt(0).toLocaleUpperCase("vi-VN") + word.slice(1);
+                });
+            }
 
-        // Set default dates
-        var today = new Date().toISOString().split('T')[0];
-        $('#checkInDate').val(today);
+            function shouldNormalizeUppercase(text) {
+                return /[\p{L}]/u.test(text) &&
+                    /[\p{Lu}]/u.test(text) &&
+                    !/[\p{Ll}]/u.test(text);
+            }
 
-        $('#bookRoomModalLabel').text('Đặt phòng ' + roomNumber);
-        var bookModal = new bootstrap.Modal(document.getElementById('bookRoomModal'));
-        bookModal.show();
-        });
+            function escapeHtml(value) {
+                return String(value || "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
 
-        function submitBooking(status) {
-        var form = $('#bookRoomForm')[0];
-        if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-        }
+            statusButtons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    statusFilter = button.dataset.roomMapFilter || "all";
+                    statusButtons.forEach(item => item.classList.remove("active"));
+                    button.classList.add("active");
+                    renderRoomMap();
+                });
+            });
 
-        var roomNumber = $('#bookRoomNumber').val();
-        var guestName = $('#guestName').val();
+            searchInput?.addEventListener("input", renderRoomMap);
+            typeFilter?.addEventListener("change", renderRoomMap);
 
-        $.ajax({
-        url: '@Url.Action("BookRoom", "Room")',
-        type: 'POST',
-        data: { roomNumber: roomNumber, status: status },
-        success: function(res) {
-        if (res.success) {
-        bootstrap.Modal.getInstance(document.getElementById('bookRoomModal')).hide();
-        var card = $('#room-card-' + roomNumber);
+            detailBody?.addEventListener("click", function (event) {
+                const button = event.target.closest("[data-room-maintenance-toggle]");
+                if (!button) return;
+                toggleRoomMaintenance(button);
+            });
 
-        if (status === 'occupied') {
-        card.find('.status-container').html('<span class="badge-status badge-occupied">Có khách</span>');
-        card.find('.action-container').html(`<button class="btn btn-dark w-100 btn-checkout" data-room="${roomNumber}" data-guest="${guestName}" data-checkout="...">Trả phòng</button>`);
-        } else {
-        card.find('.status-container').html('<span class="badge-status badge-reserved">Đã giữ</span>');
-        card.find('.action-container').html(`<button class="btn btn-dark w-100 btn-checkin" data-room="${roomNumber}">Nhận phòng (Check-in)</button>`);
-        }
+            rooms.forEach(function (room) {
+                room.addEventListener("click", function () {
+                    openRoomDetail(room);
+                });
+                room.addEventListener("keydown", function (event) {
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    event.preventDefault();
+                    openRoomDetail(room);
+                });
+            });
 
-        Swal.fire('Thành công!', 'Đã cập nhật trạng thái phòng.', 'success');
-        location.reload(); // For demo simplicity
-        }
-        }
-        });
-        }
+            detailClose?.addEventListener("click", closeRoomDetail);
+            detailModal?.addEventListener("click", function (event) {
+                if (event.target === detailModal) closeRoomDetail();
+            });
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" && detailModal && !detailModal.hidden) closeRoomDetail();
+            });
 
-        $('#btnSubmitBookRoom').click(function() { submitBooking('occupied'); });
-        $('#btnBookFuture').click(function() { submitBooking('reserved'); });
-
-        $(document).on('click', '.btn-checkin', function() {
-        var roomNumber = $(this).data('room');
-        Swal.fire('Check-in!', 'Khách đã nhận phòng ' + roomNumber, 'success').then(() => location.reload());
-        });
-
-        });
+            renderRoomMap();
+        })();
     </script>
 }
-
-
-

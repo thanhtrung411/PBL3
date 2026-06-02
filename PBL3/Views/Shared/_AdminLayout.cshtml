@@ -4,6 +4,7 @@
     // 1. Lấy thông tin từ User Identity
     var fullName = User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? User.Identity?.Name ?? "Khách";
     var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "Nhân viên";
+    var isAdmin = string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase);
 
     // 2. Tự động lấy 2 chữ cái để làm Avatar (VD: Đỗ Trần Hoài Nhi -> HN)
     var initials = "NV";
@@ -35,6 +36,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PBL3.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -61,6 +63,9 @@
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Customer" ? "active" : "")" asp-area="" asp-controller="Customer" asp-action="Index">
                 <i class="bi bi-people"></i> Khách hàng
             </a>
+            <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Staff" ? "active" : "")" asp-area="" asp-controller="Staff" asp-action="Index">
+                <i class="bi bi-person-badge"></i> Quản lý nhân viên
+            </a>
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Report" ? "active" : "")" asp-area="" asp-controller="Report" asp-action="Index">
                 <i class="bi bi-bar-chart"></i> Báo cáo
             </a>
@@ -72,12 +77,6 @@
             </a>
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Promotion" ? "active" : "")" asp-area="" asp-controller="Promotion" asp-action="Index">
                 <i class="bi bi-tag"></i> Quản lí khuyến mãi
-            </a>
-            <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Facility" ? "active" : "")" asp-area="" asp-controller="Facility" asp-action="Index">
-                <i class="bi bi-tools"></i> Quản lí cơ sở vật chất
-            </a>
-            <a class="nav-item-sidebar" asp-area="Admin" asp-controller="Admin" asp-action="Index">
-                <i class="bi bi-database-gear"></i> Source CRUD
             </a>
         </nav>
 
@@ -96,10 +95,18 @@
                 </a>
                 <ul class="dropdown-menu shadow w-100 border-0 mb-1 rounded-3">
                     <li>
-                        <a class="dropdown-item py-2 d-flex align-items-center text-dark fw-medium" href="#">
+                        <a class="dropdown-item py-2 d-flex align-items-center text-dark fw-medium" asp-controller="Account" asp-action="Settings">
                             <i class="bi bi-gear me-3 fs-5"></i> Cài đặt
                         </a>
                     </li>
+                    @if (isAdmin)
+                    {
+                        <li>
+                            <a class="dropdown-item py-2 d-flex align-items-center text-dark fw-medium" asp-controller="Receptionist" asp-action="Index">
+                                <i class="bi bi-arrow-left-right me-3 fs-5"></i> Sang Lễ tân
+                            </a>
+                        </li>
+                    }
                     <li>
                         <a class="dropdown-item py-2 d-flex align-items-center text-dark fw-medium" asp-controller="Account" asp-action="Logout">
                             <i class="bi bi-box-arrow-right me-3 fs-5"></i> Đăng xuất

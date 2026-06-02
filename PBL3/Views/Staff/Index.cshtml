@@ -1,0 +1,843 @@
+@model PBL3.Models.AdminStaffManagementViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý nhân viên";
+}
+
+@section Styles {
+    <style>
+        .staff-page {
+            color: #142033;
+        }
+
+        .staff-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .staff-header h1 {
+            margin: 0;
+            color: #111827;
+            font-size: clamp(1.9rem, 3vw, 2.7rem);
+            font-weight: 850;
+            letter-spacing: 0;
+        }
+
+        .staff-header p {
+            margin: 6px 0 0;
+            color: #66758a;
+            font-weight: 560;
+        }
+
+        .staff-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .staff-summary-card,
+        .staff-panel {
+            border: 1px solid #dfe7f0;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 16px 38px rgba(20, 32, 51, 0.08);
+        }
+
+        .staff-summary-card {
+            padding: 18px;
+        }
+
+        .staff-summary-card span {
+            color: #66758a;
+            font-size: 0.88rem;
+            font-weight: 760;
+        }
+
+        .staff-summary-card strong {
+            display: block;
+            margin-top: 6px;
+            color: #071225;
+            font-size: 1.65rem;
+            font-weight: 850;
+        }
+
+        .staff-panel {
+            overflow: hidden;
+        }
+
+        .staff-toolbar {
+            display: grid;
+            grid-template-columns: minmax(260px, 1fr) minmax(160px, 220px) minmax(160px, 220px) minmax(170px, 230px);
+            gap: 10px;
+            padding: 18px;
+            border-bottom: 1px solid #e8eef6;
+        }
+
+        .staff-search {
+            min-height: 46px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #dfe7f0;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 0 13px;
+        }
+
+        .staff-search i {
+            color: #66758a;
+        }
+
+        .staff-search input {
+            width: 100%;
+            border: 0;
+            outline: none;
+            color: #142033;
+            font-weight: 560;
+        }
+
+        .staff-table {
+            margin: 0;
+        }
+
+        .staff-table th {
+            color: #66758a;
+            font-size: 0.78rem;
+            font-weight: 820;
+            text-transform: uppercase;
+            white-space: nowrap;
+            padding: 14px 16px;
+        }
+
+        .staff-table td {
+            vertical-align: middle;
+            padding: 14px 16px;
+        }
+
+        .staff-row {
+            cursor: pointer;
+        }
+
+        .staff-avatar {
+            width: 44px;
+            height: 44px;
+            display: inline-grid;
+            place-items: center;
+            flex: 0 0 44px;
+            border-radius: 50%;
+            background: #eaf2ff;
+            color: #1f6feb;
+            font-weight: 850;
+        }
+
+        .staff-muted {
+            color: #66758a;
+            font-size: 0.86rem;
+            font-weight: 600;
+        }
+
+        .staff-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 820;
+            padding: 7px 11px;
+            white-space: nowrap;
+        }
+
+        .staff-badge.active {
+            background: #e9f8f0;
+            color: #168a55;
+        }
+
+        .staff-badge.inactive {
+            background: #fff5df;
+            color: #9d741f;
+        }
+
+        .staff-badge.account {
+            background: #edf2f7;
+            color: #334155;
+        }
+
+        .staff-action {
+            width: 38px;
+            height: 38px;
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid #dfe7f0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #1f6feb;
+        }
+
+        .staff-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .staff-detail-card {
+            min-height: 76px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fbfdff;
+            padding: 11px 12px;
+        }
+
+        .staff-detail-card span {
+            display: block;
+            color: #66758a;
+            font-size: 0.82rem;
+            font-weight: 760;
+            margin-bottom: 5px;
+        }
+
+        .staff-detail-card strong {
+            color: #142033;
+            font-size: 0.95rem;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .staff-empty {
+            padding: 34px 16px;
+            color: #66758a;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        @@media (max-width: 1100px) {
+            .staff-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .staff-toolbar {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @@media (max-width: 700px) {
+            .staff-header {
+                flex-direction: column;
+            }
+
+            .staff-summary-grid,
+            .staff-toolbar,
+            .staff-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+<div class="staff-page">
+    <header class="staff-header">
+        <div>
+            <h1>Quản lý nhân viên</h1>
+            <p>Theo dõi thông tin nhân sự, trạng thái làm việc và tài khoản đăng nhập.</p>
+        </div>
+        <button type="button" class="btn btn-dark px-4 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#createStaffModal">
+            <i class="bi bi-person-plus me-2"></i>Thêm nhân viên
+        </button>
+    </header>
+
+    @if (TempData["StaffSuccess"] is string successMessage)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @successMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        </div>
+    }
+    @if (TempData["StaffError"] is string errorMessage)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @errorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        </div>
+    }
+
+    <section class="staff-summary-grid">
+        <div class="staff-summary-card">
+            <span>Tổng nhân viên</span>
+            <strong id="staffVisibleCount">@Model.TotalCount</strong>
+        </div>
+        <div class="staff-summary-card">
+            <span>Đang làm</span>
+            <strong>@Model.ActiveCount</strong>
+        </div>
+        <div class="staff-summary-card">
+            <span>Tạm nghỉ / nghỉ việc</span>
+            <strong>@Model.InactiveCount</strong>
+        </div>
+        <div class="staff-summary-card">
+            <span>Có tài khoản</span>
+            <strong>@Model.AccountCount</strong>
+        </div>
+    </section>
+
+    <section class="staff-panel">
+        <div class="staff-toolbar">
+            <label class="staff-search">
+                <i class="bi bi-search"></i>
+                <input id="staffSearch" type="search" placeholder="Tìm theo tên, mã, SĐT, email...">
+            </label>
+            <select id="staffStatusFilter" class="form-select">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="Đang làm">Đang làm</option>
+                <option value="Tạm nghỉ">Tạm nghỉ</option>
+                <option value="Nghỉ việc">Nghỉ việc</option>
+            </select>
+            <select id="staffPositionFilter" class="form-select">
+                <option value="all">Tất cả chức vụ</option>
+                @foreach (var position in Model.Positions)
+                {
+                    <option value="@position">@position</option>
+                }
+            </select>
+            <select id="staffSort" class="form-select">
+                <option value="name-asc">Tên A-Z</option>
+                <option value="name-desc">Tên Z-A</option>
+                <option value="booking-desc">Nhiều đặt phòng nhất</option>
+                <option value="booking-asc">Ít đặt phòng nhất</option>
+                <option value="status-asc">Trạng thái A-Z</option>
+            </select>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table staff-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Nhân viên</th>
+                        <th>Liên hệ</th>
+                        <th>Chức vụ</th>
+                        <th>Tài khoản</th>
+                        <th>Đặt phòng</th>
+                        <th>Trạng thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="staffTableBody">
+                    @foreach (var employee in Model.Staff)
+                    {
+                        var isActive = employee.Status == "Đang làm";
+                        <tr class="staff-row"
+                            data-staff-row
+                            data-id="@employee.EmployeeId"
+                            data-name="@employee.FullName"
+                            data-gender="@employee.Gender"
+                            data-birth-label="@employee.BirthDateLabel"
+                            data-birth-input="@employee.BirthDateInput"
+                            data-phone="@employee.Phone"
+                            data-email="@employee.Email"
+                            data-address="@employee.Address"
+                            data-position="@employee.Position"
+                            data-status="@employee.Status"
+                            data-account-id="@employee.AccountId"
+                            data-account="@employee.AccountName"
+                            data-account-role="@employee.AccountRole"
+                            data-account-status="@employee.AccountStatus"
+                            data-has-account="@employee.HasAccount.ToString().ToLowerInvariant()"
+                            data-bookings="@employee.BookingCount"
+                            data-initials="@employee.Initials">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="staff-avatar">@employee.Initials</span>
+                                    <div>
+                                        <div class="fw-bold text-dark">@employee.FullName</div>
+                                        <div class="staff-muted">ID: @employee.EmployeeId</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">@(string.IsNullOrWhiteSpace(employee.Phone) ? "Chưa có SĐT" : employee.Phone)</div>
+                                <div class="staff-muted">@(string.IsNullOrWhiteSpace(employee.Email) ? "Chưa có email" : employee.Email)</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">@(string.IsNullOrWhiteSpace(employee.Position) ? "Chưa phân quyền" : employee.Position)</div>
+                            </td>
+                            <td>
+                                @if (employee.HasAccount)
+                                {
+                                    <span class="staff-badge account"><i class="bi bi-person-check"></i>@employee.AccountName</span>
+                                    <div class="staff-muted mt-1" data-account-status-label>@employee.AccountStatus</div>
+                                }
+                                else
+                                {
+                                    <span class="staff-muted">Chưa có tài khoản</span>
+                                }
+                            </td>
+                            <td class="fw-bold">@employee.BookingCount</td>
+                            <td>
+                                <span class="staff-badge @(isActive ? "active" : "inactive")">
+                                    <i class="bi bi-circle-fill" style="font-size: 0.55rem;"></i>@employee.Status
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="staff-action" data-staff-detail title="Xem chi tiết">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button type="button" class="staff-action" data-staff-edit title="Sửa">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <form asp-action="Delete" method="post" class="d-inline" data-staff-delete-form>
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@employee.EmployeeId">
+                                    <button type="submit" class="staff-action text-danger" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div id="staffEmptyState" class="staff-empty" hidden>Không có nhân viên phù hợp bộ lọc.</div>
+    </section>
+</div>
+
+<div class="modal fade" id="staffDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold">Chi tiết nhân viên</h5>
+                    <div class="staff-muted" id="detailStaffCode"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="staff-avatar" id="detailStaffAvatar"></span>
+                        <div>
+                            <h4 class="fw-bold mb-1" id="detailStaffName"></h4>
+                            <div id="detailStaffStatus"></div>
+                        </div>
+                    </div>
+                    <span class="staff-badge account" id="detailStaffAccount"></span>
+                </div>
+                <div class="staff-detail-grid">
+                    <div class="staff-detail-card"><span>Chức vụ</span><strong id="detailStaffPosition"></strong></div>
+                    <div class="staff-detail-card"><span>Giới tính</span><strong id="detailStaffGender"></strong></div>
+                    <div class="staff-detail-card"><span>Ngày sinh</span><strong id="detailStaffBirth"></strong></div>
+                    <div class="staff-detail-card"><span>Số điện thoại</span><strong id="detailStaffPhone"></strong></div>
+                    <div class="staff-detail-card"><span>Email</span><strong id="detailStaffEmail"></strong></div>
+                    <div class="staff-detail-card"><span>Số đặt phòng xử lý</span><strong id="detailStaffBookings"></strong></div>
+                    <div class="staff-detail-card" style="grid-column: 1 / -1;"><span>Địa chỉ</span><strong id="detailStaffAddress"></strong></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <form asp-action="RestoreAccount" method="post" id="restoreStaffAccountForm" class="me-auto">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="accountId" id="restoreStaffAccountId">
+                    <button type="submit" class="btn btn-success px-4 fw-bold">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Khôi phục tài khoản
+                    </button>
+                </form>
+                <form asp-action="ResetPassword" method="post" id="resetStaffPasswordForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="accountId" id="resetStaffPasswordAccountId">
+                    <button type="submit" class="btn btn-outline-primary px-4 fw-bold">
+                        <i class="bi bi-key me-2"></i>Đặt lại mật khẩu
+                    </button>
+                </form>
+                <form asp-action="LockAccount" method="post" id="lockStaffAccountForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="accountId" id="lockStaffAccountId">
+                    <button type="submit" class="btn btn-outline-danger px-4 fw-bold">
+                        <i class="bi bi-lock me-2"></i>Khóa tài khoản
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createStaffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form asp-action="Create" method="post" class="modal-content border-0 rounded-4">
+            @Html.AntiForgeryToken()
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Thêm nhân viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Họ tên</label>
+                        <input class="form-control" name="HoTen" maxlength="100" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Giới tính</label>
+                        <select class="form-select" name="GioiTinh">
+                            <option value="">Chưa chọn</option>
+                            <option>Nam</option>
+                            <option>Nữ</option>
+                            <option>Khác</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Ngày sinh</label>
+                        <input class="form-control" type="date" name="NgaySinh">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Trạng thái</label>
+                        <select class="form-select" name="TrangThai">
+                            <option>Đang làm</option>
+                            <option>Tạm nghỉ</option>
+                            <option>Nghỉ việc</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Số điện thoại</label>
+                        <input class="form-control" name="SoDienThoai" maxlength="15">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input class="form-control" type="email" name="Email" maxlength="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Chức vụ</label>
+                        <input class="form-control" name="ChucVu" maxlength="50" list="staffPositionOptions">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Địa chỉ</label>
+                        <input class="form-control" name="DiaChi" maxlength="255">
+                    </div>
+                    <div class="col-12">
+                        <hr class="my-1">
+                        <h6 class="fw-bold mb-0">Tài khoản đăng nhập</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Tên đăng nhập</label>
+                        <input class="form-control" name="TenDangNhap" maxlength="50" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Mật khẩu</label>
+                        <input class="form-control" type="password" name="MatKhau" autocomplete="new-password" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Vai trò</label>
+                        <select class="form-select" name="MaVaiTro" required>
+                            <option value="">Chọn vai trò</option>
+                            @foreach (var role in Model.Roles)
+                            {
+                                <option value="@role.RoleId">@role.RoleName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Đóng</button>
+                <button type="submit" class="btn btn-dark px-4">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="editStaffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form asp-action="Edit" method="post" class="modal-content border-0 rounded-4">
+            @Html.AntiForgeryToken()
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Sửa nhân viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="MaNv" id="editStaffId">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Mã nhân viên</label>
+                        <input class="form-control" id="editStaffIdDisplay" disabled>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Họ tên</label>
+                        <input class="form-control" name="HoTen" id="editStaffName" maxlength="100" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Giới tính</label>
+                        <select class="form-select" name="GioiTinh" id="editStaffGender">
+                            <option value="">Chưa chọn</option>
+                            <option>Nam</option>
+                            <option>Nữ</option>
+                            <option>Khác</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Ngày sinh</label>
+                        <input class="form-control" type="date" name="NgaySinh" id="editStaffBirth">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Trạng thái</label>
+                        <select class="form-select" name="TrangThai" id="editStaffStatus">
+                            <option>Đang làm</option>
+                            <option>Tạm nghỉ</option>
+                            <option>Nghỉ việc</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Số điện thoại</label>
+                        <input class="form-control" name="SoDienThoai" id="editStaffPhone" maxlength="15">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input class="form-control" type="email" name="Email" id="editStaffEmail" maxlength="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Chức vụ</label>
+                        <input class="form-control" name="ChucVu" id="editStaffPosition" maxlength="50" list="staffPositionOptions">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Địa chỉ</label>
+                        <input class="form-control" name="DiaChi" id="editStaffAddress" maxlength="255">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Đóng</button>
+                <button type="submit" class="btn btn-dark px-4">Cập nhật</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<datalist id="staffPositionOptions">
+    @foreach (var position in Model.Positions)
+    {
+        <option value="@position"></option>
+    }
+</datalist>
+
+@section Scripts {
+    <script>
+        (function () {
+            const rows = Array.from(document.querySelectorAll("[data-staff-row]"));
+            const tbody = document.getElementById("staffTableBody");
+            const searchInput = document.getElementById("staffSearch");
+            const statusFilter = document.getElementById("staffStatusFilter");
+            const positionFilter = document.getElementById("staffPositionFilter");
+            const sortSelect = document.getElementById("staffSort");
+            const emptyState = document.getElementById("staffEmptyState");
+            const visibleCount = document.getElementById("staffVisibleCount");
+            const detailModal = new bootstrap.Modal(document.getElementById("staffDetailModal"));
+            const editModal = new bootstrap.Modal(document.getElementById("editStaffModal"));
+            const lockAccountForm = document.getElementById("lockStaffAccountForm");
+            const restoreAccountForm = document.getElementById("restoreStaffAccountForm");
+            const resetPasswordForm = document.getElementById("resetStaffPasswordForm");
+            let activeDetailRow = null;
+
+            function normalize(value) {
+                return (value || "")
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/đ/g, "d");
+            }
+
+            function applyStaffControls() {
+                const keyword = normalize(searchInput.value);
+                const status = statusFilter.value;
+                const position = positionFilter.value;
+                let visible = 0;
+
+                rows.forEach(function (row) {
+                    const haystack = normalize([
+                        row.dataset.id,
+                        row.dataset.name,
+                        row.dataset.phone,
+                        row.dataset.email,
+                        row.dataset.position,
+                        row.dataset.status,
+                        row.dataset.account
+                    ].join(" "));
+                    const matches = (!keyword || haystack.includes(keyword)) &&
+                        (status === "all" || row.dataset.status === status) &&
+                        (position === "all" || row.dataset.position === position);
+                    row.hidden = !matches;
+                    if (matches) visible += 1;
+                });
+
+                sortRows();
+                emptyState.hidden = visible > 0;
+                visibleCount.textContent = visible;
+            }
+
+            function sortRows() {
+                const sortValue = sortSelect.value;
+                const sortedRows = rows.slice().sort(function (a, b) {
+                    if (sortValue === "name-desc") return compareText(b.dataset.name, a.dataset.name);
+                    if (sortValue === "booking-desc") return Number(b.dataset.bookings || 0) - Number(a.dataset.bookings || 0);
+                    if (sortValue === "booking-asc") return Number(a.dataset.bookings || 0) - Number(b.dataset.bookings || 0);
+                    if (sortValue === "status-asc") return compareText(a.dataset.status, b.dataset.status);
+                    return compareText(a.dataset.name, b.dataset.name);
+                });
+                sortedRows.forEach(row => tbody.appendChild(row));
+            }
+
+            function compareText(a, b) {
+                return normalize(a).localeCompare(normalize(b), "vi");
+            }
+
+            function fallback(value, emptyValue) {
+                return value && String(value).trim() ? value : emptyValue;
+            }
+
+            function renderStatus(status) {
+                const active = status === "Đang làm";
+                return `<span class="staff-badge ${active ? "active" : "inactive"}"><i class="bi bi-circle-fill" style="font-size: 0.55rem;"></i>${escapeHtml(status || "-")}</span>`;
+            }
+
+            function renderAccountSummary(row) {
+                return row.dataset.hasAccount === "true"
+                    ? `${row.dataset.account}${row.dataset.accountRole ? " - " + row.dataset.accountRole : ""}${row.dataset.accountStatus ? " - " + row.dataset.accountStatus : ""}`
+                    : "Chưa có tài khoản";
+            }
+
+            function refreshAccountControls(row) {
+                const hasAccount = row.dataset.hasAccount === "true";
+                const isActiveAccount = row.dataset.accountStatus === "Hoạt động";
+                document.getElementById("lockStaffAccountId").value = row.dataset.accountId || "";
+                document.getElementById("restoreStaffAccountId").value = row.dataset.accountId || "";
+                document.getElementById("resetStaffPasswordAccountId").value = row.dataset.accountId || "";
+                lockAccountForm.hidden = !hasAccount || !isActiveAccount;
+                restoreAccountForm.hidden = !hasAccount || isActiveAccount;
+                resetPasswordForm.hidden = !hasAccount;
+            }
+
+            function updateAccountStatus(row, accountStatus) {
+                row.dataset.accountStatus = accountStatus || "";
+                const statusLabel = row.querySelector("[data-account-status-label]");
+                if (statusLabel) {
+                    statusLabel.textContent = row.dataset.accountStatus;
+                }
+                document.getElementById("detailStaffAccount").textContent = renderAccountSummary(row);
+                refreshAccountControls(row);
+            }
+
+            function openDetail(row) {
+                activeDetailRow = row;
+                document.getElementById("detailStaffAvatar").textContent = row.dataset.initials || "NV";
+                document.getElementById("detailStaffCode").textContent = "Mã nhân viên: " + row.dataset.id;
+                document.getElementById("detailStaffName").textContent = row.dataset.name || "";
+                document.getElementById("detailStaffStatus").innerHTML = renderStatus(row.dataset.status);
+                document.getElementById("detailStaffAccount").textContent = renderAccountSummary(row);
+                document.getElementById("detailStaffPosition").textContent = fallback(row.dataset.position, "Chưa phân quyền");
+                document.getElementById("detailStaffGender").textContent = fallback(row.dataset.gender, "Chưa có");
+                document.getElementById("detailStaffBirth").textContent = fallback(row.dataset.birthLabel, "Chưa có");
+                document.getElementById("detailStaffPhone").textContent = fallback(row.dataset.phone, "Chưa có số điện thoại");
+                document.getElementById("detailStaffEmail").textContent = fallback(row.dataset.email, "Chưa có email");
+                document.getElementById("detailStaffBookings").textContent = row.dataset.bookings || "0";
+                document.getElementById("detailStaffAddress").textContent = fallback(row.dataset.address, "Chưa có địa chỉ");
+                refreshAccountControls(row);
+                detailModal.show();
+            }
+
+            function openEdit(row) {
+                document.getElementById("editStaffId").value = row.dataset.id || "";
+                document.getElementById("editStaffIdDisplay").value = row.dataset.id || "";
+                document.getElementById("editStaffName").value = row.dataset.name || "";
+                document.getElementById("editStaffGender").value = row.dataset.gender || "";
+                document.getElementById("editStaffBirth").value = row.dataset.birthInput || "";
+                document.getElementById("editStaffStatus").value = row.dataset.status || "Đang làm";
+                document.getElementById("editStaffPhone").value = row.dataset.phone || "";
+                document.getElementById("editStaffEmail").value = row.dataset.email || "";
+                document.getElementById("editStaffPosition").value = row.dataset.position || "";
+                document.getElementById("editStaffAddress").value = row.dataset.address || "";
+                editModal.show();
+            }
+
+            function escapeHtml(value) {
+                return String(value || "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            rows.forEach(function (row) {
+                row.addEventListener("click", function (event) {
+                    if (event.target.closest("button, form, a, input, select")) return;
+                    openDetail(row);
+                });
+                row.querySelector("[data-staff-detail]")?.addEventListener("click", function () {
+                    openDetail(row);
+                });
+                row.querySelector("[data-staff-edit]")?.addEventListener("click", function () {
+                    openEdit(row);
+                });
+                row.querySelector("[data-staff-delete-form]")?.addEventListener("submit", function (event) {
+                    if (!confirm("Xóa nhân viên này?")) {
+                        event.preventDefault();
+                    }
+                });
+            });
+
+            async function submitAccountStatusForm(form, confirmMessage) {
+                if (!activeDetailRow || !confirm(confirmMessage)) return;
+
+                const button = form.querySelector("button[type='submit']");
+                const originalHtml = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = "Đang cập nhật...";
+                try {
+                    const response = await fetch(form.action, {
+                        method: "POST",
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        body: new FormData(form)
+                    });
+                    if (!response.ok) {
+                        throw new Error("Không thể cập nhật tài khoản.");
+                    }
+
+                    const result = await response.json();
+                    if (!result.success) {
+                        alert(result.message || "Không thể cập nhật tài khoản.");
+                        return;
+                    }
+
+                    updateAccountStatus(activeDetailRow, result.accountStatus);
+                } catch (error) {
+                    alert(error.message || "Không thể cập nhật tài khoản.");
+                } finally {
+                    button.disabled = false;
+                    button.innerHTML = originalHtml;
+                }
+            }
+
+            lockAccountForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                submitAccountStatusForm(lockAccountForm, "Khóa tài khoản của nhân viên này? Nhân viên sẽ không đăng nhập được.");
+            });
+
+            restoreAccountForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                submitAccountStatusForm(restoreAccountForm, "Khôi phục tài khoản của nhân viên này?");
+            });
+
+            resetPasswordForm.addEventListener("submit", function (event) {
+                if (!confirm("Đặt lại mật khẩu tài khoản này thành 123456?")) {
+                    event.preventDefault();
+                }
+            });
+
+            searchInput.addEventListener("input", applyStaffControls);
+            statusFilter.addEventListener("change", applyStaffControls);
+            positionFilter.addEventListener("change", applyStaffControls);
+            sortSelect.addEventListener("change", applyStaffControls);
+            applyStaffControls();
+        })();
+    </script>
+}

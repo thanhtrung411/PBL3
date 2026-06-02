@@ -10,6 +10,8 @@ public interface IReceptionistCheckInService
 
     Task<ReceptionistRoomMapResult> GetRoomMapAsync(CancellationToken cancellationToken = default);
 
+    Task<RoomMaintenanceResult> SetRoomMaintenanceAsync(RoomMaintenanceRequest request, CancellationToken cancellationToken = default);
+
     Task<ReceptionistServiceUsageResult> GetServiceUsageAsync(CancellationToken cancellationToken = default);
 
     Task<ReceptionistAddServiceResult> AddServiceUsageAsync(ReceptionistAddServiceRequest request, CancellationToken cancellationToken = default);

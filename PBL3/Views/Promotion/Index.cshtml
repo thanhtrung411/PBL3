@@ -1,719 +1,709 @@
-﻿@* @{
-    Layout = "_AdminLayout";
-    ViewData["Title"] = "Quản lý khuyến mãi";
-}
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3 class="mb-1 fw-bold">Quản lý khuyến mãi</h3>
-        <p class="text-muted mb-0">Quản lý các chương trình ưu đãi và giảm giá</p>
-    </div>
-    <div class="d-flex gap-2">
-        <div class="input-group">
-            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control bg-white border-start-0" placeholder="Tìm kiếm khuyến mãi...">
-        </div>
-        <button class="btn btn-outline-secondary px-3 bg-white">+ Tạo khuyến mãi mới</button>
-    </div>
-</div>
-
-<!-- Stats -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card-custom p-3 border">
-            <div class="d-flex flex-column">
-                <i class="bi bi-tags text-primary fs-5 mb-2"></i>
-                <div class="fw-bold fs-4">5</div>
-                <div class="text-muted small">Tổng chương trình</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border">
-            <div class="d-flex flex-column">
-                <i class="bi bi-check-circle text-success fs-5 mb-2"></i>
-                <div class="fw-bold fs-4">3</div>
-                <div class="text-muted small">Đang áp dụng</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border">
-            <div class="d-flex flex-column">
-                <i class="bi bi-graph-up text-primary fs-5 mb-2"></i>
-                <div class="fw-bold fs-4">508</div>
-                <div class="text-muted small">Lượt sử dụng</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border">
-            <div class="d-flex flex-column">
-                <i class="bi bi-arrow-down-right text-warning fs-5 mb-2"></i>
-                <div class="fw-bold fs-4">3.2 tỷ</div>
-                <div class="text-muted small">Tổng giảm giá</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Promotion List -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="card-custom p-4 border position-relative">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-tag text-primary fs-5"></i>
-                    <div>
-                        <div class="fw-bold fs-5 text-dark">Tết đến Xuân về</div>
-                        <div class="small text-muted"><span class="badge border text-dark fw-normal me-2">TET2026</span> Đang áp dụng</div>
-                    </div>
-                </div>
-            </div>
-            <p class="text-muted small mb-3 mt-2">Giảm giá 20% cho tất cả phòng trong dịp Tết nguyên đán</p>
-
-            <div class="bg-primary bg-opacity-10 rounded p-3 mb-3 text-primary d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="small fw-bold">Mức giảm</div>
-                    <div class="fw-bold fs-4 mt-1">20%</div>
-                </div>
-                <div class="text-end">
-                    <div class="small fw-bold">Tối đa</div>
-                    <div class="fw-bold fs-4 mt-1">500.000 đ</div>
-                </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-2 mb-2 text-muted small">
-                <i class="bi bi-calendar3"></i> 01/02/2026 - 01/03/2026
-            </div>
-
-            <div class="mb-4">
-                <div class="d-flex justify-content-between small text-muted mb-1 mt-3">
-                    <span>Lượt sử dụng</span>
-                    <span>45 / 100</span>
-                </div>
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                <button class="btn btn-outline-primary btn-sm px-4 rounded-pill"><i class="bi bi-eye me-1"></i> Chi tiết</button>
-                <div class="d-flex gap-1">
-                    <button class="btn btn-icon-only"><i class="bi bi-pencil mt-1 text-muted"></i></button>
-                    <button class="btn btn-icon-only text-danger"><i class="bi bi-trash mt-1"></i></button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
- *@
-
-
-
+@model PBL3.Models.AdminPromotionManagementViewModel
+@using System.Globalization
 
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý khuyến mãi";
+    string Money(decimal value) => $"{value.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} đ";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex gap-2 flex-grow-1 me-3">
-        <div class="input-group">
-            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-            <input type="text" id="searchInput" class="form-control bg-white border-start-0" placeholder="Tìm kiếm khuyến mãi...">
+<style>
+    .promo-page {
+        color: #142033;
+    }
+
+    .promo-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .promo-header h1 {
+        margin: 0;
+        color: #111827;
+        font-size: clamp(1.85rem, 3vw, 2.6rem);
+        font-weight: 850;
+        letter-spacing: 0;
+        line-height: 1.08;
+    }
+
+    .promo-header p {
+        margin: 8px 0 0;
+        color: #66758a;
+        font-weight: 560;
+    }
+
+    .promo-primary-btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 8px;
+        background: #1f6feb;
+        color: #ffffff;
+        font-weight: 820;
+        padding: 10px 16px;
+        box-shadow: 0 14px 30px rgba(31, 111, 235, 0.18);
+    }
+
+    .promo-primary-btn:hover,
+    .promo-primary-btn:focus-visible {
+        background: #1659c7;
+        color: #ffffff;
+        outline: none;
+    }
+
+    .promo-alert {
+        border-radius: 8px;
+        font-weight: 650;
+    }
+
+    .promo-control-panel,
+    .promo-stat-card,
+    .promo-list-panel {
+        border: 1px solid #dfe7f0;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 16px 38px rgba(20, 32, 51, 0.08);
+    }
+
+    .promo-control-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: 12px;
+        margin-bottom: 18px;
+        padding: 18px;
+    }
+
+    .promo-search-box,
+    .promo-filter-select {
+        min-height: 48px;
+        border: 1px solid #dfe7f0;
+        border-radius: 8px;
+        background: #ffffff;
+    }
+
+    .promo-search-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px;
+    }
+
+    .promo-search-box i {
+        color: #66758a;
+    }
+
+    .promo-search-box input {
+        width: 100%;
+        border: 0;
+        outline: none;
+        color: #142033;
+        font-weight: 560;
+    }
+
+    .promo-filter-select {
+        color: #142033;
+        font-weight: 650;
+        padding: 0 12px;
+    }
+
+    .promo-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .promo-stat-card {
+        padding: 16px;
+    }
+
+    .promo-stat-card span {
+        color: #66758a;
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    .promo-stat-card strong {
+        display: block;
+        margin-top: 5px;
+        color: #111827;
+        font-size: 1.55rem;
+        font-weight: 880;
+        line-height: 1;
+    }
+
+    .promo-list-panel {
+        padding: 18px;
+    }
+
+    .promo-list-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .promo-list-title h2 {
+        margin: 0;
+        font-size: 1.18rem;
+        font-weight: 850;
+    }
+
+    .promo-count-pill {
+        border-radius: 999px;
+        background: #eaf2ff;
+        color: #1f6feb;
+        font-size: 0.82rem;
+        font-weight: 820;
+        padding: 7px 11px;
+    }
+
+    .promo-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .promo-card {
+        display: grid;
+        gap: 14px;
+        border: 1px solid #dfe7f0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 18px;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    }
+
+    .promo-card:hover {
+        border-color: rgba(31, 111, 235, 0.22);
+        box-shadow: 0 12px 30px rgba(20, 32, 51, 0.08);
+        transform: translateY(-1px);
+    }
+
+    .promo-card-top,
+    .promo-card-actions {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .promo-title-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .promo-icon {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #eaf2ff;
+        color: #1f6feb;
+        font-size: 1.18rem;
+        flex: 0 0 auto;
+    }
+
+    .promo-name {
+        margin: 0;
+        color: #111827;
+        font-size: 1.08rem;
+        font-weight: 850;
+    }
+
+    .promo-code {
+        display: inline-flex;
+        margin-top: 6px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #66758a;
+        font-size: 0.78rem;
+        font-weight: 820;
+        padding: 5px 9px;
+    }
+
+    .promo-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        padding: 7px 10px;
+        white-space: nowrap;
+    }
+
+    .promo-status.active {
+        background: #e9f8f0;
+        color: #168a55;
+    }
+
+    .promo-status.upcoming {
+        background: #eaf2ff;
+        color: #1f6feb;
+    }
+
+    .promo-status.expired,
+    .promo-status.inactive {
+        background: #fff1ef;
+        color: #b42318;
+    }
+
+    .promo-desc {
+        margin: 0;
+        color: #66758a;
+        font-size: 0.92rem;
+        font-weight: 570;
+    }
+
+    .promo-discount-box {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        border-radius: 10px;
+        background: #f8fbff;
+        padding: 14px;
+    }
+
+    .promo-discount-box span {
+        display: block;
+        color: #66758a;
+        font-size: 0.78rem;
+        font-weight: 720;
+    }
+
+    .promo-discount-box strong {
+        display: block;
+        margin-top: 5px;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 850;
+    }
+
+    .promo-main-discount strong {
+        color: #1f6feb;
+        font-size: 1.35rem;
+    }
+
+    .promo-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: #66758a;
+        font-size: 0.86rem;
+        font-weight: 650;
+    }
+
+    .promo-progress-row {
+        display: grid;
+        gap: 7px;
+    }
+
+    .promo-progress-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: #142033;
+        font-size: 0.86rem;
+        font-weight: 760;
+    }
+
+    .promo-progress {
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #edf2f7;
+    }
+
+    .promo-progress > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: #1f6feb;
+    }
+
+    .promo-delete-btn {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #dfe7f0;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #b42318;
+    }
+
+    .promo-empty-state {
+        display: none;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        background: #fbfdff;
+        color: #66758a;
+        padding: 38px 16px;
+        text-align: center;
+        font-weight: 720;
+    }
+
+    .promo-empty-state.is-visible {
+        display: block;
+    }
+
+    .promo-modal .modal-content {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 26px 70px rgba(15, 23, 42, 0.24);
+    }
+
+    .promo-modal-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px solid #dfe7f0;
+        padding: 22px 24px 18px;
+    }
+
+    .promo-modal-header h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.28rem;
+        font-weight: 850;
+    }
+
+    .promo-modal-header p {
+        margin: 5px 0 0;
+        color: #66758a;
+        font-weight: 620;
+    }
+
+    .promo-modal-body {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        padding: 22px 24px;
+    }
+
+    .promo-form-group {
+        display: grid;
+        gap: 7px;
+    }
+
+    .promo-form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .promo-form-group label {
+        color: #66758a;
+        font-size: 0.84rem;
+        font-weight: 760;
+    }
+
+    .promo-form-group input,
+    .promo-form-group select,
+    .promo-form-group textarea {
+        width: 100%;
+        border: 1px solid #dbe3ef;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        font-weight: 620;
+        padding: 11px 12px;
+        outline: none;
+    }
+
+    .promo-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid #dfe7f0;
+        padding: 16px 24px 22px;
+    }
+
+    @@media (max-width: 1000px) {
+        .promo-header,
+        .promo-list-title {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .promo-control-panel,
+        .promo-stat-grid,
+        .promo-grid,
+        .promo-modal-body {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="promo-page">
+    <header class="promo-header">
+        <div>
+            <h1>Quản lý khuyến mãi</h1>
+            <p>Theo dõi mã giảm giá, thời gian áp dụng, lượt sử dụng và tổng giảm giá.</p>
         </div>
-        <select id="statusFilter" class="form-select bg-white" style="min-width: 170px; max-width: 210px;">
+        <button type="button" class="promo-primary-btn" data-bs-toggle="modal" data-bs-target="#addPromotionModal">
+            <i class="bi bi-plus-lg"></i>
+            Tạo khuyến mãi
+        </button>
+    </header>
+
+    @if (TempData["PromotionSuccess"] is string successMessage)
+    {
+        <div class="alert alert-success promo-alert">@successMessage</div>
+    }
+    @if (TempData["PromotionError"] is string errorMessage)
+    {
+        <div class="alert alert-danger promo-alert">@errorMessage</div>
+    }
+
+    <section class="promo-control-panel" aria-label="Bộ lọc khuyến mãi">
+        <label class="promo-search-box" for="promotionSearchInput">
+            <i class="bi bi-search"></i>
+            <input type="search" id="promotionSearchInput" placeholder="Tìm theo tên chương trình, mã khuyến mãi..." autocomplete="off" />
+        </label>
+        <select id="promotionStatusFilter" class="promo-filter-select">
             <option value="all">Tất cả trạng thái</option>
-            <option value="Đang áp dụng">Đang áp dụng</option>
-            <option value="Sắp diễn ra">Sắp diễn ra</option>
-            <option value="Đã hết hạn">Đã hết hạn</option>
+            <option value="active">Đang áp dụng</option>
+            <option value="upcoming">Sắp diễn ra</option>
+            <option value="expired">Đã hết hạn</option>
+            <option value="inactive">Ngừng áp dụng</option>
         </select>
-    </div>
-    <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#addPromotionModal"><i class="bi bi-plus"></i> Tạo khuyến mãi mới</button>
-</div>
+    </section>
 
-<!-- Stats -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div class="d-flex flex-column">
-                <div class="bg-primary bg-opacity-10 text-primary rounded p-2 mb-3 align-self-start" style="background-color: #f3e8ff !important; color: #a855f7 !important;">
-                    <i class="bi bi-tags fs-5"></i>
-                </div>
-                <div id="totalPromotionsCount" class="fw-bold fs-3 text-dark">2</div>
-                <div class="text-muted small">Tổng chương trình</div>
-            </div>
+    <section class="promo-stat-grid" aria-label="Thống kê khuyến mãi">
+        <div class="promo-stat-card">
+            <span>Tổng chương trình</span>
+            <strong>@Model.TotalCount</strong>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div class="d-flex flex-column">
-                <div class="bg-success bg-opacity-10 text-success rounded p-2 mb-3 align-self-start">
-                    <i class="bi bi-check-circle fs-5"></i>
-                </div>
-                <div id="activePromotionsCount" class="fw-bold fs-3 text-dark">1</div>
-                <div class="text-muted small">Đang áp dụng</div>
-            </div>
+        <div class="promo-stat-card">
+            <span>Đang áp dụng</span>
+            <strong>@Model.ActiveCount</strong>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div class="d-flex flex-column">
-                <div class="bg-primary bg-opacity-10 text-primary rounded p-2 mb-3 align-self-start">
-                    <i class="bi bi-graph-up fs-5"></i>
-                </div>
-                <div class="fw-bold fs-3 text-dark">508</div>
-                <div class="text-muted small">Lượt sử dụng</div>
-            </div>
+        <div class="promo-stat-card">
+            <span>Lượt sử dụng</span>
+            <strong>@Model.TotalUsage</strong>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div class="d-flex flex-column">
-                <div class="bg-warning bg-opacity-10 text-warning rounded p-2 mb-3 align-self-start" style="background-color: #ffedd5 !important; color: #ea580c !important;">
-                    <i class="bi bi-graph-up-arrow fs-5"></i>
-                </div>
-                <div class="fw-bold fs-3 text-dark">3.2 tỷ</div>
-                <div class="text-muted small">Tổng giảm giá</div>
-            </div>
+        <div class="promo-stat-card">
+            <span>Tổng giảm giá</span>
+            <strong>@Money(Model.TotalDiscountAmount)</strong>
         </div>
-    </div>
-</div>
+    </section>
 
-<!-- Promotion List -->
-<div class="row g-4" id="promotionList">
-    <!-- Card 1 -->
-    <div class="col-md-6 promotion-item" data-name="Ưu đãi mùa hè" data-code="SUMMER2026" data-status="Sắp diễn ra">
-        <div class="card-custom p-4 border h-100 d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
-                        <i class="bi bi-tag fs-4"></i>
+    <section class="promo-list-panel">
+        <div class="promo-list-title">
+            <h2>Danh sách khuyến mãi</h2>
+            <span class="promo-count-pill" id="promotionVisibleCount">0 khuyến mãi</span>
+        </div>
+
+        <div class="promo-grid" id="promotionList">
+            @foreach (var promotion in Model.Promotions)
+            {
+                <article class="promo-card"
+                         data-promotion-card
+                         data-search="@($"{promotion.Name} {promotion.Code} {promotion.Description}")"
+                         data-status="@promotion.StatusKey">
+                    <div class="promo-card-top">
+                        <div class="promo-title-row">
+                            <span class="promo-icon"><i class="bi bi-tag"></i></span>
+                            <div>
+                                <h3 class="promo-name">@promotion.Name</h3>
+                                <span class="promo-code">@promotion.Code</span>
+                            </div>
+                        </div>
+                        <span class="promo-status @promotion.StatusClass">
+                            <i class="bi @promotion.StatusIcon"></i>
+                            @promotion.StatusLabel
+                        </span>
                     </div>
-                    <div>
-                        <div class="fw-bold fs-5 text-dark mb-1">Ưu đãi mùa hè</div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-light text-muted border px-2 py-1 fw-normal" style="font-size: 11px;">SUMMER2026</span>
-                            <span class="text-primary small fw-bold"><i class="bi bi-clock me-1"></i> Sắp diễn ra</span>
+
+                    <p class="promo-desc">@promotion.Description</p>
+
+                    <div class="promo-discount-box">
+                        <div class="promo-main-discount">
+                            <span>Mức giảm</span>
+                            <strong>@promotion.DiscountLabel</strong>
+                        </div>
+                        <div>
+                            <span>Tối đa</span>
+                            <strong>@promotion.MaxDiscountLabel</strong>
+                        </div>
+                        <div>
+                            <span>Đơn tối thiểu</span>
+                            <strong>@promotion.MinimumInvoiceLabel</strong>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <p class="text-dark small mb-4">Giảm giá 20% cho tất cả phòng trong mùa hè</p>
-
-            <div class="bg-light rounded p-3 mb-4 mt-auto">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div>
-                        <div class="text-muted small mb-1">Mức giảm</div>
-                        <div class="fw-bold fs-4 text-primary">20%</div>
+                    <div class="promo-meta">
+                        <span><i class="bi bi-calendar3"></i> @promotion.DateRangeLabel</span>
+                        <span><i class="bi bi-bullseye"></i> @promotion.ScopeLabel</span>
                     </div>
-                    <div class="text-end">
-                        <div class="text-muted small mb-1">Tối đa</div>
-                        <div class="fw-bold fs-5 text-dark">500.000 đ</div>
-                    </div>
-                </div>
-                <div class="text-muted" style="font-size: 11px;">Đơn tối thiểu: 1.000.000 đ</div>
-            </div>
 
-            <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
-                <i class="bi bi-calendar3"></i> 01/06/2026 - 31/08/2026
-            </div>
-
-            <div class="mb-2">
-                <div class="d-flex justify-content-between small text-dark fw-bold mb-2">
-                    <span>Lượt sử dụng</span>
-                    <span>45 / 100</span>
-                </div>
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: 45%" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card 2 -->
-    <div class="col-md-6 promotion-item" data-name="Giảm giá cuối tuần" data-code="WEEKEND50" data-status="Đang áp dụng">
-        <div class="card-custom p-4 border h-100 d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
-                        <i class="bi bi-tag fs-4"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold fs-5 text-dark mb-1">Giảm giá cuối tuần</div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-light text-muted border px-2 py-1 fw-normal" style="font-size: 11px;">WEEKEND50</span>
-                            <span class="text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> Đang áp dụng</span>
+                    <div class="promo-progress-row">
+                        <div class="promo-progress-label">
+                            <span>Lượt sử dụng</span>
+                            <span>@promotion.UsedCount / @promotion.IssuedCount</span>
+                        </div>
+                        <div class="promo-progress" aria-label="Lượt sử dụng @promotion.UsagePercent%">
+                            <span style="width: @promotion.UsagePercent.ToString("0.#", CultureInfo.InvariantCulture)%"></span>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <p class="text-dark small mb-4">Giảm 50k cho đặt phòng cuối tuần</p>
-
-            <div class="bg-light rounded p-3 mb-4 mt-auto">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div>
-                        <div class="text-muted small mb-1">Mức giảm</div>
-                        <div class="fw-bold fs-4 text-primary">50.000 đ</div>
+                    <div class="promo-card-actions">
+                        <span class="promo-meta">@promotion.PromotionId</span>
+                        <form asp-controller="Promotion" asp-action="Delete" method="post" data-delete-promotion-form>
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@promotion.PromotionId" />
+                            <button type="submit" class="promo-delete-btn" aria-label="Xóa @promotion.Name">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
                     </div>
-                </div>
-                <div class="text-muted" style="font-size: 11px;">Đơn tối thiểu: 500.000 đ</div>
-            </div>
-
-            <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
-                <i class="bi bi-calendar3"></i> 01/01/2026 - 31/12/2026
-            </div>
-
-            <div class="mb-2">
-                <div class="d-flex justify-content-between small text-dark fw-bold mb-2">
-                    <span>Lượt sử dụng</span>
-                    <span>234 / 500</span>
-                </div>
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: 46.8%" aria-valuenow="46.8" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
+                </article>
+            }
         </div>
-    </div>
+
+        <div class="promo-empty-state" id="promotionEmptyState">
+            <i class="bi bi-search d-block fs-2 mb-2"></i>
+            Không tìm thấy khuyến mãi phù hợp.
+        </div>
+    </section>
 </div>
 
-<!-- Modal Tạo khuyến mãi mới -->
-<div class="modal fade" id="addPromotionModal" tabindex="-1" aria-labelledby="addPromotionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border: none; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
-            <!-- Header -->
-            <div class="modal-header border-0 px-4 pt-4 pb-2">
+<div class="modal fade promo-modal" id="addPromotionModal" tabindex="-1" aria-labelledby="addPromotionModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content" asp-controller="Promotion" asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="promo-modal-header">
                 <div>
-                    <h5 class="modal-title fw-bold fs-5" id="addPromotionModalLabel">
-                        <i class="bi bi-plus-circle-fill text-primary me-2"></i>Tạo chương trình khuyến mãi mới
-                    </h5>
-                    <p class="text-muted small mb-0 mt-1">Thiết lập thông tin, mức giảm và thời gian áp dụng khuyến mãi</p>
+                    <h3 id="addPromotionModalTitle">Tạo khuyến mãi</h3>
+                    <p>Khuyến mãi mới sẽ được lưu trực tiếp vào cơ sở dữ liệu.</p>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <!-- Body -->
-            <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                <form id="addPromotionForm">
-                    <!-- Section 1: Thông tin chung -->
-                    <div class="mb-4">
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
-                            <i class="bi bi-info-circle-fill me-2"></i>Thông tin chung
-                        </h6>
-                        <div class="row g-3">
-                            <!-- Tên chương trình -->
-                            <div class="col-md-6">
-                                <label for="promoName" class="form-label fw-semibold text-dark">Tên chương trình <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="promoName" required placeholder="VD: Khai xuân đón lộc"
-                                       style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                            </div>
-                            <!-- Mã khuyến mãi -->
-                            <div class="col-md-6">
-                                <label for="promoCode" class="form-label fw-semibold text-dark">Mã khuyến mãi <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="promoCode" required placeholder="VD: XUAN2026"
-                                       style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; text-transform: uppercase;">
-                            </div>
-                            <!-- Mô tả -->
-                            <div class="col-12">
-                                <label for="promoDescription" class="form-label fw-semibold text-dark">Mô tả</label>
-                                <textarea class="form-control" id="promoDescription" rows="2" placeholder="Nhập mô tả chi tiết chương trình khuyến mãi..."
-                                          style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; resize: vertical; transition: all 0.2s;"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 2: Thiết lập giảm giá -->
-                    <div class="mb-4">
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
-                            <i class="bi bi-sliders me-2"></i>Thiết lập giảm giá
-                        </h6>
-                        <div class="row g-3">
-                            <!-- Loại giảm giá -->
-                            <div class="col-md-6">
-                                <label for="discountType" class="form-label fw-semibold text-dark">Loại giảm giá <span class="text-danger">*</span></label>
-                                <select class="form-select" id="discountType" required
-                                        style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                    <option value="percentage" selected>Giảm theo phần trăm (%)</option>
-                                    <option value="fixed">Giảm theo số tiền cố định (VNĐ)</option>
-                                </select>
-                            </div>
-                            <!-- Giá trị giảm -->
-                            <div class="col-md-6">
-                                <label for="discountValue" id="lblDiscountValue" class="form-label fw-semibold text-dark">Phần trăm giảm (%) <span class="text-danger">*</span></label>
-                                <div class="input-group" style="border-radius: 0.5rem; overflow: hidden;">
-                                    <input type="number" class="form-control" id="discountValue" min="1" required placeholder="VD: 20"
-                                           style="padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                                    <span class="input-group-text bg-light text-muted" id="discountValueSuffix" style="border-color: #e5e7eb; font-weight: 500;">%</span>
-                                </div>
-                            </div>
-                            <!-- Giảm tối đa -->
-                            <div class="col-md-6" id="maxDiscountContainer">
-                                <label for="maxDiscount" class="form-label fw-semibold text-dark">Giảm tối đa (VNĐ) <span class="text-danger">*</span></label>
-                                <div class="input-group" style="border-radius: 0.5rem; overflow: hidden;">
-                                    <input type="number" class="form-control" id="maxDiscount" min="0" placeholder="VD: 500000" required
-                                           style="padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                                    <span class="input-group-text bg-light text-muted" style="border-color: #e5e7eb; font-weight: 500;">VNĐ</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 3: Điều kiện áp dụng -->
-                    <div class="mb-4">
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
-                            <i class="bi bi-shield-check me-2"></i>Điều kiện áp dụng
-                        </h6>
-                        <div class="row g-3">
-                            <!-- Đơn tối thiểu -->
-                            <div class="col-md-4">
-                                <label for="minOrderValue" class="form-label fw-semibold text-dark">Đơn tối thiểu (VNĐ)</label>
-                                <div class="input-group" style="border-radius: 0.5rem; overflow: hidden;">
-                                    <input type="number" class="form-control" id="minOrderValue" min="0" placeholder="VD: 1000000"
-                                           style="padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                                    <span class="input-group-text bg-light text-muted" style="border-color: #e5e7eb; font-weight: 500;">VNĐ</span>
-                                </div>
-                            </div>
-                            <!-- Loại phòng áp dụng -->
-                            <div class="col-md-4">
-                                <label for="roomType" class="form-label fw-semibold text-dark">Loại phòng</label>
-                                <select class="form-select" id="roomType"
-                                        style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                    <option value="Tất cả loại phòng" selected>Tất cả loại phòng</option>
-                                    <option value="Standard">Standard</option>
-                                    <option value="Deluxe">Deluxe</option>
-                                    <option value="Suite">Suite</option>
-                                    <option value="Family">Family</option>
-                                </select>
-                            </div>
-                            <!-- Số lượt sử dụng -->
-                            <div class="col-md-4">
-                                <label for="maxUses" class="form-label fw-semibold text-dark">Số lượt sử dụng <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="maxUses" required min="1" placeholder="VD: 100"
-                                       style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 4: Thời gian -->
-                    <div class="mb-2">
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">
-                            <i class="bi bi-calendar-event me-2"></i>Thời gian áp dụng
-                        </h6>
-                        <div class="row g-3">
-                            <!-- Ngày bắt đầu -->
-                            <div class="col-md-6">
-                                <label for="startDate" class="form-label fw-semibold text-dark">Ngày bắt đầu <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="startDate" required
-                                       style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                            </div>
-                            <!-- Ngày kết thúc -->
-                            <div class="col-md-6">
-                                <label for="endDate" class="form-label fw-semibold text-dark">Ngày kết thúc <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="endDate" required
-                                       style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                            </div>
-                        </div>
-                    </div>
-                </form>
+            <div class="promo-modal-body">
+                <div class="promo-form-group">
+                    <label for="promotionName">Tên chương trình</label>
+                    <input id="promotionName" name="TenMaGiamGia" type="text" required />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionCode">Mã khuyến mãi</label>
+                    <input id="promotionCode" name="CodeGiamGia" type="text" required placeholder="VD: SUMMER2026" />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionType">Loại giảm giá</label>
+                    <select id="promotionType" name="LoaiGiamGia">
+                        <option value="PHANTRAM">Giảm theo phần trăm</option>
+                        <option value="TIENMAT">Giảm theo số tiền</option>
+                    </select>
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionValue">Giá trị giảm</label>
+                    <input id="promotionValue" name="GiaTriGiam" type="number" min="1" step="1" required />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionMax">Giảm tối đa</label>
+                    <input id="promotionMax" name="GiamToiDa" type="number" min="0" step="1000" />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionMin">Đơn tối thiểu</label>
+                    <input id="promotionMin" name="HoaDonToiThieu" type="number" min="0" step="1000" value="0" />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionScope">Phạm vi áp dụng</label>
+                    <input id="promotionScope" name="PhamViApDung" type="text" value="Tất cả" />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionLimit">Số lượt phát hành</label>
+                    <input id="promotionLimit" name="SoLuongPhatHanh" type="number" min="1" value="100" required />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionStart">Ngày bắt đầu</label>
+                    <input id="promotionStart" name="TuNgay" type="date" required />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionEnd">Ngày kết thúc</label>
+                    <input id="promotionEnd" name="DenNgay" type="date" required />
+                </div>
+                <div class="promo-form-group">
+                    <label for="promotionStatus">Trạng thái</label>
+                    <select id="promotionStatus" name="TrangThai">
+                        <option value="Hoạt động">Hoạt động</option>
+                        <option value="Ngừng áp dụng">Ngừng áp dụng</option>
+                    </select>
+                </div>
+                <div class="promo-form-group full">
+                    <label for="promotionDescription">Mô tả</label>
+                    <textarea id="promotionDescription" name="MoTa" rows="3"></textarea>
+                </div>
             </div>
-            <!-- Footer -->
-            <div class="modal-footer border-0 px-4 pb-4 pt-2">
-                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal"
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    Hủy
-                </button>
-                <button type="button" class="btn btn-primary px-4" id="btnSavePromotion"
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    <i class="bi bi-check-lg me-1"></i>Tạo khuyến mãi
-                </button>
+            <div class="promo-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="promo-primary-btn">Lưu khuyến mãi</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        function removeVietnameseTones(str) {
-            str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-            str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-            str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-            str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-            str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-            str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-            str = str.replace(/đ/g, "d");
-            str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
-            str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
-            str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
-            str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
-            str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
-            str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
-            str = str.replace(/Đ/g, "D");
-            return str;
-        }
+        (function () {
+            const searchInput = document.getElementById("promotionSearchInput");
+            const statusFilter = document.getElementById("promotionStatusFilter");
+            const cards = Array.from(document.querySelectorAll("[data-promotion-card]"));
+            const emptyState = document.getElementById("promotionEmptyState");
+            const visibleCount = document.getElementById("promotionVisibleCount");
 
-        $(document).ready(function() {
-            // Function to filter promotions
+            function normalizeText(value) {
+                return (value || "")
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/đ/g, "d");
+            }
+
             function filterPromotions() {
-                var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
-                var statusObj = $('#statusFilter').val();
+                const keyword = normalizeText(searchInput?.value);
+                const status = statusFilter?.value || "all";
+                let shown = 0;
 
-                $('.promotion-item').each(function() {
-                    var name = removeVietnameseTones($(this).data('name').toLowerCase());
-                    var code = removeVietnameseTones($(this).data('code').toLowerCase());
-                    var status = $(this).data('status');
+                cards.forEach(function (card) {
+                    const matchesSearch = !keyword || normalizeText(card.dataset.search).includes(keyword);
+                    const matchesStatus = status === "all" || card.dataset.status === status;
+                    const visible = matchesSearch && matchesStatus;
+                    card.hidden = !visible;
+                    if (visible) shown += 1;
+                });
 
-                    var matchSearch = name.includes(searchObj) || code.includes(searchObj);
-                    var matchStatus = (statusObj === 'all' || status === statusObj);
+                if (visibleCount) {
+                    visibleCount.textContent = `${shown} khuyến mãi`;
+                }
+                emptyState?.classList.toggle("is-visible", shown === 0);
+            }
 
-                    if (matchSearch && matchStatus) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
+            document.querySelectorAll("[data-delete-promotion-form]").forEach(function (form) {
+                form.addEventListener("submit", function (event) {
+                    const card = form.closest("[data-promotion-card]");
+                    const name = card?.querySelector(".promo-name")?.textContent || "khuyến mãi này";
+                    if (!confirm(`Xóa ${name}?`)) {
+                        event.preventDefault();
                     }
                 });
-            }
-
-            $('#searchInput').on('input', filterPromotions);
-            $('#statusFilter').on('change', filterPromotions);
-
-            // Toggling of discount settings
-            $('#discountType').on('change', function() {
-                var type = $(this).val();
-                if (type === 'percentage') {
-                    $('#lblDiscountValue').html('Phần trăm giảm (%) <span class="text-danger">*</span>');
-                    $('#discountValueSuffix').text('%');
-                    $('#discountValue').attr('placeholder', 'VD: 20').attr('max', '100');
-                    $('#maxDiscountContainer').show();
-                    $('#maxDiscount').attr('required', true);
-                } else {
-                    $('#lblDiscountValue').html('Số tiền giảm (VNĐ) <span class="text-danger">*</span>');
-                    $('#discountValueSuffix').text('VNĐ');
-                    $('#discountValue').attr('placeholder', 'VD: 50000').removeAttr('max');
-                    $('#maxDiscountContainer').hide();
-                    $('#maxDiscount').removeAttr('required').val('');
-                }
             });
 
-            // Trigger discount type change on init
-            $('#discountType').trigger('change');
-
-            // Form focus styles
-            $('#addPromotionForm .form-control, #addPromotionForm .form-select').on('focus', function () {
-                $(this).css({
-                    'border-color': '#3b82f6',
-                    'box-shadow': '0 0 0 3px rgba(59, 130, 246, 0.15)'
-                });
-            }).on('blur', function () {
-                $(this).css({
-                    'border-color': '#e5e7eb',
-                    'box-shadow': 'none'
-                });
-            });
-
-            // Date helpers
-            function formatDate(dateStr) {
-                if (!dateStr) return '';
-                var parts = dateStr.split('-');
-                if (parts.length === 3) {
-                    return parts[2] + '/' + parts[1] + '/' + parts[0];
-                }
-                return dateStr;
-            }
-
-            function getStatus(startDateStr, endDateStr) {
-                var today = new Date();
-                today.setHours(0,0,0,0);
-
-                var start = new Date(startDateStr);
-                start.setHours(0,0,0,0);
-
-                var end = new Date(endDateStr);
-                end.setHours(0,0,0,0);
-
-                if (today < start) {
-                    return "Sắp diễn ra";
-                } else if (today >= start && today <= end) {
-                    return "Đang áp dụng";
-                } else {
-                    return "Đã hết hạn";
-                }
-            }
-
-            function getStatusHtml(status) {
-                if (status === "Đang áp dụng") {
-                    return '<span class="text-success small fw-bold"><i class="bi bi-check-circle me-1"></i> Đang áp dụng</span>';
-                } else if (status === "Sắp diễn ra") {
-                    return '<span class="text-primary small fw-bold"><i class="bi bi-clock me-1"></i> Sắp diễn ra</span>';
-                } else {
-                    return '<span class="text-danger small fw-bold"><i class="bi bi-x-circle me-1"></i> Đã hết hạn</span>';
-                }
-            }
-
-            function updatePromotionStats() {
-                var total = $('.promotion-item').length;
-                var active = $('.promotion-item').filter(function() {
-                    return $(this).attr('data-status') === 'Đang áp dụng';
-                }).length;
-
-                $('#totalPromotionsCount').text(total);
-                $('#activePromotionsCount').text(active);
-            }
-
-            // Save promotion
-            $('#btnSavePromotion').click(function () {
-                var form = $('#addPromotionForm')[0];
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
-                }
-
-                // Get field values
-                var promoName = $('#promoName').val();
-                var promoCode = $('#promoCode').val().toUpperCase();
-                var promoDescription = $('#promoDescription').val();
-                var discountType = $('#discountType').val();
-                var discountValue = parseFloat($('#discountValue').val());
-                var maxDiscount = $('#maxDiscount').val();
-                var minOrderValue = $('#minOrderValue').val();
-                var roomType = $('#roomType').val();
-                var maxUses = parseInt($('#maxUses').val());
-                var startDate = $('#startDate').val();
-                var endDate = $('#endDate').val();
-
-                // Logical checks
-                if (discountType === 'percentage') {
-                    if (discountValue <= 0 || discountValue > 100) {
-                        Swal.fire({
-                            title: 'Lỗi nhập liệu!',
-                            text: 'Phần trăm giảm giá phải từ 1 đến 100.',
-                            icon: 'warning',
-                            confirmButtonColor: '#3b82f6'
-                        });
-                        return;
-                    }
-                } else {
-                    if (discountValue <= 0) {
-                        Swal.fire({
-                            title: 'Lỗi nhập liệu!',
-                            text: 'Số tiền giảm cố định phải lớn hơn 0.',
-                            icon: 'warning',
-                            confirmButtonColor: '#3b82f6'
-                        });
-                        return;
-                    }
-                }
-
-                if (new Date(startDate) > new Date(endDate)) {
-                    Swal.fire({
-                        title: 'Lỗi ngày áp dụng!',
-                        text: 'Ngày bắt đầu không được lớn hơn ngày kết thúc.',
-                        icon: 'warning',
-                        confirmButtonColor: '#3b82f6'
-                    });
-                    return;
-                }
-
-                // Format values for rendering
-                var formattedValue = "";
-                var discountDetailsHtml = "";
-                if (discountType === 'percentage') {
-                    formattedValue = discountValue + '%';
-                    var maxValFormatted = parseInt(maxDiscount).toLocaleString('vi-VN') + ' đ';
-                    discountDetailsHtml = `
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <div class="text-muted small mb-1">Mức giảm</div>
-                                <div class="fw-bold fs-4 text-primary">${formattedValue}</div>
-                            </div>
-                            <div class="text-end">
-                                <div class="text-muted small mb-1">Tối đa</div>
-                                <div class="fw-bold fs-5 text-dark">${maxValFormatted}</div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    formattedValue = parseInt(discountValue).toLocaleString('vi-VN') + ' đ';
-                    discountDetailsHtml = `
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>
-                                <div class="text-muted small mb-1">Mức giảm</div>
-                                <div class="fw-bold fs-4 text-primary">${formattedValue}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                var formattedMinOrder = minOrderValue ? parseInt(minOrderValue).toLocaleString('vi-VN') + ' đ' : '0 đ';
-                var dateRangeText = formatDate(startDate) + ' - ' + formatDate(endDate);
-                var status = getStatus(startDate, endDate);
-                var statusHtml = getStatusHtml(status);
-
-                var newCardHtml = `
-                    <div class="col-md-6 promotion-item" data-name="${promoName}" data-code="${promoCode}" data-status="${status}">
-                        <div class="card-custom p-4 border h-100 d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary" style="width: 50px; height: 50px;">
-                                        <i class="bi bi-tag fs-4"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold fs-5 text-dark mb-1">${promoName}</div>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <span class="badge bg-light text-muted border px-2 py-1 fw-normal" style="font-size: 11px; text-transform: uppercase;">${promoCode}</span>
-                                            ${statusHtml}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <p class="text-dark small mb-4">${promoDescription || 'Không có mô tả'}</p>
-
-                            <div class="bg-light rounded p-3 mb-4 mt-auto">
-                                ${discountDetailsHtml}
-                                <div class="text-muted" style="font-size: 11px;">Đơn tối thiểu: ${formattedMinOrder} | Loại phòng: ${roomType}</div>
-                            </div>
-
-                            <div class="d-flex align-items-center gap-2 mb-3 text-muted small">
-                                <i class="bi bi-calendar3"></i> ${dateRangeText}
-                            </div>
-
-                            <div class="mb-2">
-                                <div class="d-flex justify-content-between small text-dark fw-bold mb-2">
-                                    <span>Lượt sử dụng</span>
-                                    <span>0 / ${maxUses}</span>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                // Add to list, update stats and filter
-                $('#promotionList').prepend(newCardHtml);
-                updatePromotionStats();
-                filterPromotions();
-
-                // Close Modal
-                bootstrap.Modal.getInstance(document.getElementById('addPromotionModal')).hide();
-
-                Swal.fire({
-                    title: 'Thành công!',
-                    text: 'Chương trình khuyến mãi mới đã được tạo.',
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            });
-
-            // Cleanup form on modal hide
-            $('#addPromotionModal').on('hidden.bs.modal', function () {
-                $('#addPromotionForm')[0].reset();
-                $('#discountType').trigger('change');
-            });
-        });
+            searchInput?.addEventListener("input", filterPromotions);
+            statusFilter?.addEventListener("change", filterPromotions);
+            filterPromotions();
+        })();
     </script>
 }

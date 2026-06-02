@@ -1,738 +1,937 @@
-﻿@{
+@model PBL3.Models.AdminServiceManagementViewModel
+@using System.Globalization
+
+@{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý dịch vụ";
+    var monthlyRevenueLabel = $"{Model.MonthlyRevenue.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} đ";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="input-group flex-grow-1 me-3">
-        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-        <input type="text" id="searchInput" class="form-control bg-white border-start-0"
-               placeholder="Tìm kiếm dịch vụ...">
-    </div>
-    <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#addServiceModal"><i class="bi bi-plus"></i> Thêm dịch vụ mới</button>
-</div>
+<style>
+    .service-page {
+        color: #142033;
+    }
 
-<div class="d-flex gap-2 mb-4">
-    <button class="btn btn-primary text-white rounded-pill px-4 category-btn" data-category="all">Tất cả</button>
-    <button class="btn btn-outline-secondary bg-white text-dark border rounded-pill px-4 category-btn"
-            data-category="Ăn uống">
-        Ăn uống
-    </button>
-    <button class="btn btn-outline-secondary bg-white text-dark border rounded-pill px-4 category-btn"
-            data-category="Giải trí">
-        Giải trí
-    </button>
-    <button class="btn btn-outline-secondary bg-white text-dark border rounded-pill px-4 category-btn"
-            data-category="Tiện ích">
-        Tiện ích
-    </button>
-    <button class="btn btn-outline-secondary bg-white text-dark border rounded-pill px-4 category-btn"
-            data-category="Vận chuyển">
-        Vận chuyển
-    </button>
-</div>
+    .service-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
 
-<!-- Stats -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div id="totalServicesCount" class="fw-bold fs-3 text-dark">7</div>
-            <div class="text-muted small">Tổng dịch vụ</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div id="activeServicesCount" class="fw-bold fs-3 text-success">7</div>
-            <div class="text-muted small">Đang hoạt động</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div class="fw-bold fs-3 text-dark">256</div>
-            <div class="text-muted small">Lượt sử dụng tháng</div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-custom p-3 border h-100 d-flex flex-column justify-content-center">
-            <div class="fw-bold fs-3 text-dark">8.5 triệu</div>
-            <div class="text-muted small">Doanh thu tháng</div>
-        </div>
-    </div>
-</div>
+    .service-header h1 {
+        margin: 0;
+        color: #111827;
+        font-size: clamp(1.85rem, 3vw, 2.6rem);
+        font-weight: 850;
+        letter-spacing: 0;
+        line-height: 1.08;
+    }
 
-<!-- Cards -->
-<div class="row g-4" id="serviceList">
-    <!-- Card 1 -->
-    <div class="col-md-4 service-item" data-name="Spa & Massage" data-category="Giải trí" data-unit="60 phút" data-price="500000" data-status="active" data-description="Dịch vụ spa và massage thư giãn cao cấp">
-        <div class="card-custom p-4 border h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
-                     style="width: 40px; height: 40px;">
-                    <i class="bi bi-water"></i>
-                </div>
-                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
-                      style="font-size: 11px;">Giải trí</span>
-            </div>
-            <div class="fw-bold fs-5 text-dark mb-1">Spa & Massage</div>
-            <div class="text-muted small mb-3">Dịch vụ spa và massage thư giãn cao cấp</div>
-            <div class="fw-bold fs-4 text-dark mb-3">
-                500.000 đ <span class="text-muted fs-6 fw-normal">/ 60 phút</span>
-            </div>
-            <div class="mb-4 d-flex align-items-center gap-2">
-                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
-                <span class="text-muted small">Đang hoạt động</span>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <!-- Card 2 -->
-    <div class="col-md-4 service-item" data-name="Nhà hàng" data-category="Ăn uống" data-unit="người" data-price="200000" data-status="active" data-description="Thực đơn đa dạng các món Á - Âu">
-        <div class="card-custom p-4 border h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
-                     style="width: 40px; height: 40px;">
-                    <i class="bi bi-cup-hot"></i>
-                </div>
-                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
-                      style="font-size: 11px;">Ăn uống</span>
-            </div>
-            <div class="fw-bold fs-5 text-dark mb-1">Nhà hàng</div>
-            <div class="text-muted small mb-3">Thực đơn đa dạng các món Á - Âu</div>
-            <div class="fw-bold fs-4 text-dark mb-3">
-                200.000 đ <span class="text-muted fs-6 fw-normal">/ người</span>
-            </div>
-            <div class="mb-4 d-flex align-items-center gap-2">
-                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
-                <span class="text-muted small">Đang hoạt động</span>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <!-- Card 3 -->
-    <div class="col-md-4 service-item" data-name="WiFi cao cấp" data-category="Tiện ích" data-unit="ngày" data-price="100000" data-status="active" data-description="Wifi tốc độ cao không giới hạn">
-        <div class="card-custom p-4 border h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
-                     style="width: 40px; height: 40px;">
-                    <i class="bi bi-wifi"></i>
-                </div>
-                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
-                      style="font-size: 11px;">Tiện ích</span>
-            </div>
-            <div class="fw-bold fs-5 text-dark mb-1">WiFi cao cấp</div>
-            <div class="text-muted small mb-3">Wifi tốc độ cao không giới hạn</div>
-            <div class="fw-bold fs-4 text-dark mb-3">
-                100.000 đ <span class="text-muted fs-6 fw-normal">/ ngày</span>
-            </div>
-            <div class="mb-4 d-flex align-items-center gap-2">
-                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
-                <span class="text-muted small">Đang hoạt động</span>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <!-- Card 4 -->
-    <div class="col-md-4 service-item" data-name="Phòng gym" data-category="Giải trí" data-unit="ngày" data-price="150000" data-status="active" data-description="Phòng tập gym với thiết bị hiện đại">
-        <div class="card-custom p-4 border h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
-                     style="width: 40px; height: 40px;">
-                    <i class="bi bi-activity"></i>
-                </div>
-                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
-                      style="font-size: 11px;">Giải trí</span>
-            </div>
-            <div class="fw-bold fs-5 text-dark mb-1">Phòng gym</div>
-            <div class="text-muted small mb-3">Phòng tập gym với thiết bị hiện đại</div>
-            <div class="fw-bold fs-4 text-dark mb-3">
-                150.000 đ <span class="text-muted fs-6 fw-normal">/ ngày</span>
-            </div>
-            <div class="mb-4 d-flex align-items-center gap-2">
-                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
-                <span class="text-muted small">Đang hoạt động</span>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <!-- Card 5 -->
-    <div class="col-md-4 service-item" data-name="Giặt ủi" data-category="Tiện ích" data-unit="Kg" data-price="50000" data-status="active" data-description="Dịch vụ giặt ủi chuyên nghiệp">
-        <div class="card-custom p-4 border h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
-                     style="width: 40px; height: 40px;">
-                    <i class="bi bi-basket"></i>
-                </div>
-                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
-                      style="font-size: 11px;">Tiện ích</span>
-            </div>
-            <div class="fw-bold fs-5 text-dark mb-1">Giặt ủi</div>
-            <div class="text-muted small mb-3">Dịch vụ giặt ủi chuyên nghiệp</div>
-            <div class="fw-bold fs-4 text-dark mb-3">50.000 đ <span class="text-muted fs-6 fw-normal">/ Kg</span></div>
-            <div class="mb-4 d-flex align-items-center gap-2">
-                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
-                <span class="text-muted small">Đang hoạt động</span>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <!-- Card 6 -->
-    <div class="col-md-4 service-item" data-name="Đưa đón sân bay" data-category="Vận chuyển" data-unit="chuyến" data-price="300000" data-status="active" data-description="Dịch vụ đưa đón sân bay 24/7">
-        <div class="card-custom p-4 border h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
-                     style="width: 40px; height: 40px;">
-                    <i class="bi bi-airplane"></i>
-                </div>
-                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
-                      style="font-size: 11px;">Vận chuyển</span>
-            </div>
-            <div class="fw-bold fs-5 text-dark mb-1">Đưa đón sân bay</div>
-            <div class="text-muted small mb-3">Dịch vụ đưa đón sân bay 24/7</div>
-            <div class="fw-bold fs-4 text-dark mb-3">
-                300.000 đ <span class="text-muted fs-6 fw-normal">/ chuyến</span>
-            </div>
-            <div class="mb-4 d-flex align-items-center gap-2">
-                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
-                <span class="text-muted small">Đang hoạt động</span>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-    <!-- Card 7 -->
-    <div class="col-md-4 service-item" data-name="Bể bơi" data-category="Giải trí" data-unit="ngày" data-price="0" data-status="active" data-description="Bể bơi ngoài trời">
-        <div class="card-custom p-4 border h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
-                     style="width: 40px; height: 40px;">
-                    <i class="bi bi-water"></i>
-                </div>
-                <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
-                      style="font-size: 11px;">Giải trí</span>
-            </div>
-            <div class="fw-bold fs-5 text-dark mb-1">Bể bơi</div>
-            <div class="text-muted small mb-3">Bể bơi ngoài trời</div>
-            <div class="fw-bold fs-4 text-success mb-3">Miễn phí</div>
-            <div class="mb-4 d-flex align-items-center gap-2">
-                <i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i>
-                <span class="text-muted small">Đang hoạt động</span>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-                <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
+    .service-header p {
+        margin: 8px 0 0;
+        color: #66758a;
+        font-weight: 560;
+    }
 
-<!-- Modal Thêm dịch vụ mới -->
-<div class="modal fade" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border: none; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
-            <!-- Header -->
-            <div class="modal-header border-0 px-4 pt-4 pb-2">
-                <div>
-                    <h5 class="modal-title fw-bold fs-5" id="addServiceModalLabel">
-                        <i class="bi bi-plus-circle-fill text-primary me-2"></i>Thêm dịch vụ mới
-                    </h5>
-                    <p class="text-muted small mb-0 mt-1">Điền đầy đủ thông tin để tạo dịch vụ mới</p>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <!-- Body -->
-            <div class="modal-body px-4 py-3">
-                <form id="addServiceForm">
-                    <div class="row g-3">
-                        <!-- Tên dịch vụ -->
-                        <div class="col-md-6">
-                            <label for="serviceName" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-tag-fill text-primary me-1" style="font-size: 0.8rem;"></i>Tên dịch vụ <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="serviceName" name="serviceName"
-                                   placeholder="VD: Spa & Massage" required
-                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                        </div>
-                        <!-- Đơn vị tính -->
-                        <div class="col-md-6">
-                            <label for="serviceUnit" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-rulers text-primary me-1" style="font-size: 0.8rem;"></i>Đơn vị tính <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="serviceUnit" name="serviceUnit"
-                                   placeholder="VD: 60 phút, người, ngày, kg..."
-                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                        </div>
-                        <!-- Loại dịch vụ -->
-                        <div class="col-md-6">
-                            <label for="serviceType" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-grid-fill text-primary me-1" style="font-size: 0.8rem;"></i>Loại dịch vụ <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select" id="serviceType" name="serviceType" required
-                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                <option value="" disabled selected>-- Chọn loại dịch vụ --</option>
-                                <option value="Ăn uống">🍽️ Ăn uống</option>
-                                <option value="Giải trí">🎮 Giải trí</option>
-                                <option value="Tiện ích">⚡ Tiện ích</option>
-                                <option value="Vận chuyển">🚗 Vận chuyển</option>
-                            </select>
-                        </div>
-                        <!-- Số tiền -->
-                        <div class="col-md-6">
-                            <label for="servicePrice" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-cash-stack text-primary me-1" style="font-size: 0.8rem;"></i>Số tiền (VNĐ) <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group" style="border-radius: 0.5rem; overflow: hidden;">
-                                <input type="number" class="form-control" id="servicePrice" name="servicePrice"
-                                       placeholder="VD: 500000" min="0" required
-                                       style="padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                                <span class="input-group-text bg-light text-muted" style="border-color: #e5e7eb; font-size: 0.85rem;">VNĐ</span>
-                            </div>
-                        </div>
-                        <!-- Trạng thái -->
-                        <div class="col-md-6">
-                            <label for="serviceStatus" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-toggle-on text-primary me-1" style="font-size: 0.8rem;"></i>Trạng thái
-                            </label>
-                            <select class="form-select" id="serviceStatus" name="serviceStatus"
-                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                <option value="active" selected>🟢 Đang hoạt động</option>
-                                <option value="inactive">🔴 Ngừng hoạt động</option>
-                            </select>
-                        </div>
-                        <!-- Spacer for alignment -->
-                        <div class="col-md-6"></div>
-                        <!-- Mô tả -->
-                        <div class="col-12">
-                            <label for="serviceDescription" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-chat-left-text-fill text-primary me-1" style="font-size: 0.8rem;"></i>Mô tả
-                            </label>
-                            <textarea class="form-control" id="serviceDescription" name="serviceDescription" rows="3"
-                                      placeholder="Nhập mô tả chi tiết về dịch vụ..."
-                                      style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; resize: vertical; transition: all 0.2s;"></textarea>
+    .service-primary-btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 8px;
+        background: #1f6feb;
+        color: #ffffff;
+        font-weight: 820;
+        padding: 10px 16px;
+        box-shadow: 0 14px 30px rgba(31, 111, 235, 0.18);
+    }
+
+    .service-primary-btn:hover,
+    .service-primary-btn:focus-visible {
+        background: #1659c7;
+        color: #ffffff;
+        outline: none;
+    }
+
+    .service-alert {
+        border-radius: 8px;
+        font-weight: 650;
+    }
+
+    .service-control-panel,
+    .service-list-panel,
+    .service-stat-card {
+        border: 1px solid #dfe7f0;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 16px 38px rgba(20, 32, 51, 0.08);
+    }
+
+    .service-control-panel {
+        display: grid;
+        gap: 16px;
+        margin-bottom: 18px;
+        padding: 18px;
+    }
+
+    .service-search-box {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #dfe7f0;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 0 14px;
+    }
+
+    .service-search-box i {
+        color: #66758a;
+    }
+
+    .service-search-box input {
+        width: 100%;
+        border: 0;
+        outline: none;
+        color: #142033;
+        font-weight: 560;
+    }
+
+    .service-category-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+    }
+
+    .service-category-btn {
+        min-height: 38px;
+        border: 1px solid #dfe7f0;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #66758a;
+        font-weight: 760;
+        padding: 7px 13px;
+    }
+
+    .service-category-btn.active {
+        border-color: rgba(31, 111, 235, 0.26);
+        background: #eaf2ff;
+        color: #1f6feb;
+    }
+
+    .service-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .service-stat-card {
+        padding: 16px;
+    }
+
+    .service-stat-card span {
+        color: #66758a;
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    .service-stat-card strong {
+        display: block;
+        margin-top: 5px;
+        color: #111827;
+        font-size: 1.55rem;
+        font-weight: 880;
+        line-height: 1;
+    }
+
+    .service-list-panel {
+        padding: 18px;
+    }
+
+    .service-list-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .service-list-title h2 {
+        margin: 0;
+        font-size: 1.18rem;
+        font-weight: 850;
+    }
+
+    .service-count-pill {
+        border-radius: 999px;
+        background: #eaf2ff;
+        color: #1f6feb;
+        font-size: 0.82rem;
+        font-weight: 820;
+        padding: 7px 11px;
+        white-space: nowrap;
+    }
+
+    .service-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .service-card {
+        display: grid;
+        gap: 14px;
+        min-height: 248px;
+        border: 1px solid #dfe7f0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 16px;
+        cursor: pointer;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    }
+
+    .service-card:hover,
+    .service-card:focus-visible {
+        border-color: rgba(31, 111, 235, 0.22);
+        box-shadow: 0 12px 30px rgba(20, 32, 51, 0.08);
+        transform: translateY(-1px);
+        outline: none;
+    }
+
+    .service-card::after {
+        content: "Xem chi tiết";
+        justify-self: start;
+        width: fit-content;
+        border-radius: 999px;
+        background: #f8fbff;
+        color: #1f6feb;
+        font-size: 0.78rem;
+        font-weight: 800;
+        padding: 5px 9px;
+    }
+
+    .service-card-top,
+    .service-card-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .service-icon {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #eaf2ff;
+        color: #1f6feb;
+        font-size: 1.12rem;
+    }
+
+    .service-category-pill {
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #66758a;
+        font-size: 0.78rem;
+        font-weight: 780;
+        padding: 6px 10px;
+    }
+
+    .service-name {
+        margin: 0;
+        color: #111827;
+        font-size: 1.08rem;
+        font-weight: 850;
+    }
+
+    .service-desc {
+        min-height: 40px;
+        margin: 6px 0 0;
+        color: #66758a;
+        font-size: 0.9rem;
+        font-weight: 570;
+    }
+
+    .service-price {
+        color: #111827;
+        font-size: 1.25rem;
+        font-weight: 880;
+    }
+
+    .service-price.free {
+        color: #168a55;
+    }
+
+    .service-price span {
+        color: #66758a;
+        font-size: 0.88rem;
+        font-weight: 620;
+    }
+
+    .service-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .service-status,
+    .service-usage-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 760;
+        padding: 6px 9px;
+    }
+
+    .service-status.active {
+        background: #e9f8f0;
+        color: #168a55;
+    }
+
+    .service-status.inactive {
+        background: #fff1ef;
+        color: #b42318;
+    }
+
+    .service-usage-chip {
+        background: #f1f6fb;
+        color: #66758a;
+    }
+
+    .service-icon-btn {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #dfe7f0;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #66758a;
+    }
+
+    .service-icon-btn:hover,
+    .service-icon-btn:focus-visible {
+        border-color: rgba(31, 111, 235, 0.25);
+        background: #eaf2ff;
+        color: #1f6feb;
+        outline: none;
+    }
+
+    .service-delete-btn:hover,
+    .service-delete-btn:focus-visible {
+        border-color: #fecaca;
+        background: #fff1ef;
+        color: #b42318;
+    }
+
+    .service-empty-state {
+        display: none;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        background: #fbfdff;
+        color: #66758a;
+        padding: 38px 16px;
+        text-align: center;
+        font-weight: 720;
+    }
+
+    .service-empty-state.is-visible {
+        display: block;
+    }
+
+    .service-modal .modal-content {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 26px 70px rgba(15, 23, 42, 0.24);
+    }
+
+    .service-modal-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px solid #dfe7f0;
+        padding: 22px 24px 18px;
+    }
+
+    .service-modal-header h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.28rem;
+        font-weight: 850;
+    }
+
+    .service-modal-header p {
+        margin: 5px 0 0;
+        color: #66758a;
+        font-weight: 620;
+    }
+
+    .service-modal-body {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        padding: 22px 24px;
+    }
+
+    .service-form-group {
+        display: grid;
+        gap: 7px;
+    }
+
+    .service-form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .service-form-group label {
+        color: #66758a;
+        font-size: 0.84rem;
+        font-weight: 760;
+    }
+
+    .service-form-group input,
+    .service-form-group select,
+    .service-form-group textarea {
+        width: 100%;
+        border: 1px solid #dbe3ef;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #111827;
+        font-weight: 620;
+        padding: 11px 12px;
+        outline: none;
+    }
+
+    .service-form-group textarea {
+        resize: vertical;
+    }
+
+    .service-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid #dfe7f0;
+        padding: 16px 24px 22px;
+    }
+
+    .service-detail-hero {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 20px 24px;
+    }
+
+    .service-detail-icon {
+        width: 54px;
+        height: 54px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        border-radius: 12px;
+        background: #eaf2ff;
+        color: #1f6feb;
+        font-size: 1.35rem;
+    }
+
+    .service-detail-hero h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.35rem;
+        font-weight: 880;
+    }
+
+    .service-detail-hero p {
+        margin: 5px 0 0;
+        color: #66758a;
+        font-weight: 650;
+    }
+
+    .service-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 0 24px 22px;
+    }
+
+    .service-detail-box {
+        border: 1px solid #dfe7f0;
+        border-radius: 10px;
+        background: #fbfdff;
+        padding: 14px;
+    }
+
+    .service-detail-box.full {
+        grid-column: 1 / -1;
+    }
+
+    .service-detail-box span {
+        display: block;
+        color: #66758a;
+        font-size: 0.8rem;
+        font-weight: 780;
+    }
+
+    .service-detail-box strong,
+    .service-detail-box p {
+        display: block;
+        margin: 6px 0 0;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 820;
+    }
+
+    .service-detail-box p {
+        line-height: 1.45;
+        font-weight: 650;
+    }
+
+    @@media (max-width: 1200px) {
+        .service-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 900px) {
+        .service-header,
+        .service-list-title {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .service-stat-grid,
+        .service-grid,
+        .service-modal-body,
+        .service-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="service-page">
+    <header class="service-header">
+        <div>
+            <h1>Quản lý dịch vụ</h1>
+            <p>Theo dõi dịch vụ, đơn giá, trạng thái và lượt sử dụng trong tháng.</p>
+        </div>
+        <button type="button" class="service-primary-btn" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+            <i class="bi bi-plus-lg"></i>
+            Thêm dịch vụ
+        </button>
+    </header>
+
+    @if (TempData["ServiceSuccess"] is string successMessage)
+    {
+        <div class="alert alert-success service-alert">@successMessage</div>
+    }
+    @if (TempData["ServiceError"] is string errorMessage)
+    {
+        <div class="alert alert-danger service-alert">@errorMessage</div>
+    }
+
+    <section class="service-control-panel" aria-label="Bộ lọc dịch vụ">
+        <label class="service-search-box" for="serviceSearchInput">
+            <i class="bi bi-search"></i>
+            <input type="search" id="serviceSearchInput" placeholder="Tìm theo tên dịch vụ, mã dịch vụ, loại dịch vụ..." autocomplete="off" />
+        </label>
+
+        <div class="service-category-row">
+            <button type="button" class="service-category-btn active" data-category="all">Tất cả</button>
+            @foreach (var category in Model.Categories)
+            {
+                <button type="button" class="service-category-btn" data-category="@category">@category</button>
+            }
+        </div>
+    </section>
+
+    <section class="service-stat-grid" aria-label="Thống kê dịch vụ">
+        <div class="service-stat-card">
+            <span>Tổng dịch vụ</span>
+            <strong>@Model.TotalCount</strong>
+        </div>
+        <div class="service-stat-card">
+            <span>Đang hoạt động</span>
+            <strong>@Model.ActiveCount</strong>
+        </div>
+        <div class="service-stat-card">
+            <span>Lượt sử dụng tháng</span>
+            <strong>@Model.MonthlyUsageCount</strong>
+        </div>
+        <div class="service-stat-card">
+            <span>Doanh thu tháng</span>
+            <strong>@monthlyRevenueLabel</strong>
+        </div>
+    </section>
+
+    <section class="service-list-panel">
+        <div class="service-list-title">
+            <h2>Danh sách dịch vụ</h2>
+            <span class="service-count-pill" id="serviceVisibleCount">0 dịch vụ</span>
+        </div>
+
+        <div class="service-grid" id="serviceList">
+            @foreach (var service in Model.Services)
+            {
+                <article class="service-card"
+                         data-service-card
+                         role="button"
+                         tabindex="0"
+                         data-id="@service.ServiceId"
+                         data-name="@service.ServiceName"
+                         data-category="@service.Category"
+                         data-unit="@service.Unit"
+                         data-price="@service.Price.ToString("0.##", CultureInfo.InvariantCulture)"
+                         data-price-label="@service.PriceLabel"
+                         data-status="@service.Status"
+                         data-description="@service.Description"
+                         data-icon="@service.IconClass"
+                         data-monthly-usage="@service.MonthlyUsageCount"
+                         data-monthly-revenue="@service.MonthlyRevenueLabel">
+                    <div class="service-card-top">
+                        <span class="service-icon"><i class="bi @service.IconClass"></i></span>
+                        <span class="service-category-pill">@service.Category</span>
+                    </div>
+
+                    <div>
+                        <h3 class="service-name">@service.ServiceName</h3>
+                        <p class="service-desc">@service.Description</p>
+                    </div>
+
+                    <div class="service-price @(service.Price <= 0 ? "free" : "")">
+                        @service.PriceLabel
+                        @if (service.Price > 0)
+                        {
+                            <span>/ @service.Unit</span>
+                        }
+                    </div>
+
+                    <div class="service-meta-row">
+                        <span class="service-status @(service.IsActive ? "active" : "inactive")">
+                            <i class="bi bi-circle-fill"></i>
+                            @service.Status
+                        </span>
+                        <span class="service-usage-chip">@service.MonthlyUsageCount lượt · @service.MonthlyRevenueLabel</span>
+                    </div>
+
+                    <div class="service-card-actions">
+                        <span class="service-code">@service.ServiceId</span>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="service-icon-btn" data-edit-service aria-label="Sửa @service.ServiceName">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <form asp-controller="Service" asp-action="Delete" method="post" data-delete-service-form>
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@service.ServiceId" />
+                                <button type="submit" class="service-icon-btn service-delete-btn" aria-label="Xóa @service.ServiceName">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
-                </form>
-            </div>
-            <!-- Footer -->
-            <div class="modal-footer border-0 px-4 pb-4 pt-2">
-                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal"
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    Hủy
-                </button>
-                <button type="button" class="btn btn-primary px-4" id="btnSaveService"
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    <i class="bi bi-check-lg me-1"></i>Lưu dịch vụ
-                </button>
-            </div>
+                </article>
+            }
         </div>
+
+        <div class="service-empty-state" id="serviceEmptyState">
+            <i class="bi bi-search d-block fs-2 mb-2"></i>
+            Không tìm thấy dịch vụ phù hợp.
+        </div>
+    </section>
+</div>
+
+<div class="modal fade service-modal" id="addServiceModal" tabindex="-1" aria-labelledby="addServiceModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content" asp-controller="Service" asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="service-modal-header">
+                <div>
+                    <h3 id="addServiceModalTitle">Thêm dịch vụ</h3>
+                    <p>Dịch vụ mới sẽ được lưu trực tiếp vào cơ sở dữ liệu.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="service-modal-body">
+                <div class="service-form-group">
+                    <label for="addServiceName">Tên dịch vụ</label>
+                    <input id="addServiceName" name="TenDv" type="text" required />
+                </div>
+                <div class="service-form-group">
+                    <label for="addServiceCategory">Loại dịch vụ</label>
+                    <select id="addServiceCategory" name="LoaiDichVu">
+                        <option value="Ăn uống">Ăn uống</option>
+                        <option value="Giải trí">Giải trí</option>
+                        <option value="Tiện ích">Tiện ích</option>
+                        <option value="Vận chuyển">Vận chuyển</option>
+                    </select>
+                </div>
+                <div class="service-form-group">
+                    <label for="addServiceUnit">Đơn vị tính</label>
+                    <input id="addServiceUnit" name="DonViTinh" type="text" required placeholder="Ví dụ: cái, kg, lượt" />
+                </div>
+                <div class="service-form-group">
+                    <label for="addServicePrice">Đơn giá</label>
+                    <input id="addServicePrice" name="DonGia" type="number" min="0" step="1000" value="0" required />
+                </div>
+                <div class="service-form-group">
+                    <label for="addServiceStatus">Trạng thái</label>
+                    <select id="addServiceStatus" name="TrangThai">
+                        <option value="Hoạt động">Hoạt động</option>
+                        <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                    </select>
+                </div>
+                <div class="service-form-group full">
+                    <label for="addServiceDescription">Mô tả</label>
+                    <textarea id="addServiceDescription" name="GhiChu" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="service-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="service-primary-btn">Lưu dịch vụ</button>
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- Modal Chỉnh sửa dịch vụ -->
-<div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border: none; border-radius: 1rem; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
-            <!-- Header -->
-            <div class="modal-header border-0 px-4 pt-4 pb-2">
+<div class="modal fade service-modal" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content" asp-controller="Service" asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="editServiceId" name="MaDv" />
+            <div class="service-modal-header">
                 <div>
-                    <h5 class="modal-title fw-bold fs-5" id="editServiceModalLabel">
-                        <i class="bi bi-pencil-square text-primary me-2"></i>Thông tin dịch vụ
-                    </h5>
-                    <p class="text-muted small mb-0 mt-1">Thông tin chi tiết dịch vụ của bạn</p>
+                    <h3 id="editServiceModalTitle">Cập nhật dịch vụ</h3>
+                    <p>Thay đổi sẽ được lưu vào bảng dịch vụ.</p>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <!-- Body -->
-            <div class="modal-body px-4 py-3">
-                <form id="editServiceForm">
-                    <div class="row g-3">
-                        <!-- Tên dịch vụ -->
-                        <div class="col-md-6">
-                            <label for="editServiceName" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-tag-fill text-primary me-1" style="font-size: 0.8rem;"></i>Tên dịch vụ <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="editServiceName" name="editServiceName"
-                                   placeholder="VD: Spa & Massage" required disabled
-                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                        </div>
-                        <!-- Đơn vị tính -->
-                        <div class="col-md-6">
-                            <label for="editServiceUnit" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-rulers text-primary me-1" style="font-size: 0.8rem;"></i>Đơn vị tính <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="editServiceUnit" name="editServiceUnit"
-                                   placeholder="VD: 60 phút, người, ngày, kg..." required disabled
-                                   style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                        </div>
-                        <!-- Loại dịch vụ -->
-                        <div class="col-md-6">
-                            <label for="editServiceType" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-grid-fill text-primary me-1" style="font-size: 0.8rem;"></i>Loại dịch vụ <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select" id="editServiceType" name="editServiceType" required disabled
-                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                <option value="" disabled selected>-- Chọn loại dịch vụ --</option>
-                                <option value="Ăn uống">🍽️ Ăn uống</option>
-                                <option value="Giải trí">🎮 Giải trí</option>
-                                <option value="Tiện ích">⚡ Tiện ích</option>
-                                <option value="Vận chuyển">🚗 Vận chuyển</option>
-                            </select>
-                        </div>
-                        <!-- Số tiền -->
-                        <div class="col-md-6">
-                            <label for="editServicePrice" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-cash-stack text-primary me-1" style="font-size: 0.8rem;"></i>Số tiền (VNĐ) <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group" style="border-radius: 0.5rem; overflow: hidden;">
-                                <input type="number" class="form-control" id="editServicePrice" name="editServicePrice"
-                                       placeholder="VD: 500000" min="0" required disabled
-                                       style="padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s;">
-                                <span class="input-group-text bg-light text-muted" style="border-color: #e5e7eb; font-size: 0.85rem;">VNĐ</span>
-                            </div>
-                        </div>
-                        <!-- Trạng thái -->
-                        <div class="col-md-6">
-                            <label for="editServiceStatus" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-toggle-on text-primary me-1" style="font-size: 0.8rem;"></i>Trạng thái
-                            </label>
-                            <select class="form-select" id="editServiceStatus" name="editServiceStatus" required disabled
-                                    style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; transition: all 0.2s; cursor: pointer;">
-                                <option value="active">🟢 Đang hoạt động</option>
-                                <option value="inactive">🔴 Ngừng hoạt động</option>
-                            </select>
-                        </div>
-                        <!-- Spacer for alignment -->
-                        <div class="col-md-6"></div>
-                        <!-- Mô tả -->
-                        <div class="col-12">
-                            <label for="editServiceDescription" class="form-label fw-semibold text-dark">
-                                <i class="bi bi-chat-left-text-fill text-primary me-1" style="font-size: 0.8rem;"></i>Mô tả
-                            </label>
-                            <textarea class="form-control" id="editServiceDescription" name="editServiceDescription" rows="3" disabled
-                                      placeholder="Nhập mô tả chi tiết về dịch vụ..."
-                                      style="border-radius: 0.5rem; padding: 0.6rem 0.85rem; border-color: #e5e7eb; resize: vertical; transition: all 0.2s;"></textarea>
-                        </div>
-                    </div>
-                </form>
+            <div class="service-modal-body">
+                <div class="service-form-group">
+                    <label for="editServiceName">Tên dịch vụ</label>
+                    <input id="editServiceName" name="TenDv" type="text" required />
+                </div>
+                <div class="service-form-group">
+                    <label for="editServiceCategory">Loại dịch vụ</label>
+                    <select id="editServiceCategory" name="LoaiDichVu">
+                        <option value="Ăn uống">Ăn uống</option>
+                        <option value="Giải trí">Giải trí</option>
+                        <option value="Tiện ích">Tiện ích</option>
+                        <option value="Vận chuyển">Vận chuyển</option>
+                    </select>
+                </div>
+                <div class="service-form-group">
+                    <label for="editServiceUnit">Đơn vị tính</label>
+                    <input id="editServiceUnit" name="DonViTinh" type="text" required />
+                </div>
+                <div class="service-form-group">
+                    <label for="editServicePrice">Đơn giá</label>
+                    <input id="editServicePrice" name="DonGia" type="number" min="0" step="1000" required />
+                </div>
+                <div class="service-form-group">
+                    <label for="editServiceStatus">Trạng thái</label>
+                    <select id="editServiceStatus" name="TrangThai">
+                        <option value="Hoạt động">Hoạt động</option>
+                        <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+                    </select>
+                </div>
+                <div class="service-form-group full">
+                    <label for="editServiceDescription">Mô tả</label>
+                    <textarea id="editServiceDescription" name="GhiChu" rows="3"></textarea>
+                </div>
             </div>
-            <!-- Footer -->
-            <div class="modal-footer border-0 px-4 pb-4 pt-2">
-                <button type="button" class="btn btn-light px-4 border" data-bs-dismiss="modal"
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    Đóng
-                </button>
-                <button type="button" class="btn btn-primary px-4" id="btnUnlockEditService"
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    Chỉnh sửa
-                </button>
-                <button type="button" class="btn btn-dark px-4" id="btnSaveServiceEdit" disabled
-                        style="border-radius: 0.5rem; font-weight: 500;">
-                    <i class="bi bi-check-lg me-1"></i>Lưu
-                </button>
+            <div class="service-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="service-primary-btn">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade service-modal" id="serviceDetailModal" tabindex="-1" aria-labelledby="serviceDetailTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="service-modal-header">
+                <div>
+                    <h3 id="serviceDetailTitle">Chi tiết dịch vụ</h3>
+                    <p id="serviceDetailSubtitle">Thông tin dịch vụ đang chọn.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="service-detail-hero">
+                <span class="service-detail-icon"><i id="serviceDetailIcon" class="bi bi-gear"></i></span>
+                <div>
+                    <h3 id="serviceDetailName">Dịch vụ</h3>
+                    <p id="serviceDetailCode">Mã dịch vụ</p>
+                </div>
+            </div>
+            <div class="service-detail-grid">
+                <div class="service-detail-box">
+                    <span>Loại dịch vụ</span>
+                    <strong id="serviceDetailCategory">-</strong>
+                </div>
+                <div class="service-detail-box">
+                    <span>Trạng thái</span>
+                    <strong id="serviceDetailStatus">-</strong>
+                </div>
+                <div class="service-detail-box">
+                    <span>Đơn giá</span>
+                    <strong id="serviceDetailPrice">-</strong>
+                </div>
+                <div class="service-detail-box">
+                    <span>Đơn vị tính</span>
+                    <strong id="serviceDetailUnit">-</strong>
+                </div>
+                <div class="service-detail-box">
+                    <span>Lượt dùng tháng này</span>
+                    <strong id="serviceDetailUsage">0 lượt</strong>
+                </div>
+                <div class="service-detail-box">
+                    <span>Doanh thu tháng này</span>
+                    <strong id="serviceDetailRevenue">0 đ</strong>
+                </div>
+                <div class="service-detail-box full">
+                    <span>Mô tả</span>
+                    <p id="serviceDetailDescription">Chưa có mô tả.</p>
+                </div>
+            </div>
+            <div class="service-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function removeVietnameseTones(str) {
-        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-        str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-        str = str.replace(/đ/g, "d");
-        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
-        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
-        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
-        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
-        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
-        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
-        str = str.replace(/Đ/g, "D");
-        return str;
-        }
+        (function () {
+            const searchInput = document.getElementById("serviceSearchInput");
+            const categoryButtons = Array.from(document.querySelectorAll(".service-category-btn[data-category]"));
+            const serviceCards = Array.from(document.querySelectorAll("[data-service-card]"));
+            const emptyState = document.getElementById("serviceEmptyState");
+            const visibleCount = document.getElementById("serviceVisibleCount");
+            const editModalElement = document.getElementById("editServiceModal");
+            const detailModalElement = document.getElementById("serviceDetailModal");
 
-        $(document).ready(function () {
-        var activeCategory = 'all';
-        var activeCard = null;
+            function normalizeText(value) {
+                return (value || "")
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/đ/g, "d");
+            }
 
-        function filterServices() {
-        var searchObj = removeVietnameseTones($('#searchInput').val().toLowerCase().trim());
+            function filterServices() {
+                const keyword = normalizeText(searchInput?.value);
+                const activeCategory = document.querySelector(".service-category-btn[data-category].active")?.dataset.category || "all";
+                let shown = 0;
 
-        $('.service-item').each(function () {
-        var name = removeVietnameseTones($(this).attr('data-name').toLowerCase());
-        var category = $(this).attr('data-category');
+                serviceCards.forEach(function (card) {
+                    const haystack = normalizeText([
+                        card.dataset.id,
+                        card.dataset.name,
+                        card.dataset.category,
+                        card.dataset.description
+                    ].join(" "));
+                    const matchesSearch = !keyword || haystack.includes(keyword);
+                    const matchesCategory = activeCategory === "all" || card.dataset.category === activeCategory;
+                    const visible = matchesSearch && matchesCategory;
+                    card.hidden = !visible;
+                    if (visible) shown += 1;
+                });
 
-        var matchSearch = name.includes(searchObj);
-        var matchCategory = (activeCategory === 'all' || category === activeCategory);
+                if (visibleCount) {
+                    visibleCount.textContent = `${shown} dịch vụ`;
+                }
+                emptyState?.classList.toggle("is-visible", shown === 0);
+            }
 
-        if (matchSearch && matchCategory) {
-        $(this).show();
-        } else {
-        $(this).hide();
-        }
-        });
-        }
+            categoryButtons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    categoryButtons.forEach(item => item.classList.remove("active"));
+                    button.classList.add("active");
+                    filterServices();
+                });
+            });
 
-        $('.category-btn').click(function () {
-        $('.category-btn').removeClass('btn-primary text-white').addClass('btn-outline-secondary bg-white text-dark');
-        $(this).removeClass('btn-outline-secondary bg-white text-dark').addClass('btn-primary text-white');
-        activeCategory = $(this).data('category');
-        filterServices();
-        });
+            searchInput?.addEventListener("input", filterServices);
 
-        $('#searchInput').on('input', filterServices);
+            function fillServiceDetail(card) {
+                document.getElementById("serviceDetailTitle").textContent = card.dataset.name || "Chi tiết dịch vụ";
+                document.getElementById("serviceDetailSubtitle").textContent = card.dataset.category || "Thông tin dịch vụ";
+                document.getElementById("serviceDetailName").textContent = card.dataset.name || "Dịch vụ";
+                document.getElementById("serviceDetailCode").textContent = card.dataset.id || "";
+                document.getElementById("serviceDetailCategory").textContent = card.dataset.category || "-";
+                document.getElementById("serviceDetailStatus").textContent = card.dataset.status || "-";
+                document.getElementById("serviceDetailPrice").textContent = card.dataset.priceLabel || "0 đ";
+                document.getElementById("serviceDetailUnit").textContent = card.dataset.unit || "-";
+                document.getElementById("serviceDetailUsage").textContent = `${card.dataset.monthlyUsage || "0"} lượt`;
+                document.getElementById("serviceDetailRevenue").textContent = card.dataset.monthlyRevenue || "0 đ";
+                document.getElementById("serviceDetailDescription").textContent = card.dataset.description || "Chưa có mô tả.";
 
-        // Function to update stats
-        function updateServiceStats() {
-        var total = $('.service-item').length;
-        var active = $('.service-item[data-status="active"]').length;
-        $('#totalServicesCount').text(total);
-        $('#activeServicesCount').text(active);
-        }
+                const icon = document.getElementById("serviceDetailIcon");
+                icon.className = `bi ${card.dataset.icon || "bi-gear"}`;
+            }
 
-        // Open Edit Modal
-        $(document).on('click', '.btn-edit-service', function (e) {
-        e.preventDefault();
-        activeCard = $(this).closest('.service-item');
+            function openServiceDetail(card) {
+                if (!card || !detailModalElement) return;
+                fillServiceDetail(card);
+                new bootstrap.Modal(detailModalElement).show();
+            }
 
-        $('#editServiceName').val(activeCard.attr('data-name'));
-        $('#editServiceUnit').val(activeCard.attr('data-unit'));
-        $('#editServiceType').val(activeCard.attr('data-category'));
-        $('#editServicePrice').val(activeCard.attr('data-price'));
-        $('#editServiceStatus').val(activeCard.attr('data-status') || 'active');
-        $('#editServiceDescription').val(activeCard.attr('data-description') || '');
+            document.addEventListener("click", function (event) {
+                const editButton = event.target.closest("[data-edit-service]");
+                if (!editButton) return;
 
-        // Reset disabled state
-        $('#editServiceForm input, #editServiceForm select, #editServiceForm textarea').prop('disabled', true);
-        $('#btnSaveServiceEdit').prop('disabled', true);
-        $('#btnUnlockEditService').prop('disabled', false).show();
+                const card = editButton.closest("[data-service-card]");
+                if (!card) return;
 
-        var editModal = new bootstrap.Modal(document.getElementById('editServiceModal'));
-        editModal.show();
-        });
+                document.getElementById("editServiceId").value = card.dataset.id || "";
+                document.getElementById("editServiceName").value = card.dataset.name || "";
+                document.getElementById("editServiceCategory").value = card.dataset.category || "";
+                document.getElementById("editServiceUnit").value = card.dataset.unit || "";
+                document.getElementById("editServicePrice").value = card.dataset.price || "0";
+                document.getElementById("editServiceStatus").value = card.dataset.status || "Hoạt động";
+                document.getElementById("editServiceDescription").value = card.dataset.description || "";
 
-        // Unlock Edit Modal fields
-        $('#btnUnlockEditService').click(function () {
-        $('#editServiceForm input, #editServiceForm select, #editServiceForm textarea').prop('disabled', false);
-        $('#btnSaveServiceEdit').prop('disabled', false);
-        $(this).prop('disabled', true);
-        });
+                new bootstrap.Modal(editModalElement).show();
+            });
 
-        // Save edited service details
-        $('#btnSaveServiceEdit').click(function () {
-        var form = $('#editServiceForm')[0];
-        if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-        }
+            serviceCards.forEach(function (card) {
+                card.addEventListener("click", function (event) {
+                    if (event.target.closest("[data-edit-service], [data-delete-service-form], button, a, input, select, textarea")) {
+                        return;
+                    }
 
-        var name = $('#editServiceName').val();
-        var unit = $('#editServiceUnit').val();
-        var category = $('#editServiceType').val();
-        var price = $('#editServicePrice').val();
-        var status = $('#editServiceStatus').val();
-        var description = $('#editServiceDescription').val();
+                    openServiceDetail(card);
+                });
 
-        // Update data attributes on the card
-        activeCard.attr('data-name', name);
-        activeCard.attr('data-unit', unit);
-        activeCard.attr('data-category', category);
-        activeCard.attr('data-price', price);
-        activeCard.attr('data-status', status);
-        activeCard.attr('data-description', description);
+                card.addEventListener("keydown", function (event) {
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    if (event.target.closest("button, a, input, select, textarea")) return;
+                    event.preventDefault();
+                    openServiceDetail(card);
+                });
+            });
 
-        // Update card layout
-        activeCard.find('.fw-bold.fs-5.text-dark.mb-1').text(name);
-        activeCard.find('.badge').text(category);
-        activeCard.find('.text-muted.small.mb-3').text(description);
+            document.querySelectorAll("[data-delete-service-form]").forEach(function (form) {
+                form.addEventListener("submit", function (event) {
+                    const card = form.closest("[data-service-card]");
+                    const serviceName = card?.dataset.name || "dịch vụ này";
+                    if (!confirm(`Xóa ${serviceName}?`)) {
+                        event.preventDefault();
+                    }
+                });
+            });
 
-        var iconMap = {
-        'Ăn uống': 'bi-cup-hot',
-        'Giải trí': 'bi-activity',
-        'Tiện ích': 'bi-basket',
-        'Vận chuyển': 'bi-airplane'
-        };
-        var newIconClass = iconMap[category] || 'bi-gear';
-        activeCard.find('.bg-primary i').attr('class', 'bi ' + newIconClass);
-
-        var priceContainer = activeCard.find('.fs-4');
-        if (parseInt(price) === 0) {
-        priceContainer.html('Miễn phí').removeClass('text-dark').addClass('text-success');
-        } else {
-        var formattedPrice = parseInt(price).toLocaleString('vi-VN');
-        priceContainer.html(formattedPrice + ' đ <span class="text-muted fs-6 fw-normal">/ ' + unit + '</span>').removeClass('text-success').addClass('text-dark');
-        }
-
-        var statusContainer = activeCard.find('.mb-4.d-flex.align-items-center');
-        if (status === 'active') {
-        statusContainer.html('<i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i><span class="text-muted small">Đang hoạt động</span>');
-        } else {
-        statusContainer.html('<i class="bi bi-circle-fill text-danger" style="font-size: 8px;"></i><span class="text-muted small">Ngừng hoạt động</span>');
-        }
-
-        // Close Modal
-        bootstrap.Modal.getInstance(document.getElementById('editServiceModal')).hide();
-
-        // Update stats and search filter
-        updateServiceStats();
-        filterServices();
-
-        Swal.fire({
-        title: 'Đã lưu!',
-        text: 'Thông tin dịch vụ đã được lưu thành công.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-        });
-        });
-
-        // Delete Service
-        $(document).on('click', '.btn-delete-service', function (e) {
-        e.preventDefault();
-        var card = $(this).closest('.service-item');
-        var name = card.attr('data-name');
-
-        Swal.fire({
-        title: 'Xác nhận xóa?',
-        text: `Bạn có chắc chắn muốn xóa dịch vụ "${name}" không?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#212529',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Xác nhận',
-        cancelButtonText: 'Hủy'
-        }).then((result) => {
-        if (result.isConfirmed) {
-        card.remove();
-        updateServiceStats();
-
-        Swal.fire({
-        title: 'Đã xóa!',
-        text: 'Dịch vụ đã được xóa khỏi danh sách.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-        });
-        }
-        });
-        });
-
-        // Modal form interactions for Add Service
-        $('#addServiceModal').on('shown.bs.modal', function () {
-        $('#serviceName').focus();
-        });
-
-        $('#addServiceModal').on('hidden.bs.modal', function () {
-        $('#addServiceForm')[0].reset();
-        });
-
-        // Form focus styles
-        $('#addServiceForm .form-control, #addServiceForm .form-select, #editServiceForm .form-control, #editServiceForm .form-select').on('focus', function () {
-        $(this).css({
-        'border-color': '#3b82f6',
-        'box-shadow': '0 0 0 3px rgba(59, 130, 246, 0.15)'
-        });
-        }).on('blur', function () {
-        $(this).css({
-        'border-color': '#e5e7eb',
-        'box-shadow': 'none'
-        });
-        });
-
-        // Save button handler for Add Service
-        $('#btnSaveService').click(function () {
-        var form = $('#addServiceForm')[0];
-        if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-        }
-
-        var name = $('#serviceName').val();
-        var unit = $('#serviceUnit').val();
-        var category = $('#serviceType').val();
-        var price = $('#servicePrice').val();
-        var status = $('#serviceStatus').val();
-        var description = $('#serviceDescription').val();
-
-        var iconMap = {
-        'Ăn uống': 'bi-cup-hot',
-        'Giải trí': 'bi-activity',
-        'Tiện ích': 'bi-basket',
-        'Vận chuyển': 'bi-airplane'
-        };
-        var iconClass = iconMap[category] || 'bi-gear';
-        var priceHtml = '';
-        if (parseInt(price) === 0) {
-        priceHtml = '<div class="fw-bold fs-4 text-success mb-3">Miễn phí</div>';
-        } else {
-        var formattedPrice = parseInt(price).toLocaleString('vi-VN');
-        priceHtml = '<div class="fw-bold fs-4 text-dark mb-3">' + formattedPrice + ' đ <span class="text-muted fs-6 fw-normal">/ ' + unit + '</span></div>';
-        }
-
-        var statusHtml = '';
-        if (status === 'active') {
-        statusHtml = '<i class="bi bi-circle-fill text-success" style="font-size: 8px;"></i><span class="text-muted small">Đang hoạt động</span>';
-        } else {
-        statusHtml = '<i class="bi bi-circle-fill text-danger" style="font-size: 8px;"></i><span class="text-muted small">Ngừng hoạt động</span>';
-        }
-
-        var newCardHtml = `
-        <div class="col-md-4 service-item" data-name="${name}" data-category="${category}" data-unit="${unit}" data-price="${price}" data-status="${status}" data-description="${description}">
-        <div class="card-custom p-4 border h-100">
-        <div class="d-flex justify-content-between align-items-start mb-3">
-        <div class="bg-primary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-primary"
-        style="width: 40px; height: 40px;">
-        <i class="bi ${iconClass}"></i>
-        </div>
-        <span class="badge bg-light text-muted border rounded-pill px-2 py-1 fw-normal"
-        style="font-size: 11px;">${category}</span>
-        </div>
-        <div class="fw-bold fs-5 text-dark mb-1">${name}</div>
-        <div class="text-muted small mb-3">${description}</div>
-        ${priceHtml}
-        <div class="mb-4 d-flex align-items-center gap-2">
-        ${statusHtml}
-        </div>
-        <div class="d-flex gap-2 justify-content-end">
-        <button class="btn btn-icon-only border btn-edit-service" title="Chỉnh sửa"><i class="bi bi-pencil-square text-muted"></i></button>
-        <button class="btn btn-icon-only border text-danger btn-delete-service" title="Xóa"><i class="bi bi-trash"></i></button>
-        </div>
-        </div>
-        </div>`;
-
-        $('#serviceList').prepend(newCardHtml);
-        updateServiceStats();
-        filterServices();
-
-        $('#addServiceModal').modal('hide');
-        Swal.fire({
-        title: 'Đã thêm!',
-        text: 'Dịch vụ mới đã được tạo thành công.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-        });
-        });
-        });
+            filterServices();
+        })();
     </script>
 }

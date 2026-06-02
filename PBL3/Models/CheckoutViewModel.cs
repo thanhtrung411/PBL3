@@ -24,7 +24,10 @@ namespace PBL3.Models
             : PricePerNight * NumberOfNights * Math.Max(NumberOfRooms, 1);
         public decimal ServiceFee => 0;
         public decimal VatFee => 0;
-        public decimal GrandTotal => RoomTotal;
+        public decimal DiscountAmount { get; set; }
+        public string? PromotionCode { get; set; }
+        public string? PromotionName { get; set; }
+        public decimal GrandTotal => Math.Max(RoomTotal - DiscountAmount, 0);
 
         [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Vui lòng nhập họ và tên.")]
         [System.ComponentModel.DataAnnotations.StringLength(100)]

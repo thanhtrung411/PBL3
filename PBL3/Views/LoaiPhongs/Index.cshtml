@@ -211,6 +211,10 @@
         padding: 18px;
     }
 
+    #roomTypePriceDetailModal {
+        z-index: 1090;
+    }
+
     .room-type-modal-backdrop {
         position: absolute;
         inset: 0;
@@ -268,6 +272,182 @@
         height: 300px;
         object-fit: cover;
         display: block;
+    }
+
+    .room-detail-dialog {
+        min-height: min(760px, calc(100vh - 36px));
+        background: #ffffff;
+    }
+
+    .room-detail-dialog-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 76px;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 22px 92px 18px 30px;
+    }
+
+    .room-detail-dialog-header > div:first-child {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .room-detail-dialog-header h2 {
+        margin: 7px 0 4px;
+        color: #111827;
+        font-size: 1.35rem;
+        font-weight: 780;
+        letter-spacing: -0.01em;
+    }
+
+    .room-detail-dialog-header p {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.92rem;
+        font-weight: 560;
+    }
+
+    .room-detail-price-chip {
+        flex: 0 0 190px;
+        display: grid;
+        place-items: center;
+        gap: 3px;
+        min-width: 170px;
+        border: 1px solid #dbe7f3;
+        border-radius: 999px;
+        background: #f8fafc;
+        margin-right: 18px;
+        padding: 10px 16px;
+        text-align: center;
+    }
+
+    .room-detail-price-chip span {
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 720;
+    }
+
+    .room-detail-price-chip strong {
+        color: #111827;
+        font-size: 0.96rem;
+        font-weight: 780;
+        white-space: nowrap;
+    }
+
+    .room-detail-dialog-body {
+        display: grid;
+        gap: 18px;
+        padding: 24px 30px 30px;
+    }
+
+    .room-detail-main-grid {
+        display: grid;
+        grid-template-columns: minmax(260px, 0.52fr) minmax(0, 1fr);
+        gap: 18px;
+        align-items: stretch;
+    }
+
+    .room-detail-image-card {
+        min-height: 230px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #f1f5f9;
+    }
+
+    .room-detail-image-card img {
+        width: 100%;
+        height: 100%;
+        min-height: 230px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .room-detail-summary-card,
+    .room-detail-section {
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #fbfdff;
+        padding: 18px;
+    }
+
+    .room-detail-summary-card h3,
+    .room-detail-section-title h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.05rem;
+        font-weight: 760;
+    }
+
+    .room-detail-summary-card > p {
+        margin: 8px 0 16px;
+        color: #64748b;
+        font-size: 0.94rem;
+        font-weight: 560;
+        line-height: 1.55;
+    }
+
+    .room-detail-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .room-detail-meta-grid div {
+        border: 1px solid #edf2f7;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 11px 12px;
+    }
+
+    .room-detail-meta-grid span {
+        display: block;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 720;
+    }
+
+    .room-detail-meta-grid strong {
+        display: block;
+        margin-top: 4px;
+        color: #111827;
+        font-size: 0.9rem;
+        font-weight: 680;
+    }
+
+    .room-detail-stat-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .room-detail-section {
+        display: grid;
+        gap: 13px;
+    }
+
+    .room-detail-section-title {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .room-detail-section-title small {
+        color: #64748b;
+        font-size: 0.82rem;
+        font-weight: 560;
+        text-align: right;
+    }
+
+    .room-detail-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 4px;
     }
 
     .detail-body {
@@ -489,6 +669,11 @@
         align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
+        padding-right: 62px;
+    }
+
+    .price-detail-header .btn {
+        flex: 0 0 auto;
     }
 
     .price-detail-header h2 {
@@ -559,6 +744,12 @@
         padding: 11px;
     }
 
+    .weekday-multiplier-card.is-changed {
+        border-color: #fbbf24;
+        background: #fff7d6;
+        box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.15);
+    }
+
     .weekday-multiplier-card span {
         color: #111827;
         font-size: 0.82rem;
@@ -588,7 +779,7 @@
 
     .holiday-price-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 84px 140px;
+        grid-template-columns: minmax(0, 1fr) 84px 110px 120px;
         gap: 12px;
         align-items: center;
         border: 1px solid #e5e7eb;
@@ -619,6 +810,27 @@
         font-weight: 740;
         padding: 6px 10px;
         text-align: center;
+    }
+
+    .holiday-price-row em {
+        justify-self: end;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-style: normal;
+        font-weight: 720;
+        padding: 6px 10px;
+        white-space: nowrap;
+    }
+
+    .holiday-price-row.is-history {
+        background: #f8fafc;
+    }
+
+    .holiday-delete-btn {
+        justify-self: end;
+        white-space: nowrap;
     }
 
     .holiday-create-grid {
@@ -898,6 +1110,11 @@
         }
 
         .admin-room-title-row,
+        .room-detail-dialog-header,
+        .room-detail-main-grid,
+        .room-detail-meta-grid,
+        .room-detail-stat-row,
+        .room-detail-section-title,
         .detail-stats,
         .weekday-multiplier-grid,
         .holiday-create-grid,
@@ -905,6 +1122,22 @@
         .create-room-grid,
         .image-preview-grid {
             grid-template-columns: 1fr;
+        }
+
+        .room-detail-dialog-header,
+        .room-detail-section-title {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .room-detail-dialog-header {
+            padding-right: 70px;
+        }
+
+        .room-detail-price-chip {
+            width: 100%;
+            margin-right: 0;
+            text-align: center;
         }
 
         .detail-heading-row {
@@ -1150,6 +1383,7 @@
         const antiForgeryToken = document.querySelector("input[name='__RequestVerificationToken']")?.value || "";
         const updatePriceRulesUrl = "@Url.Action("UpdatePriceRules", "LoaiPhongs")";
         const addHolidayPriceUrl = "@Url.Action("AddHolidayPrice", "LoaiPhongs")";
+        const deleteHolidayPriceUrl = "@Url.Action("DeleteHolidayPrice", "LoaiPhongs")";
 
         function showDetail(roomTypeId) {
             const template = document.getElementById(`roomTypeDetail_${roomTypeId}`);
@@ -1235,8 +1469,10 @@
             const defaultInput = pricePanel.querySelector("[data-default-price-input]");
             const defaultPrice = parseNumber(defaultInput?.value);
             pricePanel.querySelectorAll("[data-weekday-multiplier]").forEach(function (input) {
-                const preview = input.closest(".weekday-multiplier-card")?.querySelector("[data-weekday-price-preview]");
+                const card = input.closest(".weekday-multiplier-card");
+                const preview = card?.querySelector("[data-weekday-price-preview]");
                 if (!preview) return;
+                card?.classList.toggle("is-changed", Math.abs(parseNumber(input.value || "1") - 1) > 0.0001);
                 preview.textContent = defaultPrice > 0
                     ? formatCurrency(defaultPrice * parseNumber(input.value || "1"))
                     : "Chưa có";
@@ -1408,6 +1644,49 @@
                 } catch (error) {
                     alert(error.message);
                     addHolidayButton.disabled = false;
+                }
+                return;
+            }
+
+            const deleteHolidayButton = event.target.closest("[data-delete-holiday-price]");
+            if (deleteHolidayButton && pricePanel) {
+                event.preventDefault();
+                const form = pricePanel.querySelector("[data-price-rules-form]");
+                const priceId = deleteHolidayButton.dataset.deleteHolidayPrice;
+                if (!form?.dataset.roomTypeId || !priceId) return;
+                if (!confirm("Xóa giá ngày lễ này?")) return;
+
+                deleteHolidayButton.disabled = true;
+                try {
+                    await postJson(deleteHolidayPriceUrl, {
+                        roomTypeId: form.dataset.roomTypeId,
+                        priceId
+                    });
+                    const row = deleteHolidayButton.closest(".holiday-price-row");
+                    const historyList = pricePanel.querySelector("[data-holiday-history-list]");
+                    if (row && historyList) {
+                        deleteHolidayButton.remove();
+                        row.classList.add("is-history");
+                        row.removeAttribute("data-holiday-price-id");
+                        const status = document.createElement("em");
+                        status.textContent = "Đã xóa";
+                        row.insertBefore(status, row.querySelector("b"));
+                        historyList.prepend(row);
+                        pricePanel.querySelector("[data-holiday-history-empty]")?.remove();
+                    } else {
+                        row?.remove();
+                    }
+
+                    const currentList = pricePanel.querySelector("[data-current-holiday-list]");
+                    if (currentList && currentList.children.length === 0) {
+                        const empty = document.createElement("div");
+                        empty.className = "empty-room-state py-3";
+                        empty.textContent = "Chưa có giá ngày lễ trong tương lai.";
+                        currentList.replaceWith(empty);
+                    }
+                } catch (error) {
+                    alert(error.message);
+                    deleteHolidayButton.disabled = false;
                 }
             }
         });

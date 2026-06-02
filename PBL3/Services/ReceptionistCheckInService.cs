@@ -29,13 +29,16 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
 
     private readonly ApplicationDbContext _context;
     private readonly IBookingEmailService _bookingEmailService;
+    private readonly IInvoicePromotionService _invoicePromotionService;
 
     public ReceptionistCheckInService(
         ApplicationDbContext context,
-        IBookingEmailService bookingEmailService)
+        IBookingEmailService bookingEmailService,
+        IInvoicePromotionService invoicePromotionService)
     {
         _context = context;
         _bookingEmailService = bookingEmailService;
+        _invoicePromotionService = invoicePromotionService;
     }
 
     public async Task<ReceptionistBookingLookupResult> LookupBookingAsync(
@@ -169,6 +172,55 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                     Rooms = group.ToList()
                 })
                 .ToList()
+        };
+    }
+
+    public async Task<RoomMaintenanceResult> SetRoomMaintenanceAsync(
+        RoomMaintenanceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var roomId = NormalizeOptional(request.RoomId);
+        if (string.IsNullOrWhiteSpace(roomId))
+        {
+            return FailRoomMaintenance("Thiếu mã phòng.");
+        }
+
+        var room = await _context.Phongs
+            .FirstOrDefaultAsync(x => x.MaPhong == roomId, cancellationToken);
+        if (room == null)
+        {
+            return FailRoomMaintenance("Không tìm thấy phòng.");
+        }
+
+        var hasActiveAssignment = await _context.ChiTietHoaDons
+            .AsNoTracking()
+            .Include(x => x.MaHoaDonNavigation)
+            .ThenInclude(x => x.MaDatPhongNavigation)
+            .AnyAsync(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                           x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
+                           x.MaPhong == room.MaPhong &&
+                           x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong,
+                cancellationToken);
+
+        if (hasActiveAssignment || IsBusyStatus(room.TrangThai))
+        {
+            return FailRoomMaintenance("Chỉ có thể đổi bảo trì khi phòng đang trống.");
+        }
+
+        room.TrangThai = request.Maintenance
+            ? DomainValues.PhongTrangThai.BaoTri
+            : DomainValues.PhongTrangThai.Trong;
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return new RoomMaintenanceResult
+        {
+            Success = true,
+            Message = request.Maintenance
+                ? "Đã chuyển phòng sang bảo trì."
+                : "Đã hủy bảo trì, phòng đã trống.",
+            RoomId = room.MaPhong,
+            Status = request.Maintenance ? "maintenance" : "available",
+            StatusLabel = request.Maintenance ? "Bảo trì" : "Trống"
         };
     }
 
@@ -310,10 +362,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.DichVu &&
                         x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
             .Sum(x => x.ThanhTien);
-        booking.HoaDon.TongThanhToan =
-            booking.HoaDon.TongTienPhong +
-            booking.HoaDon.TongTienDichVu -
-            booking.HoaDon.TienGiamGiaPhong;
+        await _invoicePromotionService.ApplyBestPromotionAsync(booking.HoaDon, cancellationToken);
 
         booking.HoaDon.TrangThai = booking.HoaDon.SoTienDaThanhToan >= booking.HoaDon.TongThanhToan
             ? DomainValues.HoaDonTrangThai.DaThanhToan
@@ -958,7 +1007,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 : $"Khách vãng lai - {request.Note.Trim()}"
         };
 
-        var paidAmount = isVnPayPayment ? 0 : total;
         var invoice = new HoaDon
         {
             MaHoaDon = invoiceCode,
@@ -968,7 +1016,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             TienDatCoc = 0,
             TienGiamGiaPhong = 0,
             TongThanhToan = total,
-            SoTienDaThanhToan = paidAmount,
+            SoTienDaThanhToan = 0,
             NgayThanhToanCuoi = isVnPayPayment ? null : DateTime.UtcNow,
             PhuongThucThanhToan = isVnPayPayment
                 ? DomainValues.PhuongThucThanhToan.Qr
@@ -980,6 +1028,12 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 ? $"{WalkInVnPayMarker}; Chờ thanh toán VNPay khi check-in vãng lai"
                 : "Thanh toán đủ khi check-in vãng lai"
         };
+
+        await _invoicePromotionService.ApplyBestPromotionAsync(invoice, cancellationToken);
+        if (!isVnPayPayment)
+        {
+            invoice.SoTienDaThanhToan = invoice.TongThanhToan;
+        }
 
         _context.DatPhongs.Add(booking);
         _context.HoaDons.Add(invoice);
@@ -1035,7 +1089,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 : "Check-in khách vãng lai thành công.",
             BookingCode = bookingCode,
             InvoiceCode = invoiceCode,
-            GrandTotal = total,
+            GrandTotal = invoice.TongThanhToan,
             RequiresOnlinePayment = isVnPayPayment,
             AssignedRooms = selectedRooms
                 .OrderBy(x => x.SoPhong)
@@ -1696,6 +1750,15 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             PaidAmount = paidAmount,
             GrandTotal = grandTotal,
             RemainingAmount = remainingAmount
+        };
+    }
+
+    private static RoomMaintenanceResult FailRoomMaintenance(string message)
+    {
+        return new RoomMaintenanceResult
+        {
+            Success = false,
+            Message = message
         };
     }
 }

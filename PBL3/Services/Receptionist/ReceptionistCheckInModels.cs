@@ -125,6 +125,26 @@ public class ReceptionistRoomMapResult
     public List<ReceptionistFloorRoomMapDto> Floors { get; set; } = new();
 }
 
+public class RoomMaintenanceRequest
+{
+    public string? RoomId { get; set; }
+
+    public bool Maintenance { get; set; }
+}
+
+public class RoomMaintenanceResult
+{
+    public bool Success { get; set; }
+
+    public string Message { get; set; } = string.Empty;
+
+    public string RoomId { get; set; } = string.Empty;
+
+    public string Status { get; set; } = string.Empty;
+
+    public string StatusLabel { get; set; } = string.Empty;
+}
+
 public class ReceptionistServiceUsageResult
 {
     public bool Success { get; set; }

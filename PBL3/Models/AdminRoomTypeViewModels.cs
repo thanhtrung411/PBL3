@@ -54,6 +54,8 @@ public class AdminRoomTypePriceOverviewViewModel
     public List<AdminRoomTypeWeekdayPriceViewModel> WeekdayPrices { get; set; } = new();
 
     public List<AdminRoomTypeHolidayPriceViewModel> HolidayPrices { get; set; } = new();
+
+    public List<AdminRoomTypeHolidayPriceViewModel> HolidayPriceHistory { get; set; } = new();
 }
 
 public class AdminRoomTypeWeekdayPriceViewModel
@@ -82,6 +84,10 @@ public class AdminRoomTypeHolidayPriceViewModel
     public decimal Multiplier { get; set; } = 1;
 
     public string Note { get; set; } = string.Empty;
+
+    public string StatusLabel { get; set; } = string.Empty;
+
+    public bool IsActiveFuture { get; set; }
 }
 
 public class AdminRoomTypePriceUpdateRequest
@@ -111,6 +117,13 @@ public class AdminRoomTypeHolidayPriceCreateRequest
     public int DaysAfter { get; set; }
 
     public decimal Multiplier { get; set; }
+}
+
+public class AdminRoomTypeHolidayPriceDeleteRequest
+{
+    public string RoomTypeId { get; set; } = string.Empty;
+
+    public string PriceId { get; set; } = string.Empty;
 }
 
 public class AdminRoomTypeCreateViewModel

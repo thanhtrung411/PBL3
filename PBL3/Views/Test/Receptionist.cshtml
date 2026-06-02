@@ -1,6 +1,24 @@
+@using System.Security.Claims
 @{
     Layout = null;
     ViewData["Title"] = "Lễ tân";
+    var fullName = User.Identity?.Name ?? "Nhân viên";
+    var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "receptionist";
+    var isAdmin = string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase);
+    var roleLabel = isAdmin ? "admin" : "lễ tân";
+    var initials = "NV";
+    if (!string.IsNullOrWhiteSpace(fullName))
+    {
+        var words = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length >= 2)
+        {
+            initials = $"{words[^2][0]}{words[^1][0]}".ToUpperInvariant();
+        }
+        else if (words.Length == 1)
+        {
+            initials = words[0][..Math.Min(2, words[0].Length)].ToUpperInvariant();
+        }
+    }
 }
 
 <!DOCTYPE html>
@@ -50,6 +68,41 @@
                     <span>Check-out</span>
                 </button>
             </nav>
+
+            <div class="reception-sidebar-footer dropdown dropup">
+                <button class="reception-user-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="reception-user-avatar">@initials</span>
+                    <span class="reception-user-text">
+                        <strong>@fullName</strong>
+                        <small>@roleLabel</small>
+                    </span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+                <ul class="dropdown-menu reception-user-menu shadow border-0 rounded-3">
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Settings", "Account")">
+                            <i class="bi bi-gear"></i>
+                            Cài đặt
+                        </a>
+                    </li>
+                    @if (isAdmin)
+                    {
+                        <li>
+                            <a class="dropdown-item" href="@Url.Action("Index", "Home")">
+                                <i class="bi bi-arrow-left-right"></i>
+                                Sang Admin
+                            </a>
+                        </li>
+                    }
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="@Url.Action("Logout", "Account")">
+                            <i class="bi bi-box-arrow-left"></i>
+                            Đăng xuất
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </aside>
 
         <main class="reception-main">

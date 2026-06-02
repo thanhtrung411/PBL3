@@ -1,108 +1,132 @@
 @model PBL3.Models.AdminRoomTypeCardViewModel
+@using System.Globalization
 
-<div class="detail-hero">
-    <img src="@Model.ImageUrl" alt="Ảnh loại phòng @Model.RoomTypeName" loading="lazy" onerror="this.src='/images/booking_hero.jpg';" />
-    <span class="room-stock-badge">@Model.TotalRooms phòng</span>
-</div>
-<div class="detail-body">
-    <div class="detail-heading-row">
+@{
+    var currentPriceLabel = Model.CurrentPrice.HasValue
+        ? $"{Model.CurrentPrice.Value.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} đ"
+        : "Chưa có giá";
+    var defaultPriceLabel = Model.PriceOverview.DefaultPrice.HasValue
+        ? $"{Model.PriceOverview.DefaultPrice.Value.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} đ"
+        : "Chưa có";
+}
+
+<div class="room-detail-dialog">
+    <header class="room-detail-dialog-header">
         <div>
             <span class="room-type-code">@Model.RoomTypeId</span>
-            <h2 class="mt-2" id="roomTypeModalTitle">@Model.RoomTypeName</h2>
-            <p class="detail-description">@Model.Description</p>
+            <h2 id="roomTypeModalTitle">Chi tiết @Model.RoomTypeName</h2>
+            <p>@Model.TotalRooms phòng · Tối đa @Model.MaxGuests người/phòng</p>
         </div>
-    </div>
+        <div class="room-detail-price-chip">
+            <span>Giá hiện tại</span>
+            <strong>@currentPriceLabel</strong>
+        </div>
+    </header>
 
-    <div class="detail-stats">
-        <div class="detail-stat">
-            <span>Sức chứa</span>
-            <strong>@Model.MaxGuests người</strong>
-        </div>
-        <div class="detail-stat">
-            <span>Tổng phòng</span>
-            <strong>@Model.TotalRooms</strong>
-        </div>
-        <div class="detail-stat">
-            <span>Phòng trống</span>
-            <strong>@Model.AvailableRooms</strong>
-        </div>
-        <div class="detail-stat">
-            <span>Đang sử dụng</span>
-            <strong>@Model.OccupiedRooms</strong>
-        </div>
-        <div class="detail-stat">
-            <span>Bảo trì/ngưng</span>
-            <strong>@Model.MaintenanceRooms</strong>
-        </div>
-    </div>
-
-    <div class="detail-section">
-        <h2 class="h6 mb-3">Giá hiện tại</h2>
-        <div class="price-overview-list">
-            <div class="price-overview-card price-default-card">
-                <div>
-                    <span class="price-overview-label">Giá mặc định</span>
-                    <strong>@(Model.PriceOverview.DefaultPrice.HasValue ? $"{Model.PriceOverview.DefaultPrice.Value:N0}đ" : "Chưa có")</strong>
-                    <small>Áp dụng cho mọi ngày.</small>
-                </div>
+    <div class="room-detail-dialog-body">
+        <section class="room-detail-main-grid">
+            <div class="room-detail-image-card">
+                <img src="@Model.ImageUrl" alt="Ảnh loại phòng @Model.RoomTypeName" loading="lazy" onerror="this.src='/images/booking_hero.jpg';" />
             </div>
 
-            <div class="price-overview-card">
-                <div class="price-overview-heading">
+            <div class="room-detail-summary-card">
+                <h3>@Model.RoomTypeName</h3>
+                <p>@Model.Description</p>
+                <div class="room-detail-meta-grid">
                     <div>
-                        <span class="price-overview-label">Giá theo thứ</span>
-                        <small>Ô màu vàng là ngày có giá thay đổi.</small>
+                        <span>Sức chứa</span>
+                        <strong>@Model.MaxGuests người</strong>
+                    </div>
+                    <div>
+                        <span>Nguồn giá</span>
+                        <strong>@Model.CurrentPriceSource</strong>
+                    </div>
+                    <div>
+                        <span>Giá mặc định</span>
+                        <strong>@defaultPriceLabel</strong>
+                    </div>
+                    <div>
+                        <span>Tổng phòng</span>
+                        <strong>@Model.TotalRooms</strong>
                     </div>
                 </div>
-                <div class="weekday-price-grid">
-                    @foreach (var weekday in Model.PriceOverview.WeekdayPrices)
-                    {
-                        <span class="weekday-price-chip @(weekday.IsChanged ? "is-changed" : "")">
-                            <strong>@weekday.DayLabel</strong>
-                            <small>@(weekday.Price.HasValue ? $"{weekday.Price.Value:N0}đ" : "Chưa có")</small>
-                        </span>
-                    }
-                </div>
             </div>
+        </section>
 
-            <div class="price-detail-action">
-                <button type="button" class="btn btn-outline-primary btn-sm" data-open-price-detail="@Model.RoomTypeId">
-                    <i class="bi bi-sliders"></i>
-                    Chi tiết
-                </button>
+        <section class="room-detail-stat-row" aria-label="Thống kê phòng">
+            <div class="detail-stat">
+                <span>Trống</span>
+                <strong>@Model.AvailableRooms</strong>
             </div>
-        </div>
-    </div>
+            <div class="detail-stat">
+                <span>Đang sử dụng</span>
+                <strong>@Model.OccupiedRooms</strong>
+            </div>
+            <div class="detail-stat">
+                <span>Bảo trì/ngừng</span>
+                <strong>@Model.MaintenanceRooms</strong>
+            </div>
+            <div class="detail-stat">
+                <span>Tổng phòng</span>
+                <strong>@Model.TotalRooms</strong>
+            </div>
+        </section>
 
-    <div class="detail-section">
-        <h2 class="h6 mb-3">Danh sách phòng</h2>
-        @if (Model.Rooms.Count == 0)
-        {
-            <div class="empty-room-state py-3">Chưa có phòng thuộc loại này.</div>
-        }
-        else
-        {
-            <div class="room-chip-list">
-                @foreach (var room in Model.Rooms)
+        <section class="room-detail-section">
+            <div class="room-detail-section-title">
+                <h3>Giá theo thứ</h3>
+                <small>Ô màu vàng là ngày có giá thay đổi.</small>
+            </div>
+            <div class="weekday-price-grid">
+                @foreach (var weekday in Model.PriceOverview.WeekdayPrices)
                 {
-                    <span class="room-chip" title="@room.Status">
-                        <i class="bi bi-door-open"></i>
-                        @room.RoomNumber
-                        <small>Tầng @room.Floor</small>
+                    <span class="weekday-price-chip @(weekday.IsChanged ? "is-changed" : "")">
+                        <strong>@weekday.DayLabel</strong>
+                        <small>@(weekday.Price.HasValue ? $"{weekday.Price.Value.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} đ" : "Chưa có")</small>
                     </span>
                 }
             </div>
-        }
-    </div>
+            <div class="price-detail-action">
+                <button type="button" class="btn btn-outline-primary btn-sm" data-open-price-detail="@Model.RoomTypeId">
+                    <i class="bi bi-sliders"></i>
+                    Chi tiết giá
+                </button>
+            </div>
+        </section>
 
-    <div class="room-card-actions">
-        <a asp-action="Edit" asp-route-id="@Model.RoomTypeId" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-pencil-square"></i>
-            Sửa loại phòng
-        </a>
-        <a asp-action="Delete" asp-route-id="@Model.RoomTypeId" class="btn btn-outline-danger btn-sm">
-            <i class="bi bi-trash"></i>
-            Xóa
-        </a>
+        <section class="room-detail-section">
+            <div class="room-detail-section-title">
+                <h3>Danh sách phòng</h3>
+                <small>@Model.Rooms.Count phòng thuộc loại này</small>
+            </div>
+            @if (Model.Rooms.Count == 0)
+            {
+                <div class="empty-room-state py-3">Chưa có phòng thuộc loại này.</div>
+            }
+            else
+            {
+                <div class="room-chip-list">
+                    @foreach (var room in Model.Rooms)
+                    {
+                        <span class="room-chip" title="@room.Status">
+                            <i class="bi bi-door-open"></i>
+                            @room.RoomNumber
+                            <small>Tầng @room.Floor</small>
+                        </span>
+                    }
+                </div>
+            }
+        </section>
+
+        <footer class="room-detail-actions">
+            <a asp-action="Edit" asp-route-id="@Model.RoomTypeId" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil-square"></i>
+                Sửa loại phòng
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.RoomTypeId" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-trash"></i>
+                Xóa
+            </a>
+        </footer>
     </div>
 </div>

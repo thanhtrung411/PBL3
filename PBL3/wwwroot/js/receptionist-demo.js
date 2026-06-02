@@ -231,6 +231,11 @@
         selectRoomMapRoom(tile.dataset.roomMapRoomId);
     });
     elements.roomMapDetailClose?.addEventListener("click", closeRoomMapDetailModal);
+    elements.roomMapDetailBody?.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-room-map-maintenance]");
+        if (!button) return;
+        updateRoomMaintenance(button);
+    });
     elements.roomMapDetailModal?.addEventListener("click", function (event) {
         if (event.target === elements.roomMapDetailModal) {
             closeRoomMapDetailModal();
@@ -1429,6 +1434,22 @@
         const roomNumbers = bookedRooms.length
             ? `Phòng ${bookedRooms.map(escapeHtml).join(", ")}`
             : `Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}`;
+        const canSetMaintenance = room.status === "available";
+        const canCancelMaintenance = room.status === "maintenance";
+        const maintenanceActionHtml = canSetMaintenance || canCancelMaintenance
+            ? `
+                <div class="room-map-maintenance-actions">
+                    <button type="button"
+                            class="room-map-maintenance-btn ${canSetMaintenance ? "to-maintenance" : "to-available"}"
+                            data-room-map-maintenance
+                            data-room-id="${escapeHtml(room.roomId)}"
+                            data-maintenance="${canSetMaintenance ? "true" : "false"}">
+                        <i class="bi ${canSetMaintenance ? "bi-tools" : "bi-check2-circle"}"></i>
+                        ${canSetMaintenance ? "Bảo trì phòng" : "Hủy bảo trì"}
+                    </button>
+                </div>
+            `
+            : "";
         const guestHtml = room.status === "occupied"
             ? `
                 <div class="room-map-guest-box">
@@ -1493,6 +1514,7 @@
                 </div>
                 ${serviceHtml}
             </div>
+            ${maintenanceActionHtml}
         `;
         elements.roomMapDetailModal.hidden = false;
     }
@@ -1507,6 +1529,39 @@
         state.selectedRoomMapRoomId = "";
         if (state.currentStep === "roomMap") {
             renderRoomMap();
+        }
+    }
+
+    async function updateRoomMaintenance(button) {
+        const roomId = button.dataset.roomId || "";
+        const maintenance = button.dataset.maintenance === "true";
+        if (!roomId) return;
+
+        const confirmed = confirm(maintenance
+            ? "Chuyển phòng này sang trạng thái bảo trì?"
+            : "Hủy bảo trì và chuyển phòng về trạng thái trống?");
+        if (!confirmed) return;
+
+        setButtonBusy(button, true, "Đang cập nhật...");
+        try {
+            const result = await fetchJson("/Receptionist/RoomMaintenance", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ roomId, maintenance })
+            });
+            if (!result.success) {
+                showAlert(result.message || "Không thể cập nhật trạng thái phòng.", "danger");
+                setButtonBusy(button, false);
+                return;
+            }
+
+            showAlert(result.message || "Đã cập nhật trạng thái phòng.", "success");
+            state.roomMapServiceUsage = null;
+            closeRoomMapDetailModal();
+            await loadRoomMap();
+        } catch (error) {
+            showAlert(error.message || "Không thể cập nhật trạng thái phòng.", "danger");
+            setButtonBusy(button, false);
         }
     }
 

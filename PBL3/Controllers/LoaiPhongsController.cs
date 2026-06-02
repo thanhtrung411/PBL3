@@ -49,6 +49,14 @@ namespace PBL3.Controllers
                 .Where(x => x.TrangThai == "Hoạt động" &&
                             x.GiaApDung > 0)
                 .ToListAsync();
+            var holidayPriceRows = await _context.BangGiaPhongs
+                .AsNoTracking()
+                .Where(x => x.LoaiGia == "NGAYLE" &&
+                            x.ThuApDung == null &&
+                            x.GiaApDung > 0)
+                .OrderByDescending(x => x.TuNgay)
+                .ThenByDescending(x => x.DenNgay)
+                .ToListAsync();
 
             var priceRows = allPriceRows
                 .Where(x => (x.LoaiGia == "MACDINH" && x.ThuApDung == null) ||
@@ -81,9 +89,8 @@ namespace PBL3.Controllers
                 .ToDictionary(
                     x => (x.Key.MaLoaiPhong, x.Key.ThuApDung!.Value),
                     x => x.OrderByDescending(price => price.TuNgay).First());
-            var holidayPrices = allPriceRows
-                .Where(x => x.LoaiGia == "NGAYLE" &&
-                            x.ThuApDung == null &&
+            var holidayPrices = holidayPriceRows
+                .Where(x => x.TrangThai == "Hoạt động" &&
                             x.DenNgay >= today)
                 .OrderBy(x => x.TuNgay)
                 .ThenBy(x => x.DenNgay)
@@ -115,6 +122,10 @@ namespace PBL3.Controllers
                         prices.TryGetValue(roomType.MaLoaiPhong, out var price);
                         defaultPrices.TryGetValue(roomType.MaLoaiPhong, out var defaultPrice);
                         holidayPrices.TryGetValue(roomType.MaLoaiPhong, out var roomHolidayPrices);
+                        var roomHolidayHistory = holidayPriceRows
+                            .Where(x => string.Equals(x.MaLoaiPhong, roomType.MaLoaiPhong, StringComparison.OrdinalIgnoreCase) &&
+                                        !(x.TrangThai == "Hoạt động" && x.DenNgay >= today))
+                            .ToList();
                         images.TryGetValue(roomType.MaLoaiPhong, out var imageUrl);
                         var rooms = roomType.Phongs
                             .OrderBy(x => x.Tang)
@@ -138,7 +149,9 @@ namespace PBL3.Controllers
                                 roomType.MaLoaiPhong,
                                 defaultPrice?.GiaApDung,
                                 weekdayPrices,
-                                roomHolidayPrices ?? new List<BangGiaPhong>()),
+                                roomHolidayPrices ?? new List<BangGiaPhong>(),
+                                roomHolidayHistory,
+                                today),
                             TotalRooms = rooms.Count,
                             AvailableRooms = rooms.Count(x => IsAvailableStatus(x.TrangThai)),
                             OccupiedRooms = rooms.Count(x => IsOccupiedStatus(x.TrangThai)),
@@ -343,6 +356,32 @@ namespace PBL3.Controllers
             _context.BangGiaPhongs.Add(holidayPrice);
             await _context.SaveChangesAsync();
             return Ok(new { message = "Đã thêm giá ngày lễ." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteHolidayPrice([FromBody] AdminRoomTypeHolidayPriceDeleteRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.RoomTypeId) || string.IsNullOrWhiteSpace(request.PriceId))
+            {
+                return BadRequest(new { message = "Dữ liệu ngày lễ không hợp lệ." });
+            }
+
+            var roomTypeId = request.RoomTypeId.Trim();
+            var priceId = request.PriceId.Trim();
+            var holidayPrice = await _context.BangGiaPhongs
+                .FirstOrDefaultAsync(x => x.MaBangGia == priceId &&
+                                          x.MaLoaiPhong == roomTypeId &&
+                                          x.LoaiGia == "NGAYLE" &&
+                                          x.TrangThai == "Hoạt động");
+            if (holidayPrice == null)
+            {
+                return NotFound(new { message = "Không tìm thấy giá ngày lễ." });
+            }
+
+            holidayPrice.TrangThai = "Ngừng áp dụng";
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Đã xóa giá ngày lễ." });
         }
 
         // POST: LoaiPhongs/Create
@@ -618,7 +657,9 @@ namespace PBL3.Controllers
             string roomTypeId,
             decimal? defaultPrice,
             Dictionary<(string MaLoaiPhong, byte ThuApDung), BangGiaPhong> weekdayPrices,
-            List<BangGiaPhong> holidayPrices)
+            List<BangGiaPhong> holidayPrices,
+            List<BangGiaPhong> holidayPriceHistory,
+            DateOnly today)
         {
             var overview = new AdminRoomTypePriceOverviewViewModel
             {
@@ -649,7 +690,27 @@ namespace PBL3.Controllers
                     EndDate = price.DenNgay,
                     Price = price.GiaApDung,
                     Multiplier = CalculateMultiplier(defaultPrice, price.GiaApDung),
-                    Note = price.GhiChu ?? string.Empty
+                    Note = price.GhiChu ?? string.Empty,
+                    StatusLabel = "Đang áp dụng",
+                    IsActiveFuture = true
+                })
+                .ToList();
+
+            overview.HolidayPriceHistory = holidayPriceHistory
+                .OrderByDescending(price => price.TuNgay)
+                .ThenByDescending(price => price.DenNgay)
+                .Select(price => new AdminRoomTypeHolidayPriceViewModel
+                {
+                    PriceId = price.MaBangGia,
+                    StartDate = price.TuNgay,
+                    EndDate = price.DenNgay,
+                    Price = price.GiaApDung,
+                    Multiplier = CalculateMultiplier(defaultPrice, price.GiaApDung),
+                    Note = price.GhiChu ?? string.Empty,
+                    StatusLabel = price.TrangThai == "Hoạt động" && price.DenNgay < today
+                        ? "Đã qua"
+                        : "Đã xóa",
+                    IsActiveFuture = false
                 })
                 .ToList();
 

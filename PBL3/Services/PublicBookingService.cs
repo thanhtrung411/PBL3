@@ -17,6 +17,7 @@ public class PublicBookingService : IPublicBookingService
     private readonly IBangGiaPhongService _bangGiaPhongService;
     private readonly IChiTietHoaDonService _chiTietHoaDonService;
     private readonly IHoaDonService _hoaDonService;
+    private readonly IInvoicePromotionService _invoicePromotionService;
     private readonly IExpiredBookingCleanupService _expiredBookingCleanupService;
     private readonly VnPayOptions _vnPayOptions;
 
@@ -27,6 +28,7 @@ public class PublicBookingService : IPublicBookingService
         IBangGiaPhongService bangGiaPhongService,
         IChiTietHoaDonService chiTietHoaDonService,
         IHoaDonService hoaDonService,
+        IInvoicePromotionService invoicePromotionService,
         IExpiredBookingCleanupService expiredBookingCleanupService,
         IOptions<VnPayOptions> vnPayOptions)
     {
@@ -36,6 +38,7 @@ public class PublicBookingService : IPublicBookingService
         _bangGiaPhongService = bangGiaPhongService;
         _chiTietHoaDonService = chiTietHoaDonService;
         _hoaDonService = hoaDonService;
+        _invoicePromotionService = invoicePromotionService;
         _expiredBookingCleanupService = expiredBookingCleanupService;
         _vnPayOptions = vnPayOptions.Value;
     }
@@ -161,8 +164,9 @@ public class PublicBookingService : IPublicBookingService
 
         var vnPayAvailable = IsVnPayConfigured();
         var firstRoom = roomLines.First();
+        var roomTotal = roomLines.Sum(x => x.PricePerNight * x.Rooms * Math.Max((search.CheckOut - search.CheckIn).Days, 1));
 
-        return new CheckoutViewModel
+        var checkoutModel = new CheckoutViewModel
         {
             RoomId = firstRoom.RoomTypeId,
             RoomName = roomLines.Count == 1 ? firstRoom.RoomName : "Combo phòng Venus Hotel",
@@ -178,8 +182,27 @@ public class PublicBookingService : IPublicBookingService
             PaymentMethod = PaymentMethods.VnPay,
             VnPayAvailable = vnPayAvailable,
             PaymentUnavailableMessage = vnPayAvailable ? null : "VNPay chua duoc cau hinh. Vui long thu lai sau.",
-            TotalAmount = roomLines.Sum(x => x.PricePerNight * x.Rooms * Math.Max((search.CheckOut - search.CheckIn).Days, 1))
+            TotalAmount = roomTotal
         };
+
+        var previewInvoice = new HoaDon
+        {
+            MaHoaDon = "PREVIEW",
+            MaDatPhong = "PREVIEW",
+            TongTienPhong = roomTotal,
+            TongTienDichVu = 0,
+            TienDatCoc = 0,
+            TongThanhToan = roomTotal,
+            SoTienDaThanhToan = 0,
+            TrangThai = DomainValues.HoaDonTrangThai.ChuaThanhToan
+        };
+        var promotion = await _invoicePromotionService.ApplyBestPromotionAsync(previewInvoice);
+        checkoutModel.DiscountAmount = previewInvoice.TienGiamGiaPhong;
+        checkoutModel.PromotionCode = promotion?.CodeGiamGia.Trim();
+        checkoutModel.PromotionName = promotion?.TenMaGiamGia.Trim();
+        checkoutModel.TotalAmount = checkoutModel.GrandTotal;
+
+        return checkoutModel;
     }
 
     private static Dictionary<string, int> FindCheapestCombo(List<PublicRoomOptionViewModel> rooms, int guests, int maxRooms)
@@ -445,11 +468,10 @@ public class PublicBookingService : IPublicBookingService
             invoice.TongTienPhong = roomTotal;
             invoice.TongTienDichVu = 0;
             invoice.TienDatCoc = 0;
-            invoice.TienGiamGiaPhong = 0;
-            invoice.TongThanhToan = roomTotal;
             invoice.SoTienDaThanhToan = 0;
             invoice.PhuongThucThanhToan = DomainValues.PhuongThucThanhToan.Qr;
             invoice.TrangThai = DomainValues.HoaDonTrangThai.ChuaThanhToan;
+            await _invoicePromotionService.ApplyBestPromotionAsync(invoice);
 
             if (!await _hoaDonService.UpdateAsync(invoice))
             {
@@ -586,7 +608,7 @@ public class PublicBookingService : IPublicBookingService
                         x.HoaDon != null &&
                         x.HoaDon.TrangThai == DomainValues.HoaDonTrangThai.ChuaThanhToan &&
                         x.HoaDon.PhuongThucThanhToan == DomainValues.PhuongThucThanhToan.Qr &&
-                        x.HoaDon.TongThanhToan == roomTotal)
+                        x.HoaDon.TongTienPhong == roomTotal)
             .OrderByDescending(x => x.NgayDat)
             .ToListAsync();
 

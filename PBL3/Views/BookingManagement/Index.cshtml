@@ -1,628 +1,949 @@
-﻿@{
+@model PBL3.Models.AdminBookingManagementViewModel
+
+@{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý đặt phòng";
 }
 
 <style>
     :root {
-        --bs-card-border-radius: 12px;
-        --color-arrival: #108e66;
-        --color-staying: #2563eb;
-        --color-departure: #ea580c;
-        --color-all: #ca8a04;
+        --booking-bg: #f7f9fc;
+        --booking-surface: #ffffff;
+        --booking-soft: #f1f6fb;
+        --booking-ink: #142033;
+        --booking-muted: #66758a;
+        --booking-line: #dfe7f0;
+        --booking-blue: #1f6feb;
+        --booking-blue-soft: #eaf2ff;
+        --booking-green: #168a55;
+        --booking-green-soft: #e9f8f0;
+        --booking-orange: #d97706;
+        --booking-orange-soft: #fff7e6;
+        --booking-red: #b42318;
+        --booking-radius: 8px;
+        --booking-shadow: 0 16px 38px rgba(20, 32, 51, 0.08);
     }
 
-    .booking-main-container {
+    .admin-booking-page {
+        color: var(--booking-ink);
+    }
+
+    .booking-page-header {
         display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        margin-top: 1rem;
-    }
-
-    .booking-top-section {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .booking-bottom-section {
-        padding: 0;
-    }
-
-    .booking-stats-tile {
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        min-height: 52px;
-        display: flex;
-        flex-direction: row;
         align-items: center;
-        justify-content: flex-start;
-        gap: 0.75rem;
-        background-color: #ffffff;
-        color: #4b5563;
-        font-weight: 600;
-        font-size: 0.95rem;
-        padding: 0.75rem 1.25rem;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
     }
 
-        .booking-stats-tile i {
-            font-size: 1.25rem;
-            margin-bottom: 0;
-        }
-
-        .booking-stats-tile:hover {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
-        }
-
-    /* Inactive icons color */
-    .tile-arrival i {
-        color: #108e66;
-    }
-
-    .tile-staying i {
-        color: #2563eb;
-    }
-
-    .tile-departure i {
-        color: #ea580c;
-    }
-
-    .tile-all i {
-        color: #ca8a04;
-    }
-
-    /* Active states */
-    .booking-stats-tile.tile-arrival.active {
-        background-color: #ecfdf5;
-        border-color: #108e66;
-        color: #108e66;
-    }
-
-    .booking-stats-tile.tile-staying.active {
-        background-color: #eff6ff;
-        border-color: #2563eb;
-        color: #2563eb;
-    }
-
-    .booking-stats-tile.tile-departure.active {
-        background-color: #fff7ed;
-        border-color: #ea580c;
-        color: #ea580c;
-    }
-
-    .booking-stats-tile.tile-all.active {
-        background-color: #fefce8;
-        border-color: #ca8a04;
-        color: #ca8a04;
-    }
-
-    .search-container {
-        max-width: 100%;
+    .booking-page-header h1 {
         margin: 0;
+        color: #111827;
+        font-size: clamp(1.85rem, 3vw, 2.6rem);
+        font-weight: 850;
+        line-height: 1.08;
+        letter-spacing: 0;
     }
 
-    .booking-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        transition: all 0.2s ease;
-        margin-bottom: 1rem;
-        padding: 1.25rem 1.5rem;
+    .booking-page-header p {
+        margin: 8px 0 0;
+        color: var(--booking-muted);
+        font-size: 1rem;
+        font-weight: 560;
     }
 
-        .booking-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-            border-color: #cbd5e1;
-        }
-
-    .status-badge {
-        padding: 0.25rem 0.6rem;
-        border-radius: 30px;
-        font-size: 0.7rem;
-        font-weight: 600;
+    .booking-primary-btn {
+        min-height: 44px;
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
-    }
-
-    .badge-confirmed {
-        background-color: #ecfdf5;
-        color: #108e66;
-    }
-
-    .badge-paid {
-        background-color: #ecfdf5;
-        color: #108e66;
-    }
-
-    .btn-view-details {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
         justify-content: center;
-        border: 1px solid #e2e8f0;
-        background: white;
-        color: #64748b;
-        transition: all 0.2s;
-        font-size: 1rem;
+        gap: 8px;
+        border: 0;
+        border-radius: var(--booking-radius);
+        background: var(--booking-blue);
+        color: #ffffff;
+        font-weight: 820;
+        padding: 10px 16px;
+        box-shadow: 0 14px 30px rgba(31, 111, 235, 0.18);
     }
 
-        .btn-view-details:hover {
-            background-color: #f1f5f9;
-            color: #1e293b;
-            border-color: #cbd5e1;
-        }
-
-    /* Modal styling */
-    .modal-custom-header {
-        border: none;
-        padding: 1.5rem;
+    .booking-primary-btn:hover,
+    .booking-primary-btn:focus-visible {
+        background: #1659c7;
+        color: #ffffff;
+        outline: none;
     }
 
-    .detail-section-title {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        color: #1e293b;
-    }
-
-    .detail-item-box {
-        background-color: #f1f5f9;
+    .booking-control-panel,
+    .booking-list-panel {
+        border: 1px solid var(--booking-line);
         border-radius: 12px;
-        padding: 0.75rem 1rem;
-        margin-bottom: 0.75rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: var(--booking-shadow);
     }
 
-        .detail-item-box i {
-            color: #64748b;
-            font-size: 1.1rem;
-        }
+    .booking-control-panel {
+        display: grid;
+        gap: 16px;
+        margin-bottom: 18px;
+        padding: 18px;
+    }
 
-    .detail-item-label {
-        font-size: 0.7rem;
-        color: #64748b;
+    .booking-search-box {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--booking-line);
+        border-radius: var(--booking-radius);
+        background: #ffffff;
+        padding: 0 14px;
+    }
+
+    .booking-search-box i {
+        color: var(--booking-muted);
+        font-size: 1.05rem;
+    }
+
+    .booking-search-box input {
+        width: 100%;
+        border: 0;
+        outline: none;
+        color: var(--booking-ink);
+        font-size: 0.98rem;
+        font-weight: 560;
+    }
+
+    .booking-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .booking-filter-card {
+        min-height: 66px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid var(--booking-line);
+        border-radius: var(--booking-radius);
+        background: #ffffff;
+        color: var(--booking-muted);
+        padding: 12px 14px;
+        text-align: left;
+        transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .booking-filter-card strong,
+    .booking-filter-card span {
         display: block;
     }
 
-    .detail-item-value {
-        font-weight: 600;
-        color: #1e293b;
+    .booking-filter-card strong {
+        color: var(--booking-ink);
+        font-size: 0.96rem;
+        font-weight: 820;
     }
 
-    .note-box {
-        background-color: #fefce8;
-        border-radius: 12px;
-        padding: 1rem;
-        border-left: 4px solid #facc15;
+    .booking-filter-card span {
+        margin-top: 2px;
+        color: var(--booking-muted);
+        font-size: 0.78rem;
+        font-weight: 680;
     }
 
-    .btn-payment {
-        background-color: #dcfce7;
-        color: #166534;
-        border: none;
-        border-radius: 8px;
-        padding: 0.5rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.2s;
+    .booking-filter-card i {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: var(--booking-soft);
+        color: var(--booking-blue);
+        font-size: 1.05rem;
+        flex: 0 0 auto;
     }
 
-        .btn-payment:hover {
-            background-color: #bbf7d0;
+    .booking-filter-card.active {
+        border-color: rgba(31, 111, 235, 0.28);
+        background: var(--booking-blue-soft);
+        box-shadow: inset 3px 0 0 var(--booking-blue);
+    }
+
+    .booking-filter-card.active strong,
+    .booking-filter-card.active span {
+        color: var(--booking-blue);
+    }
+
+    .booking-list-panel {
+        padding: 18px;
+    }
+
+    .booking-list-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .booking-list-title h2 {
+        margin: 0;
+        color: var(--booking-ink);
+        font-size: 1.18rem;
+        font-weight: 850;
+    }
+
+    .booking-count-pill {
+        border-radius: 999px;
+        background: var(--booking-blue-soft);
+        color: var(--booking-blue);
+        font-size: 0.82rem;
+        font-weight: 820;
+        padding: 7px 11px;
+        white-space: nowrap;
+    }
+
+    .booking-card-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .booking-card {
+        display: grid;
+        grid-template-columns: minmax(240px, 1.2fr) minmax(260px, 1fr) minmax(190px, 0.7fr) auto;
+        align-items: center;
+        gap: 18px;
+        border: 1px solid var(--booking-line);
+        border-radius: var(--booking-radius);
+        background: #ffffff;
+        padding: 16px 18px;
+        transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    }
+
+    .booking-card:hover {
+        border-color: rgba(31, 111, 235, 0.22);
+        box-shadow: 0 12px 30px rgba(20, 32, 51, 0.08);
+        transform: translateY(-1px);
+    }
+
+    .booking-guest-block {
+        min-width: 0;
+    }
+
+    .booking-code {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: var(--booking-muted);
+        font-size: 0.78rem;
+        font-weight: 820;
+        padding: 5px 9px;
+    }
+
+    .booking-guest-name {
+        margin: 0;
+        color: #111827;
+        font-size: 1.02rem;
+        font-weight: 850;
+        line-height: 1.2;
+    }
+
+    .booking-room-line,
+    .booking-meta-line {
+        margin-top: 5px;
+        color: var(--booking-muted);
+        font-size: 0.9rem;
+        font-weight: 620;
+    }
+
+    .booking-date-block {
+        display: grid;
+        gap: 8px;
+    }
+
+    .booking-info-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--booking-muted);
+        font-size: 0.9rem;
+        font-weight: 650;
+    }
+
+    .booking-info-row i {
+        color: var(--booking-blue);
+    }
+
+    .booking-money-block {
+        display: grid;
+        gap: 8px;
+        justify-items: start;
+    }
+
+    .booking-total {
+        color: #111827;
+        font-size: 1.05rem;
+        font-weight: 880;
+    }
+
+    .booking-badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .booking-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 780;
+        padding: 5px 9px;
+        white-space: nowrap;
+    }
+
+    .booking-badge.confirmed,
+    .booking-badge.paid {
+        background: var(--booking-green-soft);
+        color: var(--booking-green);
+    }
+
+    .booking-badge.unpaid {
+        background: var(--booking-orange-soft);
+        color: var(--booking-orange);
+    }
+
+    .booking-status-action {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+
+    .booking-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border-radius: 999px;
+        font-size: 0.86rem;
+        font-weight: 820;
+        padding: 8px 11px;
+        white-space: nowrap;
+    }
+
+    .booking-status.arrival {
+        background: var(--booking-green-soft);
+        color: var(--booking-green);
+    }
+
+    .booking-status.staying {
+        background: var(--booking-blue-soft);
+        color: var(--booking-blue);
+    }
+
+    .booking-status.departure {
+        background: var(--booking-orange-soft);
+        color: var(--booking-orange);
+    }
+
+    .booking-status.completed {
+        background: #f1f5f9;
+        color: var(--booking-muted);
+    }
+
+    .booking-icon-btn {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--booking-line);
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--booking-muted);
+        transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+    }
+
+    .booking-icon-btn:hover,
+    .booking-icon-btn:focus-visible {
+        border-color: rgba(31, 111, 235, 0.25);
+        background: var(--booking-blue-soft);
+        color: var(--booking-blue);
+        outline: none;
+    }
+
+    .booking-empty-state {
+        display: none;
+        border: 1px dashed #cbd5e1;
+        border-radius: var(--booking-radius);
+        background: #fbfdff;
+        color: var(--booking-muted);
+        padding: 38px 16px;
+        text-align: center;
+        font-weight: 720;
+    }
+
+    .booking-empty-state.is-visible {
+        display: block;
+    }
+
+    .booking-detail-modal .modal-content,
+    .booking-create-modal .modal-content {
+        border: 0;
+        border-radius: 16px;
+        box-shadow: 0 26px 70px rgba(15, 23, 42, 0.24);
+    }
+
+    .booking-modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px solid var(--booking-line);
+        padding: 22px 24px 18px;
+    }
+
+    .booking-modal-header h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.35rem;
+        font-weight: 850;
+    }
+
+    .booking-modal-header p {
+        margin: 5px 0 0;
+        color: var(--booking-muted);
+        font-size: 0.9rem;
+        font-weight: 620;
+    }
+
+    .booking-modal-body {
+        display: grid;
+        gap: 16px;
+        padding: 22px 24px 24px;
+    }
+
+    .booking-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .booking-detail-section {
+        border: 1px solid var(--booking-line);
+        border-radius: var(--booking-radius);
+        background: #ffffff;
+        padding: 16px;
+    }
+
+    .booking-detail-section h4 {
+        margin: 0 0 12px;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 850;
+    }
+
+    .booking-detail-row,
+    .booking-total-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border-top: 1px solid #edf2f7;
+        padding: 10px 0;
+    }
+
+    .booking-detail-row:first-of-type,
+    .booking-total-row:first-child {
+        border-top: 0;
+        padding-top: 0;
+    }
+
+    .booking-detail-row span,
+    .booking-total-row span {
+        color: var(--booking-muted);
+        font-weight: 680;
+    }
+
+    .booking-detail-row strong,
+    .booking-total-row strong {
+        color: #111827;
+        font-weight: 760;
+        text-align: right;
+    }
+
+    .booking-total-row.highlight {
+        margin-top: 4px;
+        border-radius: var(--booking-radius);
+        background: var(--booking-blue-soft);
+        color: var(--booking-blue);
+        padding: 12px;
+    }
+
+    .booking-total-row.highlight span,
+    .booking-total-row.highlight strong {
+        color: var(--booking-blue);
+    }
+
+    .booking-create-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .booking-form-group {
+        display: grid;
+        gap: 7px;
+    }
+
+    .booking-form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .booking-form-group label {
+        color: var(--booking-muted);
+        font-size: 0.84rem;
+        font-weight: 760;
+    }
+
+    .booking-form-group input,
+    .booking-form-group select,
+    .booking-form-group textarea {
+        width: 100%;
+        border: 1px solid #dbe3ef;
+        border-radius: var(--booking-radius);
+        background: #ffffff;
+        color: #111827;
+        font-weight: 620;
+        padding: 11px 12px;
+        outline: none;
+    }
+
+    .booking-form-group textarea {
+        resize: vertical;
+    }
+
+    .booking-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid var(--booking-line);
+        padding: 16px 24px 22px;
+    }
+
+    @@media (max-width: 1200px) {
+        .booking-card {
+            grid-template-columns: 1fr 1fr;
         }
+
+        .booking-status-action {
+            justify-content: flex-start;
+        }
+    }
+
+    @@media (max-width: 900px) {
+        .booking-page-header,
+        .booking-list-title {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .booking-filter-grid,
+        .booking-card,
+        .booking-detail-grid,
+        .booking-create-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h3 class="mb-1 fw-bold">Quản lý đặt phòng</h3>
-        <p class="text-muted mb-0">Theo dõi và quản lý trạng thái tất cả đặt phòng</p>
-    </div>
-    <button class="btn btn-dark px-4 py-2" data-bs-toggle="modal" data-bs-target="#addBookingModal" style="border-radius: 10px; background-color: #000; font-weight: 600;"><i class="bi bi-plus"></i> Đặt phòng mới</button>
-</div>
-
-<!-- Main Layout Container (Split 3:7) -->
-<div class="booking-main-container">
-    <!-- Top Section (3 parts) -->
-    <div class="booking-top-section">
-        <!-- Search Bar -->
-        <div class="search-container">
-            <div class="input-group shadow-sm" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
-                <span class="input-group-text bg-white border-0 ps-4"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" id="bookingSearchInput" class="form-control border-0 py-2" placeholder="Tìm kiếm theo tên khách hàng, mã đặt phòng ..." style="font-size: 0.95rem;">
-            </div>
+<div class="admin-booking-page">
+    <header class="booking-page-header">
+        <div>
+            <h1>Quản lý đặt phòng</h1>
+            <p>Theo dõi đặt phòng, lịch đến, lịch ở và thanh toán của khách.</p>
         </div>
+        <button type="button" class="booking-primary-btn" data-bs-toggle="modal" data-bs-target="#addBookingModal">
+            <i class="bi bi-plus-lg"></i>
+            Đặt phòng mới
+        </button>
+    </header>
 
-        <!-- Filter Tiles -->
-        <div class="row g-2 flex-nowrap">
-            <div class="col-3">
-                <div class="booking-stats-tile tile-arrival active" data-filter="arrival">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    <div>Khách đến hôm nay</div>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="booking-stats-tile tile-staying" data-filter="staying">
-                    <i class="bi bi-houses"></i>
-                    <div>Đang ở</div>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="booking-stats-tile tile-departure" data-filter="departure">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <div>Trả phòng hôm nay</div>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="booking-stats-tile tile-all" data-filter="all">
-                    <i class="bi bi-collection"></i>
-                    <div>Tất cả đặt phòng</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <section class="booking-control-panel" aria-label="Bộ lọc đặt phòng">
+        <label class="booking-search-box" for="bookingSearchInput">
+            <i class="bi bi-search"></i>
+            <input type="search" id="bookingSearchInput" placeholder="Tìm theo tên khách, mã đặt phòng, số phòng..." autocomplete="off" />
+        </label>
 
-    <!-- Bottom Section (7 parts) -->
-    <div class="booking-bottom-section">
-        <!-- Booking Cards List -->
-        <div id="bookingList">
-            <!-- Card 1 -->
-            <div class="booking-card" data-status="staying" data-name="Võ Thị Giang" data-id="BK001"
-                 data-phone="0934567890" data-email="vothigiang@gmail.com" data-address="Huế"
-                 data-room="104" data-roomtype="Standard" data-checkin="12/05/2026" data-checkout="14/05/2026"
-                 data-nights="3 đêm" data-guests="1 người">
-                <div class="row w-100 g-2 align-items-center m-0">
-                    <!-- Left Info (Name, ID, Room) -->
-                    <div class="col-md-3">
-                        <div class="d-flex flex-column">
-                            <span class="fw-bold text-dark fs-6">Võ Thị Giang</span>
-                            <span class="text-muted small">BK001 • Phòng 104 (Standard)</span>
-                        </div>
-                    </div>
-                    <!-- Mid Info (Checkin, Checkout, Stay details) -->
-                    <div class="col-md-3">
-                        <div class="text-secondary small">
-                            <i class="bi bi-calendar3 me-1 text-primary"></i> 12-05-2026 &rarr; 14-05-2026
-                        </div>
-                        <div class="text-muted small mt-1">
-                            <i class="bi bi-moon me-1"></i> 3 đêm • <i class="bi bi-person me-1"></i> 1 người
-                        </div>
-                    </div>
-                    <!-- Financials and Payment Status Badges -->
-                    <div class="col-md-3">
-                        <div class="d-flex flex-column align-items-start">
-                            <span class="fw-bold text-dark">10.000.000đ</span>
-                            <div class="d-flex gap-1 mt-1 flex-wrap">
-                                <span class="status-badge badge-confirmed"><i class="bi bi-check-circle-fill"></i> Xác nhận</span>
-                                <span class="status-badge badge-paid"><i class="bi bi-check-circle-fill"></i> Đã trả</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Rightmost Actions (Status Text, View button) -->
-                    <div class="col-md-3 d-flex align-items-center justify-content-end gap-3">
-                        <span class="text-primary small fw-semibold d-inline-block"><i class="bi bi-houses me-1"></i> Đang ở</span>
-                        <button class="btn-view-details" onclick="showBookingDetail('BK001')"><i class="bi bi-eye"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card 2 -->
-            <div class="booking-card" data-status="arrival" data-name="Nguyễn Văn An" data-id="BK002"
-                 data-phone="0912345678" data-email="vanan@gmail.com" data-address="Đà Nẵng"
-                 data-room="102" data-roomtype="Standard" data-checkin="13/05/2026" data-checkout="16/05/2026"
-                 data-nights="3 đêm" data-guests="1 người">
-                <div class="row w-100 g-2 align-items-center m-0">
-                    <!-- Left Info (Name, ID, Room) -->
-                    <div class="col-md-3">
-                        <div class="d-flex flex-column">
-                            <span class="fw-bold text-dark fs-6">Nguyễn Văn An</span>
-                            <span class="text-muted small">BK002 • Phòng 102 (Standard)</span>
-                        </div>
-                    </div>
-                    <!-- Mid Info (Checkin, Checkout, Stay details) -->
-                    <div class="col-md-3">
-                        <div class="text-secondary small">
-                            <i class="bi bi-calendar3 me-1 text-primary"></i> 13-05-2026 &rarr; 16-05-2026
-                        </div>
-                        <div class="text-muted small mt-1">
-                            <i class="bi bi-moon me-1"></i> 3 đêm • <i class="bi bi-person me-1"></i> 1 người
-                        </div>
-                    </div>
-                    <!-- Financials and Payment Status Badges -->
-                    <div class="col-md-3">
-                        <div class="d-flex flex-column align-items-start">
-                            <span class="fw-bold text-dark">10.000.000đ</span>
-                            <div class="d-flex gap-1 mt-1 flex-wrap">
-                                <span class="status-badge badge-confirmed"><i class="bi bi-check-circle-fill"></i> Xác nhận</span>
-                                <span class="status-badge badge-paid"><i class="bi bi-check-circle-fill"></i> Đã trả</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Rightmost Actions (Status Text, View button) -->
-                    <div class="col-md-3 d-flex align-items-center justify-content-end gap-3">
-                        <span class="text-primary small fw-semibold d-inline-block"><i class="bi bi-houses me-1"></i> Đang ở</span>
-                        <button class="btn-view-details" onclick="showBookingDetail('BK002')"><i class="bi bi-eye"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Detailed Booking Modal -->
-<div class="modal fade" id="bookingDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-custom-header d-flex justify-content-between align-items-start">
+        <div class="booking-filter-grid">
+            <button type="button" class="booking-filter-card active" data-filter="arrival">
                 <div>
-                    <h4 class="fw-bold mb-2">Thông tin chi tiết</h4>
-                    <span class="status-badge bg-primary text-white" id="modalStatus" style="background-color: #2563eb !important;">Đang ở</span>
+                    <strong>Khách đến hôm nay</strong>
+                    <span>@Model.ArrivalCount đặt phòng</span>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <i class="bi bi-box-arrow-in-right"></i>
+            </button>
+            <button type="button" class="booking-filter-card" data-filter="staying">
+                <div>
+                    <strong>Đang ở</strong>
+                    <span>@Model.StayingCount đặt phòng</span>
+                </div>
+                <i class="bi bi-house-check"></i>
+            </button>
+            <button type="button" class="booking-filter-card" data-filter="departure">
+                <div>
+                    <strong>Trả phòng hôm nay</strong>
+                    <span>@Model.DepartureCount đặt phòng</span>
+                </div>
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+            <button type="button" class="booking-filter-card" data-filter="all">
+                <div>
+                    <strong>Tất cả đặt phòng</strong>
+                    <span>@Model.TotalCount đặt phòng</span>
+                </div>
+                <i class="bi bi-collection"></i>
+            </button>
+        </div>
+    </section>
+
+    <section class="booking-list-panel">
+        <div class="booking-list-title">
+            <h2>Danh sách đặt phòng</h2>
+            <span class="booking-count-pill" id="bookingVisibleCount">0 đặt phòng</span>
+        </div>
+
+        <div class="booking-card-list" id="bookingList">
+            @foreach (var booking in Model.Bookings)
+            {
+                var phoneLabel = string.IsNullOrWhiteSpace(booking.Phone) ? "Chưa có SĐT" : booking.Phone;
+                var emailLabel = string.IsNullOrWhiteSpace(booking.Email) ? "Chưa có email" : booking.Email;
+                var addressLabel = string.IsNullOrWhiteSpace(booking.Address) ? "Chưa có địa chỉ" : booking.Address;
+                var identityLabel = string.IsNullOrWhiteSpace(booking.IdentityNumber) ? "Chưa có CCCD/Hộ chiếu" : booking.IdentityNumber;
+                <article class="booking-card"
+                         data-status="@booking.FilterStatus"
+                         data-statuses="@booking.FilterStatuses"
+                         data-status-class="@booking.BookingStatusClass"
+                         data-status-label="@booking.BookingStatusLabel"
+                         data-status-icon="@booking.BookingStatusIcon"
+                         data-name="@booking.GuestName"
+                         data-id="@booking.BookingCode"
+                         data-phone="@phoneLabel"
+                         data-email="@emailLabel"
+                         data-address="@addressLabel"
+                         data-identity="@identityLabel"
+                         data-room="@booking.RoomNumbers"
+                         data-roomtype="@booking.RoomTypes"
+                         data-room-summary="@booking.RoomSummary"
+                         data-checkin="@booking.CheckInLabel"
+                         data-checkout="@booking.CheckOutLabel"
+                         data-created="@booking.CreatedAtLabel"
+                         data-nights="@booking.NightsLabel"
+                         data-guests="@booking.GuestsLabel"
+                         data-total="@booking.TotalLabel"
+                         data-paid="@booking.PaidLabel"
+                         data-payment="@booking.PaymentStatusLabel">
+                    <div class="booking-guest-block">
+                        <span class="booking-code"><i class="bi bi-receipt"></i> @booking.BookingCode</span>
+                        <h3 class="booking-guest-name">@booking.GuestName</h3>
+                        <div class="booking-room-line">@booking.RoomSummary</div>
+                        <div class="booking-meta-line">@phoneLabel · @emailLabel</div>
+                    </div>
+                    <div class="booking-date-block">
+                        <div class="booking-info-row">
+                            <i class="bi bi-calendar3"></i>
+                            <span>@booking.DateRangeLabel</span>
+                        </div>
+                        <div class="booking-info-row">
+                            <i class="bi bi-moon"></i>
+                            <span>@booking.NightsLabel · @booking.GuestsLabel</span>
+                        </div>
+                    </div>
+                    <div class="booking-money-block">
+                        <div class="booking-total">@booking.TotalLabel</div>
+                        <div class="booking-badge-row">
+                            <span class="booking-badge confirmed"><i class="bi bi-check-circle-fill"></i> @booking.BookingStatusLabel</span>
+                            <span class="booking-badge @booking.PaymentStatusClass">
+                                <i class="bi @(booking.PaymentStatusClass == "paid" ? "bi-check-circle-fill" : "bi-clock")"></i>
+                                @booking.PaymentStatusLabel
+                            </span>
+                        </div>
+                    </div>
+                    <div class="booking-status-action">
+                        <span class="booking-status @booking.BookingStatusClass"><i class="bi @booking.BookingStatusIcon"></i> @booking.BookingStatusLabel</span>
+                        <button type="button" class="booking-icon-btn" data-booking-detail="@booking.BookingCode" aria-label="Xem chi tiết @booking.BookingCode">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </article>
+            }
+        </div>
+
+        <div class="booking-empty-state" id="bookingEmptyState">
+            <i class="bi bi-search d-block fs-2 mb-2"></i>
+            Không tìm thấy đặt phòng phù hợp.
+        </div>
+    </section>
+</div>
+
+<div class="modal fade booking-detail-modal" id="bookingDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="booking-modal-header">
+                <div>
+                    <h3>Chi tiết đặt phòng</h3>
+                    <p id="modalBookingCode">BK001</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="booking-status staying" id="modalStatus"><i class="bi bi-house-check"></i> Đang ở</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
             </div>
-            <div class="modal-body px-4 pb-4">
-                <hr class="mt-0 mb-4 opacity-50">
+            <div class="booking-modal-body">
+                <div class="booking-detail-grid">
+                    <section class="booking-detail-section">
+                        <h4>Thông tin khách</h4>
+                        <div class="booking-detail-row">
+                            <span>Họ và tên</span>
+                            <strong id="modalGuestName">Võ Thị Giang</strong>
+                        </div>
+                        <div class="booking-detail-row">
+                            <span>Số điện thoại</span>
+                            <strong id="modalPhone">0934567890</strong>
+                        </div>
+                        <div class="booking-detail-row">
+                            <span>CCCD/Hộ chiếu</span>
+                            <strong id="modalIdentity">Chưa có CCCD/Hộ chiếu</strong>
+                        </div>
+                        <div class="booking-detail-row">
+                            <span>Email</span>
+                            <strong id="modalEmail">vothigiang@gmail.com</strong>
+                        </div>
+                        <div class="booking-detail-row">
+                            <span>Địa chỉ</span>
+                            <strong id="modalAddress">Huế</strong>
+                        </div>
+                    </section>
 
-                <div class="detail-section-title">
-                    <i class="bi bi-person-fill"></i> Thông tin khách hàng
-                </div>
-                <div class="detail-item-box">
-                    <div class="flex-grow-1">
-                        <span class="detail-item-label">Họ và tên</span>
-                        <div class="detail-item-value" id="modalGuestName">Võ Thị Giang</div>
-                    </div>
-                </div>
-                <div class="detail-item-box">
-                    <i class="bi bi-telephone"></i>
-                    <div class="detail-item-value" id="modalPhone">0934567890</div>
-                </div>
-                <div class="detail-item-box">
-                    <i class="bi bi-envelope"></i>
-                    <div class="detail-item-value" id="modalEmail">vothigiang@gmail.com</div>
-                </div>
-                <div class="detail-item-box">
-                    <i class="bi bi-geo-alt"></i>
-                    <div class="detail-item-value" id="modalAddress">Huế</div>
-                </div>
-
-                <div class="detail-section-title mt-4">
-                    <i class="bi bi-door-open-fill"></i> Thông tin phòng
-                </div>
-                <div class="row g-2 mb-3">
-                    <div class="col-12">
-                        <div class="detail-item-box m-0 py-3 d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="detail-item-label">Phòng số</span>
-                                <div class="detail-item-value fs-5" id="modalRoomNo">104</div>
-                            </div>
-                            <div class="text-end">
-                                <div class="detail-item-value" id="modalRoomType">Standard</div>
-                            </div>
+                    <section class="booking-detail-section">
+                        <h4>Thông tin phòng</h4>
+                        <div class="booking-detail-row">
+                            <span>Phòng</span>
+                            <strong id="modalRoomNo">104</strong>
                         </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="detail-item-box m-0 text-center flex-column py-3">
-                            <span class="detail-item-label">Nhận phòng</span>
-                            <div class="detail-item-value" id="modalCheckin">12/5/2026</div>
+                        <div class="booking-detail-row">
+                            <span>Loại phòng</span>
+                            <strong id="modalRoomType">Standard</strong>
                         </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="detail-item-box m-0 text-center flex-column py-3">
-                            <span class="detail-item-label">Trả phòng</span>
-                            <div class="detail-item-value" id="modalCheckout">14/5/2026</div>
+                        <div class="booking-detail-row">
+                            <span>Nhận phòng</span>
+                            <strong id="modalCheckin">12/05/2026</strong>
                         </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="detail-item-box m-0 d-flex justify-content-between align-items-center">
-                            <span class="detail-item-label">Số đêm lưu trú</span>
-                            <div class="detail-item-value" id="modalNights">3 đêm</div>
+                        <div class="booking-detail-row">
+                            <span>Trả phòng</span>
+                            <strong id="modalCheckout">14/05/2026</strong>
                         </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="detail-item-box m-0 d-flex justify-content-between align-items-center">
-                            <span class="detail-item-label">Số khách</span>
-                            <div class="detail-item-value" id="modalGuests">1 người</div>
+                        <div class="booking-detail-row">
+                            <span>Ngày đặt</span>
+                            <strong id="modalCreated">12/05/2026 10:00</strong>
                         </div>
-                    </div>
+                    </section>
                 </div>
 
-                <div class="detail-section-title mt-4">Dịch vụ kèm theo</div>
-                <div class="d-flex gap-2 mb-4">
-                    <span class="status-badge" style="background-color: #dbeafe; color: #1e40af;">Spa</span>
-                    <span class="status-badge" style="background-color: #dbeafe; color: #1e40af;">Giặt ủi</span>
-                </div>
-
-                <div class="detail-section-title">Yêu cầu đặc biệt</div>
-                <div class="note-box mb-4">
-                    <div class="detail-item-value" style="font-size: 0.85rem;">Phòng view biển</div>
-                </div>
-
-                <div class="detail-section-title">
-                    <i class="bi bi-credit-card-2-back-fill"></i> Thanh toán
-                </div>
-                <div class="d-flex justify-content-center mt-3">
-                    <button class="btn-payment">Thanh toán</button>
-                </div>
+                <section class="booking-detail-section">
+                    <h4>Thanh toán</h4>
+                    <div class="booking-total-row">
+                        <span>Thời gian lưu trú</span>
+                        <strong id="modalNights">3 đêm</strong>
+                    </div>
+                    <div class="booking-total-row">
+                        <span>Số khách</span>
+                        <strong id="modalGuests">1 người</strong>
+                    </div>
+                    <div class="booking-total-row">
+                        <span>Trạng thái thanh toán</span>
+                        <strong id="modalPayment">Đã trả</strong>
+                    </div>
+                    <div class="booking-total-row">
+                        <span>Đã thanh toán</span>
+                        <strong id="modalPaid">0 đ</strong>
+                    </div>
+                    <div class="booking-total-row highlight">
+                        <span>Tổng tiền</span>
+                        <strong id="modalTotal">10.000.000 đ</strong>
+                    </div>
+                </section>
+            </div>
+            <div class="booking-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="booking-primary-btn">Cập nhật đặt phòng</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Add Booking Modal -->
-<div class="modal fade" id="addBookingModal" tabindex="-1" aria-labelledby="addBookingModalLabel" aria-hidden="true">
+<div class="modal fade booking-create-modal" id="addBookingModal" tabindex="-1" aria-labelledby="addBookingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header border-0 px-4 pt-4">
-                <h5 class="modal-title fw-bold" id="addBookingModalLabel"><i class="bi bi-plus-circle me-2"></i>Thêm đặt phòng mới</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content">
+            <div class="booking-modal-header">
+                <div>
+                    <h3 id="addBookingModalLabel">Đặt phòng mới</h3>
+                    <p>Nhập thông tin khách và thời gian lưu trú.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
-            <div class="modal-body p-4">
-                <form id="addBookingForm">
-                    <!-- Guest Information -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold text-primary mb-3 border-bottom pb-2"><i class="bi bi-person-bounding-box me-2"></i>Thông tin khách hàng</h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Họ và tên</label>
-                                <input type="text" class="form-control" placeholder="Nhập họ và tên" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">CMND/CCCD/Hộ chiếu</label>
-                                <input type="text" class="form-control" placeholder="Nhập số giấy tờ" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Số điện thoại</label>
-                                <input type="tel" class="form-control" placeholder="Nhập số điện thoại" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Quốc tịch</label>
-                                <input type="text" class="form-control" value="Việt Nam">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-semibold">Giới tính</label>
-                                <select class="form-select">
-                                    <option value="Nam">Nam</option>
-                                    <option value="Nữ">Nữ</option>
-                                    <option value="Khác">Khác</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Email</label>
-                                <input type="email" class="form-control" placeholder="example@email.com">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Địa chỉ thường trú</label>
-                                <input type="text" class="form-control" placeholder="Nhập địa chỉ thường trú">
-                            </div>
+            <form id="addBookingForm">
+                <div class="booking-modal-body">
+                    <div class="booking-create-grid">
+                        <div class="booking-form-group">
+                            <label>Họ và tên</label>
+                            <input type="text" placeholder="Nhập họ và tên" required />
+                        </div>
+                        <div class="booking-form-group">
+                            <label>CCCD/Hộ chiếu</label>
+                            <input type="text" placeholder="Nhập số giấy tờ" required />
+                        </div>
+                        <div class="booking-form-group">
+                            <label>Số điện thoại</label>
+                            <input type="tel" placeholder="Nhập số điện thoại" required />
+                        </div>
+                        <div class="booking-form-group">
+                            <label>Email</label>
+                            <input type="email" placeholder="example@email.com" />
+                        </div>
+                        <div class="booking-form-group">
+                            <label>Ngày nhận phòng</label>
+                            <input type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="booking-form-group">
+                            <label>Ngày trả phòng</label>
+                            <input type="date" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="booking-form-group">
+                            <label>Số khách</label>
+                            <input type="number" min="1" value="1" />
+                        </div>
+                        <div class="booking-form-group">
+                            <label>Phòng</label>
+                            <select>
+                                <option>Chọn phòng</option>
+                                <option>101 - Standard</option>
+                                <option>201 - Deluxe</option>
+                                <option>301 - VIP</option>
+                            </select>
+                        </div>
+                        <div class="booking-form-group full">
+                            <label>Ghi chú</label>
+                            <textarea rows="3" placeholder="Yêu cầu đặc biệt của khách"></textarea>
                         </div>
                     </div>
-
-                    <!-- Booking Information -->
-                    <div>
-                        <h6 class="fw-bold text-primary mb-3 border-bottom pb-2"><i class="bi bi-calendar-check me-2"></i>Thông tin đặt phòng</h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Số lượng khách</label>
-                                <input type="number" class="form-control" value="1" min="1">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Giờ nhận phòng</label>
-                                <input type="time" class="form-control" value="14:00">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Ngày nhận phòng</label>
-                                <input type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Ngày trả phòng</label>
-                                <input type="date" class="form-control" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold">Ghi chú đặc biệt</label>
-                                <textarea class="form-control" rows="2" placeholder="Nhập các yêu cầu đặc biệt của khách..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0 p-4 pt-0">
-                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-dark px-4" onclick="submitAddBooking()">Xác nhận đặt phòng</button>
-            </div>
+                </div>
+                <div class="booking-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="booking-primary-btn" id="submitAddBooking">Xác nhận đặt phòng</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            // Filter Logic
-            $('.booking-stats-tile').click(function() {
-                $('.booking-stats-tile').removeClass('active');
-                $(this).addClass('active');
-                filterList();
-            });
+        (function () {
+            const searchInput = document.getElementById("bookingSearchInput");
+            const filterButtons = Array.from(document.querySelectorAll("[data-filter]"));
+            const bookingCards = Array.from(document.querySelectorAll(".booking-card"));
+            const emptyState = document.getElementById("bookingEmptyState");
+            const visibleCount = document.getElementById("bookingVisibleCount");
 
-            // Search Logic
-            $('#bookingSearchInput').on('input', function() {
-                filterList();
-            });
-
-            function filterList() {
-                var searchText = $('#bookingSearchInput').val().toLowerCase();
-                var activeTile = $('.booking-stats-tile.active');
-                var activeFilter = activeTile.data('filter');
-
-                $('.booking-card').each(function() {
-                    var card = $(this);
-                    var name = (card.data('name') || '').toLowerCase();
-                    var id = (card.data('id') || '').toLowerCase();
-                    var status = card.data('status');
-
-                    var matchesSearch = name.includes(searchText) || id.includes(searchText);
-                    var matchesFilter = (activeFilter === 'all') || (status === activeFilter);
-
-                    if (matchesSearch && matchesFilter) {
-                        card.show();
-                    } else {
-                        card.hide();
-                    }
-                });
-
-                // Show no results if all hidden
-                if ($('.booking-card:visible').length === 0) {
-                    if ($('#no-results-msg').length === 0) {
-                        $('#bookingList').append('<div id="no-results-msg" class="text-center py-5 text-muted"><i class="bi bi-search fs-1 d-block mb-3"></i>Không tìm thấy kết quả phù hợp.</div>');
-                    }
-                } else {
-                    $('#no-results-msg').remove();
-                }
+            function getStatusText(status) {
+                if (status === "arrival") return { text: "Sắp đến", icon: "bi-box-arrow-in-right" };
+                if (status === "departure") return { text: "Sắp trả phòng", icon: "bi-box-arrow-right" };
+                if (status === "completed") return { text: "Hoàn tất", icon: "bi-check2-circle" };
+                return { text: "Đang ở", icon: "bi-house-check" };
             }
 
-            // Initial filter
-            filterList();
-        });
+            function filterBookings() {
+                const keyword = (searchInput?.value || "").trim().toLowerCase();
+                const activeFilter = document.querySelector("[data-filter].active")?.dataset.filter || "all";
+                let shown = 0;
 
-        function showBookingDetail(id) {
-            var card = $('.booking-card[data-id="' + id + '"]');
+                bookingCards.forEach(function (card) {
+                    const haystack = [
+                        card.dataset.name,
+                        card.dataset.id,
+                        card.dataset.room,
+                        card.dataset.roomtype,
+                        card.dataset.phone
+                    ].join(" ").toLowerCase();
+                    const matchesSearch = !keyword || haystack.includes(keyword);
+                    const statuses = (card.dataset.statuses || card.dataset.status || "all").split(/\s+/);
+                    const matchesFilter = activeFilter === "all" || statuses.includes(activeFilter);
+                    const isVisible = matchesSearch && matchesFilter;
+                    card.hidden = !isVisible;
+                    if (isVisible) shown += 1;
+                });
 
-            // Populate modal with card data
-            $('#modalGuestName').text(card.data('name'));
-            $('#modalPhone').text(card.data('phone'));
-            $('#modalEmail').text(card.data('email'));
-            $('#modalAddress').text(card.data('address'));
+                if (visibleCount) {
+                    visibleCount.textContent = `${shown} đặt phòng`;
+                }
+                emptyState?.classList.toggle("is-visible", shown === 0);
+            }
 
-            $('#modalRoomNo').text(card.data('room'));
-            $('#modalRoomType').text(card.data('roomtype'));
-            $('#modalCheckin').text(card.data('checkin'));
-            $('#modalCheckout').text(card.data('checkout'));
-            $('#modalNights').text(card.data('nights'));
-            $('#modalGuests').text(card.data('guests'));
+            filterButtons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    filterButtons.forEach(item => item.classList.remove("active"));
+                    button.classList.add("active");
+                    filterBookings();
+                });
+            });
 
-            // Update status badge in modal
-            var status = card.data('status');
-            var statusText = "Đang ở";
-            if(status === 'arrival') statusText = "Sắp đến";
-            if(status === 'departure') statusText = "Sắp đi";
-            $('#modalStatus').text(statusText);
+            searchInput?.addEventListener("input", filterBookings);
 
-            var modal = new bootstrap.Modal(document.getElementById('bookingDetailModal'));
-            modal.show();
-        }
+            document.addEventListener("click", function (event) {
+                const detailButton = event.target.closest("[data-booking-detail]");
+                if (!detailButton) return;
 
-        function submitAddBooking() {
-            // Demo logic
-            alert("Đã thêm đặt phòng mới thành công!");
-            var modal = bootstrap.Modal.getInstance(document.getElementById('addBookingModal'));
-            modal.hide();
-        }
+                const card = document.querySelector(`.booking-card[data-id="${detailButton.dataset.bookingDetail}"]`);
+                if (!card) return;
+
+                const modalStatus = document.getElementById("modalStatus");
+                modalStatus.className = `booking-status ${card.dataset.statusClass || card.dataset.status}`;
+                modalStatus.innerHTML = `<i class="bi ${card.dataset.statusIcon || "bi-calendar-check"}"></i> ${card.dataset.statusLabel || "Đặt phòng"}`;
+
+                document.getElementById("modalBookingCode").textContent = card.dataset.id || "";
+                document.getElementById("modalGuestName").textContent = card.dataset.name || "";
+                document.getElementById("modalPhone").textContent = card.dataset.phone || "";
+                document.getElementById("modalIdentity").textContent = card.dataset.identity || "";
+                document.getElementById("modalEmail").textContent = card.dataset.email || "";
+                document.getElementById("modalAddress").textContent = card.dataset.address || "";
+                document.getElementById("modalRoomNo").textContent = card.dataset.room || "";
+                document.getElementById("modalRoomType").textContent = card.dataset.roomtype || "";
+                document.getElementById("modalCheckin").textContent = card.dataset.checkin || "";
+                document.getElementById("modalCheckout").textContent = card.dataset.checkout || "";
+                document.getElementById("modalCreated").textContent = card.dataset.created || "";
+                document.getElementById("modalNights").textContent = card.dataset.nights || "";
+                document.getElementById("modalGuests").textContent = card.dataset.guests || "";
+                document.getElementById("modalPayment").textContent = card.dataset.payment || "";
+                document.getElementById("modalPaid").textContent = card.dataset.paid || "";
+                document.getElementById("modalTotal").textContent = card.dataset.total || "";
+
+                new bootstrap.Modal(document.getElementById("bookingDetailModal")).show();
+            });
+
+            document.getElementById("submitAddBooking")?.addEventListener("click", function () {
+                alert("Đã thêm đặt phòng mới thành công.");
+                bootstrap.Modal.getInstance(document.getElementById("addBookingModal"))?.hide();
+            });
+
+            filterBookings();
+        })();
     </script>
 }

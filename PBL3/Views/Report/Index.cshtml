@@ -1,64 +1,59 @@
-﻿@{
+@model PBL3.Models.AdminReportViewModel
+@using System.Globalization
+@using System.Text.Json
+
+@{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Báo cáo & Thống kê";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    string Money(decimal value) => $"{value.ToString("N0", vi)} đ";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h3 class="mb-1 fw-bold">Báo cáo & Thống kê</h3>
-        <p class="text-muted mb-0">Phân tích doanh thu và hiệu suất hoạt động</p>
+        <p class="text-muted mb-0">Phân tích doanh thu và hiệu suất hoạt động từ dữ liệu hệ thống</p>
     </div>
 </div>
 
 <div class="card-custom mb-4">
-    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3 flex-wrap gap-3">
         <div>
             <div class="fw-bold fs-5">Báo cáo tổng hợp</div>
-            <div class="text-muted small">Thời gian: 01/01/2026 - 01/02/2026</div>
+            <div class="text-muted small">Thời gian: @Model.PeriodLabel</div>
         </div>
-        <div class="d-flex gap-2">
-            <select class="form-select bg-light text-muted" style="width: auto;">
-                <option>Thời gian</option>
-            </select>
-            <button class="btn btn-primary"><i class="bi bi-download"></i> Xuất file</button>
-        </div>
+        <form class="d-flex gap-2 align-items-center flex-wrap" method="get" asp-controller="Report" asp-action="Index">
+            <input class="form-control bg-light" style="width: 170px;" type="month" name="month" value="@Model.SelectedMonthValue" />
+            <button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel"></i> Xem</button>
+            <a class="btn btn-primary" asp-controller="Report" asp-action="Export" asp-route-month="@Model.SelectedMonthValue">
+                <i class="bi bi-download"></i> Xuất file
+            </a>
+        </form>
     </div>
 
     <div class="row g-3">
         <div class="col-md-3">
             <div class="p-3 border rounded">
                 <div class="text-muted small mb-2">Tổng doanh thu</div>
-                <div class="d-flex justify-content-between align-items-end">
-                    <div class="fw-bold fs-3 text-dark">14.2 tỷ</div>
-                    <div class="text-success small fw-bold">+15%</div>
-                </div>
+                <div class="fw-bold fs-3 text-dark">@Money(Model.TotalRevenue)</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="p-3 border rounded">
                 <div class="text-muted small mb-2">Tổng đặt phòng</div>
-                <div class="d-flex justify-content-between align-items-end">
-                    <div class="fw-bold fs-3 text-dark">318</div>
-                    <div class="text-success small fw-bold">+8%</div>
-                </div>
+                <div class="fw-bold fs-3 text-dark">@Model.TotalBookings</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="p-3 border rounded">
                 <div class="text-muted small mb-2">Tỷ lệ lấp đầy TB</div>
-                <div class="d-flex justify-content-between align-items-end">
-                    <div class="fw-bold fs-3 text-dark">82%</div>
-                    <div class="text-success small fw-bold">+3%</div>
-                </div>
+                <div class="fw-bold fs-3 text-dark">@Model.OccupancyRate.ToString("0.#", vi)%</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="p-3 border rounded">
                 <div class="text-muted small mb-2">Giá trị đơn TB</div>
-                <div class="d-flex justify-content-between align-items-end">
-                    <div class="fw-bold fs-3 text-dark">1.2 triệu</div>
-                    <div class="text-success small fw-bold">+12%</div>
-                </div>
+                <div class="fw-bold fs-3 text-dark">@Money(Model.AverageOrderValue)</div>
             </div>
         </div>
     </div>
@@ -92,14 +87,25 @@
 
 @section Scripts {
     <script>
+        const revenueTrendLabels = @Html.Raw(JsonSerializer.Serialize(Model.RevenueTrendLabels));
+        const revenueTrendValues = @Html.Raw(JsonSerializer.Serialize(Model.RevenueTrendValues));
+        const roomTypeRevenueLabels = @Html.Raw(JsonSerializer.Serialize(Model.RoomTypeRevenueLabels));
+        const roomTypeRevenueValues = @Html.Raw(JsonSerializer.Serialize(Model.RoomTypeRevenueValues));
+        const occupancyLabels = @Html.Raw(JsonSerializer.Serialize(Model.OccupancyLabels));
+        const occupancyValues = @Html.Raw(JsonSerializer.Serialize(Model.OccupancyValues));
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat("vi-VN").format(value || 0) + " đ";
+        }
+
         const ctxTrend = document.getElementById('revenueTrendChart').getContext('2d');
         new Chart(ctxTrend, {
             type: 'line',
             data: {
-                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+                labels: revenueTrendLabels,
                 datasets: [{
                     label: 'Doanh thu',
-                    data: [1.2, 1.3, 1.25, 1.4, 1.45, 1.6],
+                    data: revenueTrendValues,
                     borderColor: '#4e73df',
                     backgroundColor: 'rgba(78, 115, 223, 0.1)',
                     fill: true,
@@ -109,9 +115,21 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: context => formatCurrency(context.parsed.y)
+                        }
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: false, min: 0.8 }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => formatCurrency(value)
+                        }
+                    }
                 }
             }
         });
@@ -120,10 +138,10 @@
         new Chart(ctxType, {
             type: 'bar',
             data: {
-                labels: ['Standard', 'Deluxe', 'Suit', 'President'],
+                labels: roomTypeRevenueLabels.length ? roomTypeRevenueLabels : ['Chưa có dữ liệu'],
                 datasets: [{
                     label: 'Doanh thu',
-                    data: [5, 8, 12, 10],
+                    data: roomTypeRevenueValues.length ? roomTypeRevenueValues : [0],
                     backgroundColor: '#4e73df',
                     borderRadius: 4
                 }]
@@ -131,7 +149,22 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } }
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: context => formatCurrency(context.parsed.y)
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => formatCurrency(value)
+                        }
+                    }
+                }
             }
         });
 
@@ -139,23 +172,37 @@
         new Chart(ctxOcc, {
             type: 'line',
             data: {
-                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+                labels: occupancyLabels,
                 datasets: [{
                     label: 'Tỷ lệ lấp đầy',
-                    data: [75, 80, 85, 83, 88, 90],
+                    data: occupancyValues,
                     borderColor: '#1cc88a',
-                    tension: 0.1
+                    backgroundColor: 'rgba(28, 200, 138, 0.08)',
+                    fill: true,
+                    tension: 0.25
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.parsed.y || 0}%`
+                        }
+                    }
+                },
                 scales: {
-                    y: { min: 50, max: 100 }
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: value => `${value}%`
+                        }
+                    }
                 }
             }
         });
     </script>
 }
-
