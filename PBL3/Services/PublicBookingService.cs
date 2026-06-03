@@ -556,6 +556,7 @@ public class PublicBookingService : IPublicBookingService
 
         var booking = await _context.DatPhongs
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .FirstOrDefaultAsync(x => x.MaDatPhong == normalizedCode && x.SdtSnapshot == normalizedPhone);
@@ -597,6 +598,7 @@ public class PublicBookingService : IPublicBookingService
 
         var candidates = await _context.DatPhongs
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.GiuCho &&

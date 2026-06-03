@@ -13,22 +13,24 @@
 
         .staff-header {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             gap: 16px;
+            min-height: 44px;
             margin-bottom: 22px;
         }
 
         .staff-header h1 {
             margin: 0;
             color: #111827;
-            font-size: clamp(1.9rem, 3vw, 2.7rem);
-            font-weight: 850;
+            font-size: 1.45rem;
+            font-weight: 800;
             letter-spacing: 0;
         }
 
         .staff-header p {
             margin: 6px 0 0;
+            display: none;
             color: #66758a;
             font-weight: 560;
         }
@@ -242,9 +244,8 @@
     <header class="staff-header">
         <div>
             <h1>Quản lý nhân viên</h1>
-            <p>Theo dõi thông tin nhân sự, trạng thái làm việc và tài khoản đăng nhập.</p>
         </div>
-        <button type="button" class="btn btn-dark px-4 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#createStaffModal">
+        <button type="button" class="btn btn-dark admin-page-action" data-bs-toggle="modal" data-bs-target="#createStaffModal">
             <i class="bi bi-person-plus me-2"></i>Thêm nhân viên
         </button>
     </header>

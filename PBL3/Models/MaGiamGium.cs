@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace PBL3.Models;
 
 [Index("CodeGiamGia", Name = "UQ_MaGiamGia_Code", IsUnique = true)]
+[Index("TuNgay", "DenNgay", "HoaDonToiThieu", "TrangThai", Name = "IX_MaGiamGia_ActiveLookup")]
 public partial class MaGiamGium
 {
     [Key]

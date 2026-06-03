@@ -17,20 +17,22 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+        min-height: 44px;
         margin-bottom: 22px;
     }
 
     .promo-header h1 {
         margin: 0;
         color: #111827;
-        font-size: clamp(1.85rem, 3vw, 2.6rem);
-        font-weight: 850;
+        font-size: 1.45rem;
+        font-weight: 800;
         letter-spacing: 0;
-        line-height: 1.08;
+        line-height: 1.2;
     }
 
     .promo-header p {
         margin: 8px 0 0;
+        display: none;
         color: #66758a;
         font-weight: 560;
     }
@@ -43,16 +45,16 @@
         gap: 8px;
         border: 0;
         border-radius: 8px;
-        background: #1f6feb;
+        background: #111827;
         color: #ffffff;
-        font-weight: 820;
-        padding: 10px 16px;
-        box-shadow: 0 14px 30px rgba(31, 111, 235, 0.18);
+        font-weight: 750;
+        padding: 9px 16px;
+        box-shadow: none;
     }
 
     .promo-primary-btn:hover,
     .promo-primary-btn:focus-visible {
-        background: #1659c7;
+        background: #000000;
         color: #ffffff;
         outline: none;
     }
@@ -450,7 +452,6 @@
     <header class="promo-header">
         <div>
             <h1>Quản lý khuyến mãi</h1>
-            <p>Theo dõi mã giảm giá, thời gian áp dụng, lượt sử dụng và tổng giảm giá.</p>
         </div>
         <button type="button" class="promo-primary-btn" data-bs-toggle="modal" data-bs-target="#addPromotionModal">
             <i class="bi bi-plus-lg"></i>
@@ -621,7 +622,11 @@
                 </div>
                 <div class="promo-form-group">
                     <label for="promotionScope">Phạm vi áp dụng</label>
-                    <input id="promotionScope" name="PhamViApDung" type="text" value="Tất cả" />
+                    <select id="promotionScope" name="PhamViApDung">
+                        <option value="TAT_CA">Tất cả</option>
+                        <option value="CHI_PHONG">Chỉ phòng</option>
+                        <option value="CHI_DICHVU">Chỉ dịch vụ</option>
+                    </select>
                 </div>
                 <div class="promo-form-group">
                     <label for="promotionLimit">Số lượt phát hành</label>

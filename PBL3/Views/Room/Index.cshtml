@@ -32,20 +32,22 @@
             align-items: center;
             justify-content: space-between;
             gap: 16px;
+            min-height: 44px;
             margin-bottom: 22px;
         }
 
         .room-admin-header h1 {
             margin: 0;
             color: #111827;
-            font-size: clamp(1.85rem, 3vw, 2.6rem);
-            font-weight: 850;
+            font-size: 1.45rem;
+            font-weight: 800;
             letter-spacing: 0;
-            line-height: 1.08;
+            line-height: 1.2;
         }
 
         .room-admin-header p {
             margin: 8px 0 0;
+            display: none;
             color: #66758a;
             font-weight: 560;
         }
@@ -215,13 +217,13 @@
 
         .room-map-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, 116px);
+            grid-template-columns: repeat(auto-fill, 120px);
             gap: 8px;
             justify-content: start;
         }
 
         .room-map-tile {
-            width: 116px;
+            width: 120px;
             min-height: 88px;
             display: grid;
             gap: 7px;
@@ -535,9 +537,8 @@
     <header class="room-admin-header">
         <div>
             <h1>Quản lý phòng</h1>
-            <p>Sơ đồ phòng theo dữ liệu hiện tại của lễ tân.</p>
         </div>
-        <a class="btn btn-dark px-4" asp-controller="LoaiPhongs" asp-action="Index">
+        <a class="btn btn-dark admin-page-action" asp-controller="LoaiPhongs" asp-action="Index">
             <i class="bi bi-layers"></i>
             Quản lý loại phòng
         </a>

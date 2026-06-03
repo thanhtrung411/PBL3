@@ -7,6 +7,7 @@ namespace PBL3.Models;
 [Table("LinkAnh")]
 [Index("DoiTuong", Name = "IX_LinkAnh_DoiTuong")]
 [Index("DoiTuong", "LaAnhDaiDien", "ThuTu", Name = "IX_LinkAnh_DoiTuong_DaiDien")]
+[Index("DoiTuong", "TrangThai", "LaAnhDaiDien", "ThuTu", Name = "IX_LinkAnh_DoiTuong_TrangThai_DaiDien")]
 public partial class LinkAnh
 {
     [Key]

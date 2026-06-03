@@ -887,7 +887,7 @@
         <p class="page-subtitle">Lựa chọn không gian nghỉ dưỡng phù hợp với lịch trình của bạn</p>
     </div>
 
-    <section class="search-card card mb-4 border-0" id="roomsSearchPanel" aria-label="Tìm phòng trống" aria-busy="false">
+    <section class="search-card card mb-4 border-0" id="roomsSearchPanel" aria-label="Tìm phòng" aria-busy="false">
         <div class="card-body p-4">
             <div class="inline-error mb-3 p-3" id="roomsError" role="alert" aria-live="assertive" tabindex="-1">
                 <i class="fa fa-exclamation-circle me-2" aria-hidden="true"></i>
@@ -966,7 +966,7 @@
                     <button type="submit" class="btn btn-hotel w-100 py-2" id="roomsSearchButton">
                         <i class="fa fa-search default-icon" aria-hidden="true"></i>
                         <i class="fa fa-spinner fa-spin loading-icon" aria-hidden="true"></i>
-                        <span>Tìm phòng trống</span>
+                        <span>Tìm phòng</span>
                     </button>
                 </div>
             </form>
@@ -1321,7 +1321,7 @@
             button.classList.toggle('is-loading', isLoading);
             panel.classList.toggle('is-loading', isLoading);
             panel.setAttribute('aria-busy', String(isLoading));
-            button.querySelector('span').textContent = isLoading ? 'Đang tìm...' : 'Tìm phòng trống';
+            button.querySelector('span').textContent = isLoading ? 'Đang tìm...' : 'Tìm phòng';
         }
 
         if (roomResults.length === 0) {

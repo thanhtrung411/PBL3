@@ -178,7 +178,7 @@
                                 <label for="walkInNote">Ghi chú</label>
                                 <textarea id="walkInNote" class="form-control" rows="2" placeholder="Yêu cầu đặc biệt hoặc ghi chú nội bộ"></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary walkin-span-2" id="walkInLoadRoomsBtn">
+                            <button type="button" class="btn btn-primary walkin-span-2" id="walkInLoadRoomsBtn">
                                 Tiếp tục chọn phòng
                                 <i class="bi bi-arrow-right"></i>
                             </button>
@@ -248,7 +248,7 @@
                             <div class="walkin-cash-box" id="walkInCashBox">
                                 <div class="walkin-payment-field">
                                     <label for="walkInPaymentAmount">Số tiền khách đưa</label>
-                                    <input id="walkInPaymentAmount" class="form-control" type="number" min="0" step="1000" value="0" />
+                                    <input id="walkInPaymentAmount" class="form-control" type="text" inputmode="numeric" autocomplete="off" value="0" />
                                 </div>
                                 <div class="checkout-total-box walkin-change-box">
                                     <div class="checkout-money-row strong"><span>Tiền thối</span><strong id="walkInChangeAmount">0đ</strong></div>
@@ -353,25 +353,19 @@
                         </button>
                     </div>
 
-                    <div class="service-usage-grid">
-                        <div>
-                            <div class="service-section-title">
-                                <strong>Khách đang lưu trú</strong>
-                                <span id="serviceUsageSummary">Đang tải...</span>
-                            </div>
-                            <div id="serviceStayList" class="service-stay-list"></div>
-                        </div>
-
-                        <form id="serviceUsageForm" class="service-form">
+                    <div class="service-usage-grid service-usage-form-only">
+                        <form id="serviceUsageForm" class="service-form service-entry-form">
                             <div>
                                 <h3>Ghi nhận dịch vụ</h3>
                             </div>
                             <div id="serviceSelectedStayInfo" class="service-selected-box"></div>
-                            <label for="serviceBookingSelect">Booking / phòng</label>
-                            <select id="serviceBookingSelect" class="form-select form-select-lg"></select>
+                            <label for="serviceBookingSelect">Khách / phòng / booking</label>
+                            <input id="serviceBookingSelect" class="form-control form-control-lg" list="serviceBookingOptions" autocomplete="off" placeholder="Tìm theo tên khách, phòng hoặc mã đặt phòng" />
+                            <datalist id="serviceBookingOptions"></datalist>
 
                             <label for="serviceOptionSelect">Dịch vụ</label>
-                            <select id="serviceOptionSelect" class="form-select form-select-lg"></select>
+                            <input id="serviceOptionSelect" class="form-control form-control-lg" list="serviceOptionOptions" autocomplete="off" placeholder="Tìm theo tên dịch vụ hoặc loại dịch vụ" />
+                            <datalist id="serviceOptionOptions"></datalist>
                             <div id="serviceSelectedServiceInfo" class="service-selected-box service-selected-box-muted"></div>
 
                             <div class="service-form-row">
@@ -410,58 +404,127 @@
                     </div>
 
                     <div class="checkout-grid">
-                        <div>
+                        <div class="checkout-list-panel" id="checkoutListPanel">
                             <div class="service-section-title">
                                 <strong>Khách đang ở</strong>
                                 <span id="checkoutSummary">Đang tải...</span>
                             </div>
+                            <div class="checkout-toolbar">
+                                <div class="checkout-search-field">
+                                    <i class="bi bi-search"></i>
+                                    <input id="checkoutSearchInput" class="form-control form-control-lg" autocomplete="off" placeholder="Tìm theo tên khách, phòng, mã đặt phòng..." />
+                                </div>
+                                <div class="checkout-control">
+                                    <label for="checkoutScopeSelect">Hiển thị</label>
+                                    <select id="checkoutScopeSelect" class="form-select form-select-lg">
+                                        <option value="today" selected>Trả hôm nay</option>
+                                        <option value="all">Tất cả</option>
+                                    </select>
+                                </div>
+                                <div class="checkout-control">
+                                    <label for="checkoutSortSelect">Sắp xếp</label>
+                                    <select id="checkoutSortSelect" class="form-select form-select-lg">
+                                        <option value="checkoutDateAsc" selected>Ngày trả gần nhất</option>
+                                        <option value="checkoutDateDesc">Ngày trả xa nhất</option>
+                                        <option value="roomAsc">Số phòng</option>
+                                        <option value="nameAsc">Tên A-Z</option>
+                                        <option value="remainingDesc">Còn thu cao nhất</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div id="checkoutStayList" class="service-stay-list"></div>
                         </div>
 
-                        <div class="checkout-detail-panel">
-                            <div>
-                                <h3>Hóa đơn trả phòng</h3>
-                            </div>
-                            <div id="checkoutDetail" class="checkout-detail-empty">Chọn một khách để xem hóa đơn.</div>
-
-                            <form id="checkoutPaymentForm" class="checkout-payment-form">
-                                <input type="hidden" id="checkoutBookingCode" />
-
-                                <label for="checkoutPaymentAmount">Số tiền thu thêm</label>
-                                <input id="checkoutPaymentAmount" class="form-control form-control-lg" type="number" min="0" step="1000" value="0" />
-
-                                <label for="checkoutPaymentMethod">Phương thức</label>
-                                <select id="checkoutPaymentMethod" class="form-select form-select-lg">
-                                    <option value="Tiền mặt">Tiền mặt</option>
-                                    <option value="Chuyển khoản">Chuyển khoản</option>
-                                    <option value="Thẻ">Thẻ</option>
-                                    <option value="QR">QR</option>
-                                </select>
-
-                                <label for="checkoutNote">Ghi chú</label>
-                                <textarea id="checkoutNote" class="form-control" rows="3" placeholder="Ví dụ: khách đã kiểm tra minibar, phòng ổn"></textarea>
-
-                                <div class="checkout-receipt-options">
-                                    <label class="checkout-receipt-option" for="checkoutSendEmail">
-                                        <input id="checkoutSendEmail" type="checkbox" checked />
-                                        <span>Gửi hóa đơn qua mail</span>
-                                    </label>
-                                    <label class="checkout-receipt-option" for="checkoutPrintInvoice">
-                                        <input id="checkoutPrintInvoice" type="checkbox" checked />
-                                        <span>In hóa đơn</span>
-                                    </label>
-                                </div>
-
-                                <div class="checkout-email-field">
-                                    <label for="checkoutReceiptEmail">Email nhận hóa đơn</label>
-                                    <input id="checkoutReceiptEmail" class="form-control" type="email" placeholder="example@email.com" autocomplete="email" />
-                                </div>
-
-                                <button type="submit" class="btn btn-success btn-lg" id="confirmCheckoutBtn" disabled>
-                                    <i class="bi bi-check2-circle"></i>
-                                    Xác nhận check-out
+                        <div class="checkout-detail-panel" id="checkoutDetailPanel" hidden>
+                            <div class="checkout-payment-head">
+                                <button type="button" class="btn btn-outline-secondary" id="checkoutBackToListBtn">
+                                    <i class="bi bi-arrow-left"></i>
+                                    Khách đang ở
                                 </button>
-                            </form>
+                                <h3>Thanh toán trả phòng</h3>
+                            </div>
+                            <div class="checkout-payment-grid">
+                                <div class="checkout-invoice-side">
+                                    <div id="checkoutDetail" class="checkout-detail-empty">Chọn một khách để xem hóa đơn.</div>
+                                </div>
+
+                                <div class="checkout-money-side">
+                                    <div id="checkoutMoneySummary" class="checkout-total-box"></div>
+
+                                    <form id="checkoutPaymentForm" class="checkout-payment-form">
+                                        <input type="hidden" id="checkoutBookingCode" />
+
+                                        <label for="checkoutPaymentAmount">Số tiền thu thêm</label>
+                                        <input id="checkoutPaymentAmount" class="form-control form-control-lg" type="text" inputmode="numeric" autocomplete="off" value="0" />
+
+                                        <label for="checkoutPaymentMethod">Phương thức</label>
+                                        <select id="checkoutPaymentMethod" class="form-select form-select-lg">
+                                            <option value="Tiền mặt">Tiền mặt</option>
+                                            <option value="VNPAY">VNPAY</option>
+                                        </select>
+
+                                        <label for="checkoutNote">Ghi chú</label>
+                                        <textarea id="checkoutNote" class="form-control" rows="3" placeholder="Ví dụ: khách đã kiểm tra minibar, phòng ổn"></textarea>
+
+                                        <div class="checkout-receipt-options">
+                                            <label class="checkout-receipt-option" for="checkoutSendEmail">
+                                                <input id="checkoutSendEmail" type="checkbox" checked />
+                                                <span>Gửi hóa đơn qua mail</span>
+                                            </label>
+                                            <label class="checkout-receipt-option" for="checkoutPrintInvoice">
+                                                <input id="checkoutPrintInvoice" type="checkbox" checked />
+                                                <span>In hóa đơn</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="checkout-email-field">
+                                            <label for="checkoutReceiptEmail">Email nhận hóa đơn</label>
+                                            <input id="checkoutReceiptEmail" class="form-control" type="email" placeholder="example@email.com" autocomplete="email" />
+                                        </div>
+
+                                        <button type="submit" class="btn btn-success btn-lg" id="confirmCheckoutBtn" disabled>
+                                            <i class="bi bi-check2-circle"></i>
+                                            Xác nhận check-out
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="checkout-result-panel" id="checkoutPaymentResultPanel" hidden>
+                            <div class="checkout-result-icon" id="checkoutPaymentResultIcon">
+                                <i class="bi bi-check2"></i>
+                            </div>
+                            <h3 id="checkoutPaymentResultTitle">Thanh toán VNPay check-out</h3>
+                            <p id="checkoutPaymentResultMessage">Đang cập nhật kết quả thanh toán.</p>
+                            <div class="checkout-result-details">
+                                <div>
+                                    <span>Mã đặt phòng</span>
+                                    <strong id="checkoutPaymentResultBooking">-</strong>
+                                </div>
+                                <div>
+                                    <span>Số tiền</span>
+                                    <strong id="checkoutPaymentResultAmount">0đ</strong>
+                                </div>
+                                <div>
+                                    <span>Mã giao dịch</span>
+                                    <strong id="checkoutPaymentResultTransaction">Chưa có</strong>
+                                </div>
+                                <div>
+                                    <span>Ngân hàng</span>
+                                    <strong id="checkoutPaymentResultBank">Chưa có</strong>
+                                </div>
+                            </div>
+                            <div class="checkout-result-actions">
+                                <button type="button" class="btn btn-dark" id="checkoutResultBackBtn">
+                                    <i class="bi bi-arrow-left"></i>
+                                    Khách đang ở
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="checkoutResultRefreshBtn">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Cập nhật check-out
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -498,13 +561,13 @@
                     <div class="tool-panel checkin-lookup-card">
                         <div class="panel-heading">
                             <div>
-                                <h2>Nhập mã thủ công</h2>
+                                <h2>Nhập mã đặt phòng</h2>
                             </div>
                             <i class="bi bi-keyboard"></i>
                         </div>
                         <form id="manualLookupForm" class="manual-form">
-                            <label for="bookingCodeInput">Mã đặt phòng hoặc nội dung QR</label>
-                            <input id="bookingCodeInput" class="form-control form-control-lg" autocomplete="off" placeholder='DP00000019 hoặc {"booking":"DP00000019"}' />
+                            <label for="bookingCodeInput">Mã đặt phòng</label>
+                            <input id="bookingCodeInput" class="form-control form-control-lg" autocomplete="off" placeholder="DP00000019" />
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-search"></i>
                                 Kiểm tra

@@ -72,6 +72,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         var today = DateOnly.FromDateTime(DateTime.Today);
         var bookings = await _context.DatPhongs
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(x => x.MaKhNavigation)
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
@@ -229,7 +230,10 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     {
         var activeBookings = await _context.DatPhongs
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(x => x.MaKhNavigation)
+            .Include(x => x.HoaDon)
+            .ThenInclude(x => x!.MaGiamGiaPhongNavigation)
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .ThenInclude(x => x.MaDvNavigation)
@@ -303,6 +307,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         var booking = await _context.DatPhongs
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.MaDatPhong == bookingCode, cancellationToken);
 
         if (booking == null)
@@ -362,7 +367,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.DichVu &&
                         x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
             .Sum(x => x.ThanhTien);
-        await _invoicePromotionService.ApplyBestPromotionAsync(booking.HoaDon, cancellationToken);
+        await _invoicePromotionService.ApplyBestPromotionAsync(booking.HoaDon, cancellationToken, serviceOnly: true);
 
         booking.HoaDon.TrangThai = booking.HoaDon.SoTienDaThanhToan >= booking.HoaDon.TongThanhToan
             ? DomainValues.HoaDonTrangThai.DaThanhToan
@@ -388,7 +393,10 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     {
         var activeBookings = await _context.DatPhongs
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(x => x.MaKhNavigation)
+            .Include(x => x.HoaDon)
+            .ThenInclude(x => x!.MaGiamGiaPhongNavigation)
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .ThenInclude(x => x.MaDvNavigation)
@@ -445,6 +453,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .ThenInclude(x => x.MaPhongNavigation)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.MaDatPhong == bookingCode, cancellationToken);
 
         if (booking == null)
@@ -771,7 +780,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             request.CheckOutDate,
             cancellationToken);
 
-        var availableRooms = rooms
+        var selectableRooms = rooms
             .Where(room => !blockedRoomIds.Contains(room.MaPhong) &&
                            !IsMaintenanceStatus(room.TrangThai) &&
                            (checkInDate > today || !IsBusyStatus(room.TrangThai)))
@@ -782,24 +791,24 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             excludedBookingCode: null,
             cancellationToken);
         var roomTypePrices = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
-        foreach (var roomTypeId in availableRooms.Select(x => x.MaLoaiPhong).Distinct(StringComparer.OrdinalIgnoreCase))
+        foreach (var roomTypeId in rooms.Select(x => x.MaLoaiPhong).Distinct(StringComparer.OrdinalIgnoreCase))
         {
             roomTypePrices[roomTypeId] = await GetCurrentRoomTypePriceAsync(roomTypeId, checkInDate, cancellationToken);
         }
 
-        var maxSelectableRoomCount = availableRooms
+        var maxSelectableRoomCount = selectableRooms
             .GroupBy(x => x.MaLoaiPhong, StringComparer.OrdinalIgnoreCase)
             .Sum(group =>
             {
                 unassignedDemand.TryGetValue(group.Key, out var reservedCount);
                 return Math.Max(group.Count() - reservedCount, 0);
             });
-        var reservedRoomCount = Math.Max(availableRooms.Count - maxSelectableRoomCount, 0);
+        var reservedRoomCount = Math.Max(selectableRooms.Count - maxSelectableRoomCount, 0);
 
         return new ReceptionistWalkInAvailabilityResult
         {
             Success = true,
-            Message = availableRooms.Count == 0 || maxSelectableRoomCount == 0
+            Message = selectableRooms.Count == 0 || maxSelectableRoomCount == 0
                 ? "Hiện không có phòng trống phù hợp."
                 : reservedRoomCount > 0
                     ? $"Có {maxSelectableRoomCount} phòng có thể chọn. {reservedRoomCount} suất phòng đang giữ cho đặt trước."
@@ -807,31 +816,114 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             CheckInDate = checkInDate.ToString("dd/MM/yyyy"),
             CheckOutDate = request.CheckOutDate.ToString("dd/MM/yyyy"),
             Nights = nights,
-            Groups = availableRooms
+            Groups = rooms
                 .GroupBy(x => new { x.MaLoaiPhong, x.MaLoaiPhongNavigation.TenLoaiPhong })
                 .OrderBy(x => x.Min(room => room.MaLoaiPhongNavigation.SoNguoiToiDa))
                 .ThenBy(x => roomTypePrices.TryGetValue(x.Key.MaLoaiPhong, out var price) ? price : 0)
                 .ThenBy(x => x.Key.TenLoaiPhong)
-                .Select(group => new ReceptionistRoomGroupDto
+                .Select(group =>
                 {
-                    RoomTypeId = group.Key.MaLoaiPhong,
-                    RoomTypeName = group.Key.TenLoaiPhong,
-                    RequiredRooms = 0,
-                    MaxSelectableRooms = Math.Max(group.Count() -
-                        (unassignedDemand.TryGetValue(group.Key.MaLoaiPhong, out var reservedCount) ? reservedCount : 0), 0),
-                    ReservedForBookingCount = unassignedDemand.TryGetValue(group.Key.MaLoaiPhong, out var reservedForType)
-                        ? Math.Min(reservedForType, group.Count())
-                        : 0,
-                    PricePerNight = roomTypePrices.TryGetValue(group.Key.MaLoaiPhong, out var groupPrice) ? groupPrice : 0,
-                    Capacity = group.First().MaLoaiPhongNavigation.SoNguoiToiDa,
-                    Rooms = group.OrderBy(room => room.Tang).ThenBy(room => room.SoPhong).Select(room =>
+                    var selectableCount = group.Count(room => selectableRooms.Any(selectable =>
+                        string.Equals(selectable.MaPhong, room.MaPhong, StringComparison.OrdinalIgnoreCase)));
+                    var reservedForType = unassignedDemand.TryGetValue(group.Key.MaLoaiPhong, out var reservedDemand)
+                        ? Math.Min(reservedDemand, selectableCount)
+                        : 0;
+
+                    return new ReceptionistRoomGroupDto
                     {
-                        var dto = BuildRoomDto(room, false);
-                        dto.PricePerNight = roomTypePrices.TryGetValue(room.MaLoaiPhong, out var price) ? price : 0;
-                        return dto;
-                    }).ToList()
+                        RoomTypeId = group.Key.MaLoaiPhong,
+                        RoomTypeName = group.Key.TenLoaiPhong,
+                        RequiredRooms = 0,
+                        MaxSelectableRooms = Math.Max(selectableCount - reservedForType, 0),
+                        ReservedForBookingCount = reservedForType,
+                        PricePerNight = roomTypePrices.TryGetValue(group.Key.MaLoaiPhong, out var groupPrice) ? groupPrice : 0,
+                        Capacity = group.First().MaLoaiPhongNavigation.SoNguoiToiDa,
+                        Rooms = group.OrderBy(room => room.Tang).ThenBy(room => room.SoPhong).Select(room =>
+                        {
+                            var hasOverlappingAssignment = blockedRoomIds.Contains(room.MaPhong) ||
+                                (checkInDate <= today && IsBusyStatus(room.TrangThai));
+                            var dto = BuildRoomDto(room, hasOverlappingAssignment);
+                            dto.PricePerNight = roomTypePrices.TryGetValue(room.MaLoaiPhong, out var price) ? price : 0;
+                            return dto;
+                        }).ToList()
+                    };
                 })
                 .ToList()
+        };
+    }
+
+    public async Task<ReceptionistWalkInPromotionPreviewResult> PreviewWalkInPromotionAsync(
+        ReceptionistWalkInPromotionPreviewRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var checkInDate = request.CheckInDate == default ? today : request.CheckInDate;
+        if (checkInDate < today)
+        {
+            return FailWalkInPromotionPreview("Ngày nhận phòng không được trước hôm nay.");
+        }
+
+        if (request.CheckOutDate <= checkInDate)
+        {
+            return FailWalkInPromotionPreview("Ngày trả phòng phải sau ngày nhận phòng.");
+        }
+
+        var roomIds = request.RoomIds
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (roomIds.Count == 0)
+        {
+            return FailWalkInPromotionPreview("Chọn ít nhất một phòng trống.");
+        }
+
+        var selectedRooms = await _context.Phongs
+            .AsNoTracking()
+            .Include(x => x.MaLoaiPhongNavigation)
+            .Where(x => roomIds.Contains(x.MaPhong))
+            .ToListAsync(cancellationToken);
+        if (selectedRooms.Count != roomIds.Count)
+        {
+            return FailWalkInPromotionPreview("Có phòng không tồn tại hoặc đã bị xóa.");
+        }
+
+        var nights = Math.Max(request.CheckOutDate.DayNumber - checkInDate.DayNumber, 1);
+        var roomPrices = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+        foreach (var roomTypeId in selectedRooms.Select(x => x.MaLoaiPhong).Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var price = await GetCurrentRoomTypePriceAsync(roomTypeId, checkInDate, cancellationToken);
+            if (price <= 0)
+            {
+                return FailWalkInPromotionPreview($"Loại phòng {roomTypeId} chưa có giá áp dụng.");
+            }
+
+            roomPrices[roomTypeId] = price;
+        }
+
+        var roomTotal = selectedRooms.Sum(room => roomPrices[room.MaLoaiPhong] * nights);
+        var previewInvoice = new HoaDon
+        {
+            MaHoaDon = "PREVIEW",
+            MaDatPhong = "PREVIEW",
+            TongTienPhong = roomTotal,
+            TongTienDichVu = 0,
+            TienDatCoc = 0,
+            TienGiamGiaPhong = 0,
+            TongThanhToan = roomTotal,
+            SoTienDaThanhToan = 0,
+            TrangThai = DomainValues.HoaDonTrangThai.ChuaThanhToan
+        };
+        var promotion = await _invoicePromotionService.ApplyBestPromotionAsync(previewInvoice, cancellationToken);
+
+        return new ReceptionistWalkInPromotionPreviewResult
+        {
+            Success = true,
+            RoomTotal = roomTotal,
+            DiscountAmount = previewInvoice.TienGiamGiaPhong,
+            GrandTotal = previewInvoice.TongThanhToan,
+            PromotionCode = promotion?.CodeGiamGia.Trim(),
+            PromotionName = promotion?.TenMaGiamGia.Trim()
         };
     }
 
@@ -965,8 +1057,23 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
 
         total = selectedRooms.Sum(room => roomPrices[room.MaLoaiPhong] * nights);
         var isVnPayPayment = IsVnPayPayment(request.PaymentMethod);
-        if (!isVnPayPayment && request.PaymentAmount + 0.01m < total)
+        var previewInvoice = new HoaDon
         {
+            MaHoaDon = "PREVIEW",
+            MaDatPhong = "PREVIEW",
+            TongTienPhong = total,
+            TongTienDichVu = 0,
+            TienDatCoc = 0,
+            TienGiamGiaPhong = 0,
+            TongThanhToan = total,
+            SoTienDaThanhToan = 0,
+            TrangThai = DomainValues.HoaDonTrangThai.ChuaThanhToan
+        };
+        await _invoicePromotionService.ApplyBestPromotionAsync(previewInvoice, cancellationToken);
+        var payableTotal = previewInvoice.TongThanhToan;
+        if (!isVnPayPayment && request.PaymentAmount + 0.01m < payableTotal)
+        {
+            total = payableTotal;
             return FailWalkIn($"Khách vãng lai cần thanh toán đủ {total:N0}đ trước khi check-in.");
         }
 
@@ -1014,8 +1121,9 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             TongTienPhong = total,
             TongTienDichVu = 0,
             TienDatCoc = 0,
-            TienGiamGiaPhong = 0,
-            TongThanhToan = total,
+            MaGiamGiaPhong = previewInvoice.MaGiamGiaPhong,
+            TienGiamGiaPhong = previewInvoice.TienGiamGiaPhong,
+            TongThanhToan = payableTotal,
             SoTienDaThanhToan = 0,
             NgayThanhToanCuoi = isVnPayPayment ? null : DateTime.UtcNow,
             PhuongThucThanhToan = isVnPayPayment
@@ -1117,6 +1225,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         var booking = await _context.DatPhongs
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.MaDatPhong == bookingCode.Trim(), cancellationToken);
         if (booking?.HoaDon == null ||
             !IsWalkInVnPayInvoice(booking.HoaDon) ||
@@ -1162,6 +1271,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .ThenInclude(x => x.MaPhongNavigation)
+            .AsSplitQuery()
             .AsQueryable();
 
         if (!tracking)
@@ -1205,6 +1315,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     {
         var bookings = await _context.DatPhongs
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
             .Where(x => x.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
@@ -1532,6 +1643,8 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             RoomTotal = invoice.TongTienPhong,
             ServiceTotal = invoice.TongTienDichVu,
             DiscountAmount = invoice.TienGiamGiaPhong,
+            PromotionCode = invoice.MaGiamGiaPhongNavigation?.CodeGiamGia.Trim() ?? invoice.MaGiamGiaPhong?.Trim(),
+            PromotionName = invoice.MaGiamGiaPhongNavigation?.TenMaGiamGia.Trim(),
             PaidAmount = invoice.SoTienDaThanhToan,
             GrandTotal = invoice.TongThanhToan,
             RemainingAmount = Math.Max(invoice.TongThanhToan - invoice.SoTienDaThanhToan, 0),
@@ -1622,7 +1735,7 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             StatusLabel = status switch
             {
                 "maintenance" => "Bảo trì",
-                "occupied" => "Đã có khách",
+                "occupied" => "Đang sử dụng",
                 _ => "Trống"
             },
             IsSelectable = status == "available",
@@ -1719,6 +1832,15 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     private static ReceptionistWalkInCheckInResult FailWalkIn(string message)
     {
         return new ReceptionistWalkInCheckInResult
+        {
+            Success = false,
+            Message = message
+        };
+    }
+
+    private static ReceptionistWalkInPromotionPreviewResult FailWalkInPromotionPreview(string message)
+    {
+        return new ReceptionistWalkInPromotionPreviewResult
         {
             Success = false,
             Message = message

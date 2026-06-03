@@ -11,7 +11,11 @@
         selectedRoomMapRoomId: "",
         serviceUsage: null,
         checkoutList: null,
+        checkoutSearch: "",
+        checkoutScope: "today",
+        checkoutSort: "checkoutDateAsc",
         walkInAvailability: null,
+        walkInPromotionPreview: null,
         selectedWalkInRooms: new Map(),
         walkInStep: "info",
         selectedCheckoutCode: "",
@@ -58,21 +62,38 @@
         roomMapDetailClose: document.getElementById("roomMapDetailClose"),
         roomMapFloors: document.getElementById("roomMapFloors"),
         serviceUsageRefreshBtn: document.getElementById("serviceUsageRefreshBtn"),
-        serviceUsageSummary: document.getElementById("serviceUsageSummary"),
-        serviceStayList: document.getElementById("serviceStayList"),
         serviceUsageForm: document.getElementById("serviceUsageForm"),
         serviceSelectedStayInfo: document.getElementById("serviceSelectedStayInfo"),
         serviceSelectedServiceInfo: document.getElementById("serviceSelectedServiceInfo"),
         serviceBookingSelect: document.getElementById("serviceBookingSelect"),
+        serviceBookingOptions: document.getElementById("serviceBookingOptions"),
         serviceOptionSelect: document.getElementById("serviceOptionSelect"),
+        serviceOptionOptions: document.getElementById("serviceOptionOptions"),
         serviceQuantityInput: document.getElementById("serviceQuantityInput"),
         serviceNoteInput: document.getElementById("serviceNoteInput"),
         serviceLineEstimate: document.getElementById("serviceLineEstimate"),
         addServiceUsageBtn: document.getElementById("addServiceUsageBtn"),
         checkoutRefreshBtn: document.getElementById("checkoutRefreshBtn"),
         checkoutSummary: document.getElementById("checkoutSummary"),
+        checkoutSearchInput: document.getElementById("checkoutSearchInput"),
+        checkoutScopeSelect: document.getElementById("checkoutScopeSelect"),
+        checkoutSortSelect: document.getElementById("checkoutSortSelect"),
+        checkoutListPanel: document.getElementById("checkoutListPanel"),
         checkoutStayList: document.getElementById("checkoutStayList"),
+        checkoutDetailPanel: document.getElementById("checkoutDetailPanel"),
+        checkoutPaymentResultPanel: document.getElementById("checkoutPaymentResultPanel"),
+        checkoutPaymentResultIcon: document.getElementById("checkoutPaymentResultIcon"),
+        checkoutPaymentResultTitle: document.getElementById("checkoutPaymentResultTitle"),
+        checkoutPaymentResultMessage: document.getElementById("checkoutPaymentResultMessage"),
+        checkoutPaymentResultBooking: document.getElementById("checkoutPaymentResultBooking"),
+        checkoutPaymentResultAmount: document.getElementById("checkoutPaymentResultAmount"),
+        checkoutPaymentResultTransaction: document.getElementById("checkoutPaymentResultTransaction"),
+        checkoutPaymentResultBank: document.getElementById("checkoutPaymentResultBank"),
+        checkoutResultBackBtn: document.getElementById("checkoutResultBackBtn"),
+        checkoutResultRefreshBtn: document.getElementById("checkoutResultRefreshBtn"),
+        checkoutBackToListBtn: document.getElementById("checkoutBackToListBtn"),
         checkoutDetail: document.getElementById("checkoutDetail"),
+        checkoutMoneySummary: document.getElementById("checkoutMoneySummary"),
         checkoutPaymentForm: document.getElementById("checkoutPaymentForm"),
         checkoutBookingCode: document.getElementById("checkoutBookingCode"),
         checkoutPaymentAmount: document.getElementById("checkoutPaymentAmount"),
@@ -145,8 +166,12 @@
     elements.walkInNavBtn?.addEventListener("click", showWalkIn);
     elements.walkInForm?.addEventListener("submit", function (event) {
         event.preventDefault();
-        loadWalkInAvailability();
     });
+    elements.walkInForm?.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter" || event.target?.tagName === "TEXTAREA") return;
+        event.preventDefault();
+    });
+    elements.walkInLoadRoomsBtn?.addEventListener("click", loadWalkInAvailability);
     elements.walkInResetBtn?.addEventListener("click", resetWalkIn);
     elements.walkInEditGuestBtn?.addEventListener("click", function () {
         showWalkInView("info");
@@ -154,7 +179,7 @@
     elements.walkInGoPaymentBtn?.addEventListener("click", showWalkInPaymentStep);
     elements.walkInReviewBtn?.addEventListener("click", showWalkInConfirmStep);
     elements.walkInConfirmBtn?.addEventListener("click", submitWalkInCheckIn);
-    elements.walkInPaymentAmount?.addEventListener("input", updateWalkInSelectionState);
+    bindCurrencyInput(elements.walkInPaymentAmount, updateWalkInSelectionState);
     elements.walkInPaymentChoices?.forEach(function (item) {
         item.addEventListener("change", updateWalkInPaymentUi);
     });
@@ -167,11 +192,13 @@
     elements.walkInCheckinDate?.addEventListener("change", function () {
         ensureWalkInDateOrder();
         state.walkInAvailability = null;
+        state.walkInPromotionPreview = null;
         state.selectedWalkInRooms.clear();
         renderWalkInAvailability();
     });
     elements.walkInCheckoutDate?.addEventListener("change", function () {
         state.walkInAvailability = null;
+        state.walkInPromotionPreview = null;
         state.selectedWalkInRooms.clear();
         renderWalkInAvailability();
     });
@@ -189,12 +216,33 @@
     elements.serviceUsageNavBtn?.addEventListener("click", loadServiceUsage);
     elements.serviceUsageRefreshBtn?.addEventListener("click", loadServiceUsage);
     elements.serviceUsageForm?.addEventListener("submit", addServiceUsage);
+    elements.serviceBookingSelect?.addEventListener("input", renderServiceSelection);
     elements.serviceBookingSelect?.addEventListener("change", renderServiceSelection);
+    elements.serviceOptionSelect?.addEventListener("input", updateServiceEstimate);
     elements.serviceOptionSelect?.addEventListener("change", updateServiceEstimate);
     elements.serviceQuantityInput?.addEventListener("input", updateServiceEstimate);
     elements.checkoutNavBtn?.addEventListener("click", loadCheckoutList);
     elements.checkoutRefreshBtn?.addEventListener("click", loadCheckoutList);
+    elements.checkoutBackToListBtn?.addEventListener("click", showCheckoutListPage);
+    elements.checkoutResultBackBtn?.addEventListener("click", loadCheckoutList);
+    elements.checkoutResultRefreshBtn?.addEventListener("click", loadCheckoutList);
+    elements.checkoutSearchInput?.addEventListener("input", function () {
+        state.checkoutSearch = elements.checkoutSearchInput.value || "";
+        state.selectedCheckoutCode = "";
+        renderCheckoutList();
+    });
+    elements.checkoutScopeSelect?.addEventListener("change", function () {
+        state.checkoutScope = elements.checkoutScopeSelect.value || "today";
+        state.selectedCheckoutCode = "";
+        renderCheckoutList();
+    });
+    elements.checkoutSortSelect?.addEventListener("change", function () {
+        state.checkoutSort = elements.checkoutSortSelect.value || "checkoutDateAsc";
+        renderCheckoutList(state.selectedCheckoutCode);
+    });
     elements.checkoutPaymentForm?.addEventListener("submit", submitCheckout);
+    bindCurrencyInput(elements.checkoutPaymentAmount);
+    elements.checkoutPaymentMethod?.addEventListener("change", updateCheckoutPaymentUi);
     elements.checkoutSendEmail?.addEventListener("change", syncCheckoutEmailField);
     elements.checkoutReceiptEmail?.addEventListener("input", function () {
         if (elements.checkoutReceiptEmail.value.trim() && elements.checkoutSendEmail) {
@@ -265,7 +313,18 @@
         });
     });
 
-    handleWalkInPaymentReturn();
+    handleReceptionPaymentReturn();
+    handleInitialOpenTarget();
+
+    function handleInitialOpenTarget() {
+        const query = new URLSearchParams(window.location.search);
+        if (query.get("open") === "checkout") {
+            loadCheckoutList();
+            query.delete("open");
+            const nextUrl = `${window.location.pathname}${query.toString() ? `?${query}` : ""}${window.location.hash}`;
+            window.history.replaceState({}, document.title, nextUrl);
+        }
+    }
 
     function setStep(step) {
         if (step !== "scan" && state.scannerRunning) {
@@ -299,15 +358,43 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    async function handleWalkInPaymentReturn() {
+    async function handleReceptionPaymentReturn() {
         const query = new URLSearchParams(window.location.search);
-        const status = query.get("walkInPaymentStatus");
-        if (!status) {
+        const walkInStatus = query.get("walkInPaymentStatus");
+        const checkoutStatus = query.get("checkoutPaymentStatus");
+        if (!walkInStatus && !checkoutStatus) {
             return;
         }
 
         const bookingCode = query.get("bookingCode") || "";
         const message = query.get("message") || "";
+        if (checkoutStatus) {
+            setStep("checkout");
+            renderCheckoutPaymentResult({
+                status: checkoutStatus,
+                bookingCode,
+                amount: Number(query.get("amount") || 0),
+                transactionNo: query.get("transactionNo") || "",
+                bankCode: query.get("bankCode") || "",
+                message
+            });
+            showAlert(
+                message || (checkoutStatus === "success"
+                    ? "Thanh toán VNPay check-out thành công."
+                    : "Thanh toán VNPay check-out chưa hoàn tất."),
+                checkoutStatus === "success" ? "success" : checkoutStatus === "cancelled" ? "warning" : "danger");
+            query.delete("checkoutPaymentStatus");
+            query.delete("bookingCode");
+            query.delete("amount");
+            query.delete("transactionNo");
+            query.delete("bankCode");
+            query.delete("message");
+            const nextUrl = `${window.location.pathname}${query.toString() ? `?${query}` : ""}${window.location.hash}`;
+            window.history.replaceState({}, document.title, nextUrl);
+            return;
+        }
+
+        const status = walkInStatus;
         showWalkIn();
 
         if (status === "success") {
@@ -487,11 +574,12 @@
 
     function resetWalkIn() {
         state.walkInAvailability = null;
+        state.walkInPromotionPreview = null;
         state.selectedWalkInRooms.clear();
         elements.walkInForm?.reset();
         if (elements.walkInGuestCount) elements.walkInGuestCount.value = "1";
         if (elements.walkInNationality) elements.walkInNationality.value = "Việt Nam";
-        if (elements.walkInPaymentAmount) elements.walkInPaymentAmount.value = "0";
+        setCurrencyInputValue(elements.walkInPaymentAmount, 0);
         state.walkInStep = "info";
         showWalkInView("info");
         showWalkIn();
@@ -545,7 +633,8 @@
         }
 
         if (step === "confirm") {
-            renderWalkInConfirmSummary();
+            showWalkInConfirmStep();
+            return;
         }
         showWalkInView(step);
     }
@@ -557,7 +646,7 @@
         if (step === "confirm") {
             if (state.selectedWalkInRooms.size === 0) return false;
             return getWalkInPaymentMethod() === "vnpay" ||
-                Number(elements.walkInPaymentAmount?.value || 0) + 0.01 >= getWalkInTotal();
+                getCurrencyInputValue(elements.walkInPaymentAmount) + 0.01 >= getWalkInPayableTotal();
         }
 
         return step === "done" && state.walkInStep === "done";
@@ -713,6 +802,7 @@
             state.selectedWalkInRooms.set(roomId, room);
         }
 
+        state.walkInPromotionPreview = null;
         updateWalkInSelectionState();
     }
 
@@ -769,8 +859,44 @@
             }, 0);
     }
 
+    function getWalkInDiscountAmount() {
+        return Math.max(Number(state.walkInPromotionPreview?.discountAmount || 0), 0);
+    }
+
+    function getWalkInPayableTotal() {
+        const total = getWalkInTotal();
+        if (state.walkInPromotionPreview?.success) {
+            return Math.max(Number(state.walkInPromotionPreview.grandTotal || total), 0);
+        }
+
+        return total;
+    }
+
+    async function refreshWalkInPromotionPreview() {
+        state.walkInPromotionPreview = null;
+        if (!state.walkInAvailability || state.selectedWalkInRooms.size === 0) {
+            updateWalkInSelectionState();
+            return null;
+        }
+
+        const result = await fetchJson("/Receptionist/WalkInPromotionPreview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                checkInDate: elements.walkInCheckinDate?.value || "",
+                checkOutDate: elements.walkInCheckoutDate?.value || "",
+                roomIds: Array.from(state.selectedWalkInRooms.keys())
+            })
+        });
+
+        state.walkInPromotionPreview = result?.success ? result : null;
+        updateWalkInSelectionState();
+        return state.walkInPromotionPreview;
+    }
+
     function updateWalkInSelectionState() {
         const total = getWalkInTotal();
+        const payableTotal = getWalkInPayableTotal();
         const selectedRooms = Array.from(state.selectedWalkInRooms.values());
         const selectedCapacity = selectedRooms.reduce(function (sum, room) {
             return sum + Number(room.capacity || 0);
@@ -819,10 +945,10 @@
             elements.walkInStayNights.textContent = String(state.walkInAvailability?.nights || 0);
         }
         if (elements.walkInPaymentDue) {
-            elements.walkInPaymentDue.textContent = formatMoney(total);
+            elements.walkInPaymentDue.textContent = formatMoney(payableTotal);
         }
         if (elements.walkInChangeAmount) {
-            const change = Math.max(Number(elements.walkInPaymentAmount?.value || 0) - total, 0);
+            const change = Math.max(getCurrencyInputValue(elements.walkInPaymentAmount) - payableTotal, 0);
             elements.walkInChangeAmount.textContent = formatMoney(change);
         }
         if (elements.walkInGoPaymentBtn) {
@@ -831,7 +957,7 @@
         if (elements.walkInConfirmBtn) {
             const method = getWalkInPaymentMethod();
             elements.walkInConfirmBtn.disabled = total <= 0 ||
-                (method === "cash" && Number(elements.walkInPaymentAmount?.value || 0) + 0.01 < total);
+                (method === "cash" && getCurrencyInputValue(elements.walkInPaymentAmount) + 0.01 < payableTotal);
         }
     }
 
@@ -840,19 +966,26 @@
         section?.classList.toggle("is-limit-reached", locked);
     }
 
-    function showWalkInPaymentStep() {
+    async function showWalkInPaymentStep() {
         if (state.selectedWalkInRooms.size === 0) {
             showAlert("Chọn ít nhất một phòng trống trước khi thanh toán.", "warning");
             return;
         }
 
-        if (elements.walkInPaymentAmount && Number(elements.walkInPaymentAmount.value || 0) <= 0) {
-            elements.walkInPaymentAmount.value = String(getWalkInTotal());
+        try {
+            await refreshWalkInPromotionPreview();
+        } catch (error) {
+            showAlert(error.message, "danger");
+            return;
+        }
+
+        if (elements.walkInPaymentAmount) {
+            setCurrencyInputValue(elements.walkInPaymentAmount, getWalkInPayableTotal());
         }
         showWalkInView("payment");
     }
 
-    function showWalkInConfirmStep() {
+    async function showWalkInConfirmStep() {
         const total = getWalkInTotal();
         const method = getWalkInPaymentMethod();
         if (total <= 0 || state.selectedWalkInRooms.size === 0) {
@@ -860,8 +993,16 @@
             return;
         }
 
-        if (method === "cash" && Number(elements.walkInPaymentAmount?.value || 0) + 0.01 < total) {
-            showAlert(`Khách cần đưa đủ ${formatMoney(total)} trước khi xác nhận.`, "warning");
+        try {
+            await refreshWalkInPromotionPreview();
+        } catch (error) {
+            showAlert(error.message, "danger");
+            return;
+        }
+
+        const payableTotal = getWalkInPayableTotal();
+        if (method === "cash" && getCurrencyInputValue(elements.walkInPaymentAmount) + 0.01 < payableTotal) {
+            showAlert(`Khách cần đưa đủ ${formatMoney(payableTotal)} trước khi xác nhận.`, "warning");
             return;
         }
 
@@ -899,9 +1040,11 @@
                     String(a.roomNumber).localeCompare(String(b.roomNumber), "vi", { numeric: true });
             });
         const total = getWalkInTotal();
+        const discountAmount = getWalkInDiscountAmount();
+        const payableTotal = getWalkInPayableTotal();
         const method = getWalkInPaymentMethod();
-        const paid = method === "vnpay" ? 0 : Number(elements.walkInPaymentAmount?.value || 0);
-        const change = Math.max(paid - total, 0);
+        const paid = method === "vnpay" ? 0 : getCurrencyInputValue(elements.walkInPaymentAmount);
+        const change = Math.max(paid - payableTotal, 0);
         const nights = state.walkInAvailability?.nights || 0;
         const guestCount = Number(elements.walkInGuestCount?.value || 1);
         const roomLines = Array.from(rooms.reduce(function (lines, room) {
@@ -984,6 +1127,12 @@
                             <span>Giá phòng (${roomsCount} phòng x ${nights} đêm)</span>
                             <strong>${formatMoney(total)}</strong>
                         </div>
+                        ${discountAmount > 0 ? `
+                            <div class="walkin-invoice-row walkin-invoice-discount">
+                                <span>Khuyến mãi${state.walkInPromotionPreview?.promotionCode ? " " + escapeHtml(state.walkInPromotionPreview.promotionCode) : ""}</span>
+                                <strong>-${formatMoney(discountAmount)}</strong>
+                            </div>
+                        ` : ""}
                         ${method === "cash" ? `
                             <div class="walkin-invoice-row">
                                 <span>Khách đưa</span>
@@ -996,7 +1145,7 @@
                         ` : ""}
                         <div class="walkin-invoice-total">
                             <span>Cần thanh toán</span>
-                            <strong>${formatMoney(total)}</strong>
+                            <strong>${formatMoney(payableTotal)}</strong>
                         </div>
                     </div>
 
@@ -1010,7 +1159,7 @@
     }
 
     async function submitWalkInCheckIn() {
-        const total = getWalkInTotal();
+        let total = getWalkInPayableTotal();
         if (!elements.walkInCustomerName?.value.trim()) {
             showAlert("Nhập họ tên khách vãng lai.", "warning");
             return;
@@ -1020,7 +1169,14 @@
             return;
         }
         const method = getWalkInPaymentMethod();
-        if (method === "cash" && Number(elements.walkInPaymentAmount?.value || 0) + 0.01 < total) {
+        try {
+            await refreshWalkInPromotionPreview();
+            total = getWalkInPayableTotal();
+        } catch (error) {
+            showAlert(error.message, "danger");
+            return;
+        }
+        if (method === "cash" && getCurrencyInputValue(elements.walkInPaymentAmount) + 0.01 < total) {
             showAlert(`Khách cần thanh toán đủ ${formatMoney(total)} trước khi check-in.`, "warning");
             return;
         }
@@ -1042,7 +1198,7 @@
                     checkOutDate: elements.walkInCheckoutDate?.value || "",
                     guestCount: Number(elements.walkInGuestCount?.value || 1),
                     roomIds: Array.from(state.selectedWalkInRooms.keys()),
-                    paymentAmount: method === "vnpay" ? 0 : Number(elements.walkInPaymentAmount?.value || 0),
+                    paymentAmount: method === "vnpay" ? 0 : getCurrencyInputValue(elements.walkInPaymentAmount),
                     paymentMethod: elements.walkInPaymentMethod?.value || "",
                     note: elements.walkInNote?.value || ""
                 })
@@ -1188,7 +1344,7 @@
         elements.todayArrivalsList.innerHTML = bookings.map(function (booking) {
             const rooms = (booking.requirements || [])
                 .map(function (item) {
-                    return `${item.requiredRooms} ${escapeHtml(formatDisplayText(item.roomTypeName))}`;
+                    return `${item.requiredRooms} ${escapeHtml(formatRoomTypeName(item.roomTypeName))}`;
                 })
                 .join(" · ");
             const statusClass = booking.canCheckIn ? "ready" : "blocked";
@@ -1568,15 +1724,9 @@
     async function loadServiceUsage(preferredBookingCode) {
         const preferredCode = typeof preferredBookingCode === "string"
             ? preferredBookingCode
-            : elements.serviceBookingSelect?.value;
+            : resolveServiceBookingCode();
 
         setStep("services");
-        if (elements.serviceUsageSummary) {
-            elements.serviceUsageSummary.textContent = "Đang tải...";
-        }
-        if (elements.serviceStayList) {
-            elements.serviceStayList.innerHTML = `<div class="arrival-empty">Đang tải danh sách khách đang lưu trú...</div>`;
-        }
 
         try {
             const result = await fetchJson("/Receptionist/ServiceUsage");
@@ -1587,7 +1737,7 @@
 
             state.serviceUsage = result;
             renderServiceUsage(preferredCode);
-            showAlert(result.message, "info");
+            showAlert("Đã tải dữ liệu ghi nhận dịch vụ.", "info");
         } catch (error) {
             showAlert(error.message, "danger");
         }
@@ -1597,85 +1747,38 @@
         const activeStays = state.serviceUsage?.activeStays || [];
         const services = state.serviceUsage?.services || [];
 
-        if (elements.serviceUsageSummary) {
-            elements.serviceUsageSummary.textContent = `${activeStays.length} khách - ${services.length} dịch vụ`;
-        }
-
-        renderServiceStayList(activeStays);
         renderServiceSelects(activeStays, services, preferredBookingCode);
         renderServiceSelection();
     }
 
-    function renderServiceStayList(activeStays) {
-        if (!elements.serviceStayList) return;
-
-        if (activeStays.length === 0) {
-            elements.serviceStayList.innerHTML = `<div class="arrival-empty">Hiện chưa có khách đang lưu trú.</div>`;
-            return;
-        }
-
-        elements.serviceStayList.innerHTML = activeStays.map(function (stay) {
-            const rooms = (stay.roomNumbers || []).length > 0
-                ? `Phòng ${stay.roomNumbers.map(function (roomNumber) { return escapeHtml(formatDisplayText(roomNumber)); }).join(", ")}`
-                : "Chưa gán phòng";
-            const serviceLines = (stay.serviceLines || []).slice(0, 3);
-            const lineHtml = serviceLines.length === 0
-                ? `<div class="service-line-empty">Chưa phát sinh dịch vụ.</div>`
-                : serviceLines.map(function (line) {
-                    return `
-                        <div class="service-line">
-                            <span>${escapeHtml(formatDisplayText(line.serviceName))} x${line.quantity}</span>
-                            <strong>${formatMoney(line.total)}</strong>
-                        </div>
-                    `;
-                }).join("");
-
-            return `
-                <article class="service-stay-card" data-service-stay="${escapeHtml(stay.bookingCode)}">
-                    <div class="service-stay-main">
-                        <span class="arrival-code">${escapeHtml(stay.bookingCode)}</span>
-                        <h3>${escapeHtml(formatPersonName(stay.customerName))}</h3>
-                        <p>${escapeHtml(rooms)} · Trả ${escapeHtml(stay.checkOutDate)}</p>
-                    </div>
-                    <div class="service-stay-total">
-                        <span>Dịch vụ</span>
-                        <strong>${formatMoney(stay.serviceTotal)}</strong>
-                    </div>
-                    <div class="service-lines">${lineHtml}</div>
-                </article>
-            `;
-        }).join("");
-
-        elements.serviceStayList.querySelectorAll("[data-service-stay]").forEach(function (card) {
-            card.addEventListener("click", function () {
-                if (elements.serviceBookingSelect) {
-                    elements.serviceBookingSelect.value = card.dataset.serviceStay;
-                }
-                renderServiceSelection();
-            });
-        });
-    }
-
     function renderServiceSelects(activeStays, services, preferredBookingCode) {
         if (elements.serviceBookingSelect) {
-            elements.serviceBookingSelect.innerHTML = activeStays.map(function (stay) {
-                const rooms = (stay.roomNumbers || []).length > 0
-                    ? ` - phòng ${stay.roomNumbers.map(formatDisplayText).join(", ")}`
-                    : "";
-                return `<option value="${escapeHtml(stay.bookingCode)}">${escapeHtml(stay.bookingCode)} - ${escapeHtml(formatPersonName(stay.customerName))}${escapeHtml(rooms)}</option>`;
-            }).join("");
+            if (elements.serviceBookingOptions) {
+                elements.serviceBookingOptions.innerHTML = activeStays.map(function (stay) {
+                    const value = formatServiceStayOptionValue(stay);
+                    return `<option value="${escapeHtml(value)}" data-booking-code="${escapeHtml(stay.bookingCode)}"></option>`;
+                }).join("");
+            }
 
             const fallbackCode = activeStays[0]?.bookingCode || "";
-            elements.serviceBookingSelect.value = activeStays.some(function (stay) {
+            const selectedCode = activeStays.some(function (stay) {
                 return stay.bookingCode === preferredBookingCode;
             }) ? preferredBookingCode : fallbackCode;
+            const selectedStay = activeStays.find(function (stay) {
+                return stay.bookingCode === selectedCode;
+            });
+            elements.serviceBookingSelect.value = selectedStay ? formatServiceStayOptionValue(selectedStay) : "";
             elements.serviceBookingSelect.disabled = activeStays.length === 0;
         }
 
         if (elements.serviceOptionSelect) {
-            elements.serviceOptionSelect.innerHTML = services.map(function (service) {
-                return `<option value="${escapeHtml(service.serviceId)}" data-price="${service.unitPrice}" data-unit="${escapeHtml(formatSentenceText(service.unit))}" data-name="${escapeHtml(formatDisplayText(service.serviceName))}" data-category="${escapeHtml(formatDisplayText(service.category || ""))}">${escapeHtml(formatDisplayText(service.serviceName))} - ${formatMoney(service.unitPrice)}/${escapeHtml(formatSentenceText(service.unit))}</option>`;
-            }).join("");
+            if (elements.serviceOptionOptions) {
+                elements.serviceOptionOptions.innerHTML = services.map(function (service) {
+                    const value = formatServiceOptionValue(service);
+                    return `<option value="${escapeHtml(value)}" data-service-id="${escapeHtml(service.serviceId)}" data-price="${service.unitPrice}" data-unit="${escapeHtml(formatSentenceText(service.unit))}" data-name="${escapeHtml(formatDisplayText(service.serviceName))}" data-category="${escapeHtml(formatDisplayText(service.category || ""))}"></option>`;
+                }).join("");
+            }
+            elements.serviceOptionSelect.value = services[0] ? formatServiceOptionValue(services[0]) : "";
             elements.serviceOptionSelect.disabled = services.length === 0;
         }
 
@@ -1693,22 +1796,91 @@
     }
 
     function renderServiceSelection() {
-        const selectedCode = elements.serviceBookingSelect?.value || "";
+        const selectedCode = resolveServiceBookingCode();
         const selectedStay = (state.serviceUsage?.activeStays || []).find(function (stay) {
             return stay.bookingCode === selectedCode;
         }) || null;
-        elements.serviceStayList?.querySelectorAll("[data-service-stay]").forEach(function (card) {
-            card.classList.toggle("selected", card.dataset.serviceStay === selectedCode);
-        });
         renderSelectedServiceStay(selectedStay);
         updateServiceEstimate();
+    }
+
+    function formatServiceStayOptionValue(stay) {
+        if (!stay) return "";
+
+        const rooms = (stay.roomNumbers || []).length > 0
+            ? ` - phòng ${stay.roomNumbers.map(formatDisplayText).join(", ")}`
+            : "";
+        return `${stay.bookingCode} - ${formatPersonName(stay.customerName)}${rooms}`;
+    }
+
+    function formatServiceOptionValue(service) {
+        if (!service) return "";
+
+        return `${formatDisplayText(service.serviceName)} - ${formatMoney(service.unitPrice)}/${formatSentenceText(service.unit)}`;
+    }
+
+    function resolveServiceBookingCode() {
+        const value = elements.serviceBookingSelect?.value.trim() || "";
+        if (!value) return "";
+
+        const exactOption = findDatalistOption(elements.serviceBookingOptions, value);
+        if (exactOption?.dataset.bookingCode) {
+            return exactOption.dataset.bookingCode;
+        }
+
+        const activeStays = state.serviceUsage?.activeStays || [];
+        const normalizedValue = normalizeSearchText(value);
+        const matchedStay = activeStays.find(function (stay) {
+            return normalizeSearchText(formatServiceStayOptionValue(stay)).includes(normalizedValue) ||
+                normalizeSearchText(stay.bookingCode).includes(normalizedValue) ||
+                (stay.roomNumbers || []).some(function (roomNumber) {
+                    return normalizeSearchText(roomNumber).includes(normalizedValue);
+                });
+        });
+
+        return matchedStay?.bookingCode || "";
+    }
+
+    function resolveServiceOptionId() {
+        const option = getSelectedServiceOptionElement();
+        return option?.dataset.serviceId || "";
+    }
+
+    function getSelectedServiceOptionElement() {
+        const value = elements.serviceOptionSelect?.value.trim() || "";
+        if (!value) return null;
+
+        const exactOption = findDatalistOption(elements.serviceOptionOptions, value);
+        if (exactOption) return exactOption;
+
+        const normalizedValue = normalizeSearchText(value);
+        return Array.from(elements.serviceOptionOptions?.options || []).find(function (option) {
+            return normalizeSearchText(option.value).includes(normalizedValue) ||
+                normalizeSearchText(option.dataset.name).includes(normalizedValue) ||
+                normalizeSearchText(option.dataset.category).includes(normalizedValue);
+        }) || null;
+    }
+
+    function findDatalistOption(datalist, value) {
+        return Array.from(datalist?.options || []).find(function (option) {
+            return option.value === value;
+        }) || null;
+    }
+
+    function normalizeSearchText(value) {
+        return String(value ?? "")
+            .trim()
+            .toLocaleLowerCase("vi-VN")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/đ/g, "d");
     }
 
     function renderSelectedServiceStay(stay) {
         if (!elements.serviceSelectedStayInfo) return;
 
         if (!stay) {
-            elements.serviceSelectedStayInfo.innerHTML = `<span>Chưa chọn khách lưu trú.</span>`;
+            elements.serviceSelectedStayInfo.innerHTML = `<span>Chưa chọn khách / phòng.</span>`;
             return;
         }
 
@@ -1728,7 +1900,7 @@
     function updateServiceEstimate() {
         if (!elements.serviceLineEstimate) return;
 
-        const option = elements.serviceOptionSelect?.selectedOptions?.[0];
+        const option = getSelectedServiceOptionElement();
         const price = Number(option?.dataset.price || 0);
         const quantity = Math.max(Number(elements.serviceQuantityInput?.value || 0), 0);
         elements.serviceLineEstimate.textContent = formatMoney(price * quantity);
@@ -1747,8 +1919,8 @@
     async function addServiceUsage(event) {
         event.preventDefault();
 
-        const bookingCode = elements.serviceBookingSelect?.value || "";
-        const serviceId = elements.serviceOptionSelect?.value || "";
+        const bookingCode = resolveServiceBookingCode();
+        const serviceId = resolveServiceOptionId();
         const quantity = Number(elements.serviceQuantityInput?.value || 0);
         const note = elements.serviceNoteInput?.value || "";
 
@@ -1804,6 +1976,7 @@
         if (elements.checkoutStayList) {
             elements.checkoutStayList.innerHTML = `<div class="arrival-empty">Đang tải danh sách khách đang ở...</div>`;
         }
+        showCheckoutListPage();
 
         try {
             const result = await fetchJson("/Receptionist/Checkout");
@@ -1822,8 +1995,11 @@
 
     function renderCheckoutList(preferredBookingCode) {
         const stays = state.checkoutList?.activeStays || [];
+        const visibleStays = getVisibleCheckoutStays(stays);
         if (elements.checkoutSummary) {
-            elements.checkoutSummary.textContent = `${stays.length} khách đang ở`;
+            elements.checkoutSummary.textContent = state.checkoutScope === "today"
+                ? `${visibleStays.length}/${stays.length} khách trả hôm nay`
+                : `${visibleStays.length}/${stays.length} khách đang ở`;
         }
 
         if (!elements.checkoutStayList) return;
@@ -1834,21 +2010,35 @@
             return;
         }
 
-        const selectedCode = stays.some(function (stay) {
+        if (visibleStays.length === 0) {
+            elements.checkoutStayList.innerHTML = `<div class="arrival-empty">Không tìm thấy khách phù hợp.</div>`;
+            state.selectedCheckoutCode = "";
+            renderCheckoutDetail(null);
+            return;
+        }
+
+        const selectedCode = visibleStays.some(function (stay) {
             return stay.bookingCode === preferredBookingCode;
-        }) ? preferredBookingCode : stays[0].bookingCode;
+        }) ? preferredBookingCode : "";
         state.selectedCheckoutCode = selectedCode || "";
 
-        elements.checkoutStayList.innerHTML = stays.map(function (stay) {
+        elements.checkoutStayList.innerHTML = visibleStays.map(function (stay) {
             const rooms = (stay.roomNumbers || []).length > 0
                 ? `Phòng ${stay.roomNumbers.map(function (roomNumber) { return escapeHtml(formatDisplayText(roomNumber)); }).join(", ")}`
                 : "Chưa gán phòng";
             const remainingClass = stay.remainingAmount > 0 ? "due" : "paid";
+            const isTodayCheckout = isCheckoutToday(stay);
+            const todayBadge = isTodayCheckout
+                ? `<span class="checkout-today-badge">Trả hôm nay</span>`
+                : "";
 
             return `
-                <article class="checkout-stay-card ${remainingClass} ${stay.bookingCode === selectedCode ? "selected" : ""}" data-checkout-stay="${escapeHtml(stay.bookingCode)}">
+                <article class="checkout-stay-card ${remainingClass} ${isTodayCheckout ? "today-checkout" : ""} ${stay.bookingCode === selectedCode ? "selected" : ""}" data-checkout-stay="${escapeHtml(stay.bookingCode)}">
                     <div class="service-stay-main">
-                        <span class="arrival-code">${escapeHtml(stay.bookingCode)}</span>
+                        <div class="checkout-card-meta">
+                            <span class="arrival-code">${escapeHtml(stay.bookingCode)}</span>
+                            ${todayBadge}
+                        </div>
                         <h3>${escapeHtml(formatPersonName(stay.customerName))}</h3>
                         <p>${escapeHtml(rooms)} · ${escapeHtml(stay.checkInDate)} - ${escapeHtml(stay.checkOutDate)}</p>
                     </div>
@@ -1864,10 +2054,139 @@
             card.addEventListener("click", function () {
                 state.selectedCheckoutCode = card.dataset.checkoutStay || "";
                 renderCheckoutList(state.selectedCheckoutCode);
+                renderCheckoutDetail(getSelectedCheckoutStay());
+                showCheckoutPaymentPage();
             });
         });
 
-        renderCheckoutDetail(getSelectedCheckoutStay());
+        if (elements.checkoutDetailPanel?.hidden === false && state.selectedCheckoutCode) {
+            renderCheckoutDetail(getSelectedCheckoutStay());
+        }
+    }
+
+    function showCheckoutListPage() {
+        if (elements.checkoutListPanel) elements.checkoutListPanel.hidden = false;
+        if (elements.checkoutDetailPanel) elements.checkoutDetailPanel.hidden = true;
+        if (elements.checkoutPaymentResultPanel) elements.checkoutPaymentResultPanel.hidden = true;
+    }
+
+    function showCheckoutPaymentPage() {
+        if (elements.checkoutListPanel) elements.checkoutListPanel.hidden = true;
+        if (elements.checkoutDetailPanel) elements.checkoutDetailPanel.hidden = false;
+        if (elements.checkoutPaymentResultPanel) elements.checkoutPaymentResultPanel.hidden = true;
+        elements.checkoutDetailPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function showCheckoutPaymentResultPage() {
+        if (elements.checkoutListPanel) elements.checkoutListPanel.hidden = true;
+        if (elements.checkoutDetailPanel) elements.checkoutDetailPanel.hidden = true;
+        if (elements.checkoutPaymentResultPanel) elements.checkoutPaymentResultPanel.hidden = false;
+        elements.checkoutPaymentResultPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderCheckoutPaymentResult(result) {
+        const success = result.status === "success";
+        const cancelled = result.status === "cancelled";
+        elements.checkoutPaymentResultPanel?.classList.toggle("is-success", success);
+        elements.checkoutPaymentResultPanel?.classList.toggle("is-error", !success);
+        if (elements.checkoutPaymentResultIcon) {
+            elements.checkoutPaymentResultIcon.innerHTML = `<i class="bi ${success ? "bi-check2" : "bi-x-lg"}"></i>`;
+        }
+        if (elements.checkoutPaymentResultTitle) {
+            elements.checkoutPaymentResultTitle.textContent = success
+                ? "Thanh toán check-out thành công"
+                : cancelled
+                    ? "Thanh toán VNPay đã hủy"
+                    : "Thanh toán check-out chưa hoàn tất";
+        }
+        if (elements.checkoutPaymentResultMessage) {
+            elements.checkoutPaymentResultMessage.textContent = result.message || (success
+                ? "VNPay đã xác nhận thanh toán. Hóa đơn đã được cập nhật và phòng đã được trả."
+                : "VNPay chưa xác nhận thanh toán. Khách vẫn còn trong danh sách đang ở.");
+        }
+        if (elements.checkoutPaymentResultBooking) {
+            elements.checkoutPaymentResultBooking.textContent = result.bookingCode || "-";
+        }
+        if (elements.checkoutPaymentResultAmount) {
+            elements.checkoutPaymentResultAmount.textContent = formatMoney(result.amount || 0);
+        }
+        if (elements.checkoutPaymentResultTransaction) {
+            elements.checkoutPaymentResultTransaction.textContent = result.transactionNo || "Chưa có";
+        }
+        if (elements.checkoutPaymentResultBank) {
+            elements.checkoutPaymentResultBank.textContent = result.bankCode || "Chưa có";
+        }
+        showCheckoutPaymentResultPage();
+    }
+
+    function getVisibleCheckoutStays(stays) {
+        const todayKey = getTodayDateKey();
+        const query = normalizeSearchText(state.checkoutSearch || "");
+        const scopedStays = stays.filter(function (stay) {
+            if (state.checkoutScope !== "today") return true;
+            return getCheckoutDateKey(stay) === todayKey;
+        });
+        const filteredStays = query
+            ? scopedStays.filter(function (stay) {
+                return normalizeSearchText([
+                    stay.bookingCode,
+                    stay.customerName,
+                    stay.phoneNumber,
+                    stay.email,
+                    stay.checkInDate,
+                    stay.checkOutDate,
+                    (stay.roomNumbers || []).join(" ")
+                ].join(" ")).includes(query);
+            })
+            : scopedStays;
+
+        return sortCheckoutStays(filteredStays);
+    }
+
+    function sortCheckoutStays(stays) {
+        const sorted = [...stays];
+        const sortMode = state.checkoutSort || "checkoutDateAsc";
+        sorted.sort(function (a, b) {
+            if (sortMode === "checkoutDateDesc") {
+                return compareText(getCheckoutDateKey(b), getCheckoutDateKey(a)) ||
+                    compareText(getFirstCheckoutRoom(a), getFirstCheckoutRoom(b));
+            }
+            if (sortMode === "roomAsc") {
+                return compareText(getFirstCheckoutRoom(a), getFirstCheckoutRoom(b)) ||
+                    compareText(getCheckoutDateKey(a), getCheckoutDateKey(b));
+            }
+            if (sortMode === "nameAsc") {
+                return compareText(formatPersonName(a.customerName), formatPersonName(b.customerName)) ||
+                    compareText(getCheckoutDateKey(a), getCheckoutDateKey(b));
+            }
+            if (sortMode === "remainingDesc") {
+                return Number(b.remainingAmount || 0) - Number(a.remainingAmount || 0) ||
+                    compareText(getCheckoutDateKey(a), getCheckoutDateKey(b));
+            }
+
+            return compareText(getCheckoutDateKey(a), getCheckoutDateKey(b)) ||
+                compareText(getFirstCheckoutRoom(a), getFirstCheckoutRoom(b));
+        });
+        return sorted;
+    }
+
+    function compareText(left, right) {
+        return String(left || "").localeCompare(String(right || ""), "vi", {
+            numeric: true,
+            sensitivity: "base"
+        });
+    }
+
+    function getFirstCheckoutRoom(stay) {
+        return (stay.roomNumbers || [])[0] || "";
+    }
+
+    function isCheckoutToday(stay) {
+        return getCheckoutDateKey(stay) === getTodayDateKey();
+    }
+
+    function getCheckoutDateKey(stay) {
+        return normalizeDateKey(stay?.checkOutDate);
     }
 
     function getSelectedCheckoutStay() {
@@ -1883,8 +2202,9 @@
         if (!stay) {
             elements.checkoutDetail.innerHTML = "Chọn một khách để xem hóa đơn.";
             elements.checkoutDetail.classList.add("checkout-detail-empty");
+            if (elements.checkoutMoneySummary) elements.checkoutMoneySummary.innerHTML = "";
             if (elements.checkoutBookingCode) elements.checkoutBookingCode.value = "";
-            if (elements.checkoutPaymentAmount) elements.checkoutPaymentAmount.value = "0";
+            setCurrencyInputValue(elements.checkoutPaymentAmount, 0);
             if (elements.checkoutReceiptEmail) elements.checkoutReceiptEmail.value = "";
             if (elements.checkoutSendEmail) elements.checkoutSendEmail.checked = false;
             if (elements.checkoutPrintInvoice) elements.checkoutPrintInvoice.checked = true;
@@ -1893,6 +2213,7 @@
             return;
         }
 
+        if (elements.checkoutDetailPanel) elements.checkoutDetailPanel.hidden = false;
         elements.checkoutDetail.classList.remove("checkout-detail-empty");
         const roomLines = stay.roomLines || [];
         const serviceLines = stay.serviceLines || [];
@@ -1936,21 +2257,25 @@
                 <h4>Dịch vụ</h4>
                 ${servicesHtml}
             </div>
-            <div class="checkout-total-box">
+        `;
+
+        if (elements.checkoutMoneySummary) {
+            elements.checkoutMoneySummary.innerHTML = `
+                <h4>Thanh toán</h4>
                 ${moneyRow("Tiền phòng", stay.roomTotal)}
                 ${moneyRow("Dịch vụ", stay.serviceTotal)}
                 ${stay.discountAmount > 0 ? moneyRow("Giảm giá", -stay.discountAmount) : ""}
                 ${moneyRow("Tổng hóa đơn", stay.grandTotal, true)}
                 ${moneyRow("Đã thanh toán", stay.paidAmount)}
                 ${moneyRow("Còn phải thu", stay.remainingAmount, true)}
-            </div>
-        `;
+            `;
+        }
 
         if (elements.checkoutBookingCode) {
             elements.checkoutBookingCode.value = stay.bookingCode;
         }
         if (elements.checkoutPaymentAmount) {
-            elements.checkoutPaymentAmount.value = String(Math.max(stay.remainingAmount || 0, 0));
+            setCurrencyInputValue(elements.checkoutPaymentAmount, Math.max(stay.remainingAmount || 0, 0));
         }
         if (elements.checkoutNote) {
             elements.checkoutNote.value = "";
@@ -1965,6 +2290,7 @@
             elements.checkoutPrintInvoice.checked = true;
         }
         syncCheckoutEmailField();
+        updateCheckoutPaymentUi();
         if (elements.confirmCheckoutBtn) {
             elements.confirmCheckoutBtn.disabled = false;
         }
@@ -1974,8 +2300,11 @@
         event.preventDefault();
 
         const bookingCode = elements.checkoutBookingCode?.value || state.selectedCheckoutCode;
-        const paymentAmount = Number(elements.checkoutPaymentAmount?.value || 0);
         const paymentMethod = elements.checkoutPaymentMethod?.value || "";
+        const isVnPay = isCheckoutVnPayPayment();
+        const paymentAmount = isVnPay
+            ? Math.max(Number(getSelectedCheckoutStay()?.remainingAmount || 0), 0)
+            : getCurrencyInputValue(elements.checkoutPaymentAmount);
         const note = elements.checkoutNote?.value || "";
         const sendReceiptEmail = Boolean(elements.checkoutSendEmail?.checked);
         const printInvoice = Boolean(elements.checkoutPrintInvoice?.checked);
@@ -1992,7 +2321,12 @@
             return;
         }
 
-        setButtonBusy(elements.confirmCheckoutBtn, true, "Đang check-out...");
+        if (isVnPay && paymentAmount <= 0) {
+            showAlert("Hóa đơn đã thu đủ, không cần thanh toán VNPay.", "warning");
+            return;
+        }
+
+        setButtonBusy(elements.confirmCheckoutBtn, true, isVnPay ? "Đang tạo VNPay..." : "Đang check-out...");
         let printWindow = null;
         if (printInvoice && selectedStay) {
             printWindow = window.open("", "_blank", "width=820,height=900");
@@ -2024,6 +2358,12 @@
                 return;
             }
 
+            if (result.requiresOnlinePayment && result.paymentUrl) {
+                showAlert(result.message || "Đang chuyển sang VNPay.", "info");
+                window.location.assign(result.paymentUrl);
+                return;
+            }
+
             if (printInvoice && selectedStay && printWindow) {
                 printCheckoutInvoice(selectedStay, {
                     paymentAmount,
@@ -2043,6 +2383,26 @@
         } finally {
             setButtonBusy(elements.confirmCheckoutBtn, false);
         }
+    }
+
+    function updateCheckoutPaymentUi() {
+        const isVnPay = isCheckoutVnPayPayment();
+        const selectedStay = getSelectedCheckoutStay();
+        if (isVnPay && elements.checkoutPaymentAmount && selectedStay) {
+            setCurrencyInputValue(elements.checkoutPaymentAmount, Math.max(selectedStay.remainingAmount || 0, 0));
+        }
+        if (elements.checkoutPaymentAmount) {
+            elements.checkoutPaymentAmount.disabled = isVnPay;
+        }
+        if (elements.confirmCheckoutBtn) {
+            elements.confirmCheckoutBtn.innerHTML = isVnPay
+                ? `<i class="bi bi-credit-card"></i> Thanh toán VNPay`
+                : `<i class="bi bi-check2-circle"></i> Xác nhận check-out`;
+        }
+    }
+
+    function isCheckoutVnPayPayment() {
+        return String(elements.checkoutPaymentMethod?.value || "").trim().toUpperCase() === "VNPAY";
     }
 
     function moneyRow(label, value, strong) {
@@ -2167,14 +2527,14 @@
             detailRow("Số đêm", `${booking.nights}`),
             detailRow("Tổng thanh toán", formatMoney(booking.totalAmount)),
             detailRowHtml("Đã thanh toán", `<span class="paid-chip"><i class="bi bi-check-circle-fill"></i>${formatMoney(booking.paidAmount)}</span>`),
-            detailRow("Trạng thái booking", formatSentenceText(booking.bookingStatus)),
-            detailRow("Trạng thái hóa đơn", formatSentenceText(booking.invoiceStatus))
+            detailRow("Trạng thái booking", formatBookingStatus(booking.bookingStatus)),
+            detailRow("Trạng thái hóa đơn", formatInvoiceStatus(booking.invoiceStatus))
         ].join("");
 
         elements.roomRequirements.innerHTML = booking.requirements.map(function (item) {
             return `
                 <div class="requirement-item">
-                    <strong>${escapeHtml(formatDisplayText(item.roomTypeName))}</strong>
+                    <strong>${escapeHtml(formatRoomTypeName(item.roomTypeName))}</strong>
                     <span>${item.requiredRooms} phòng - ${item.guests} khách</span>
                 </div>
             `;
@@ -2526,6 +2886,41 @@
         }).format(value || 0);
     }
 
+    function bindCurrencyInput(input, onInput) {
+        if (!input) return;
+
+        input.addEventListener("input", function () {
+            const amount = getCurrencyInputValue(input);
+            input.value = amount > 0 ? formatCurrencyInputValue(amount) : "";
+            onInput?.();
+        });
+        input.addEventListener("blur", function () {
+            setCurrencyInputValue(input, getCurrencyInputValue(input));
+            onInput?.();
+        });
+        setCurrencyInputValue(input, getCurrencyInputValue(input));
+    }
+
+    function getCurrencyInputValue(input) {
+        if (!input) return 0;
+
+        const digits = String(input.value || "").replace(/[^\d]/g, "");
+        return digits ? Number(digits) : 0;
+    }
+
+    function setCurrencyInputValue(input, value) {
+        if (!input) return;
+
+        input.value = formatCurrencyInputValue(value);
+    }
+
+    function formatCurrencyInputValue(value) {
+        const amount = Math.max(Math.trunc(Number(value) || 0), 0);
+        return new Intl.NumberFormat("vi-VN", {
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
     function formatInputDate(date) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -2553,6 +2948,70 @@
         }
 
         return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function getTodayDateKey() {
+        return formatInputDate(new Date());
+    }
+
+    function normalizeDateKey(value) {
+        const text = String(value || "").trim();
+        if (!text) return "";
+
+        const isoMatch = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (isoMatch) {
+            return `${isoMatch[1]}-${isoMatch[2].padStart(2, "0")}-${isoMatch[3].padStart(2, "0")}`;
+        }
+
+        const displayMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (displayMatch) {
+            return `${displayMatch[3]}-${displayMatch[2].padStart(2, "0")}-${displayMatch[1].padStart(2, "0")}`;
+        }
+
+        return text;
+    }
+
+    function formatBookingStatus(value) {
+        const labels = {
+            GIU_CHO: "Giữ chỗ",
+            DA_DAT_COC: "Đã đặt cọc",
+            DA_NHAN_PHONG: "Đã nhận phòng",
+            TRA_PHONG: "Đã trả phòng",
+            DA_HUY: "Đã hủy",
+            QUA_HAN_NHAN_PHONG: "Quá hạn nhận phòng"
+        };
+
+        return labels[normalizeCode(value)] || formatCodeLabel(value);
+    }
+
+    function formatInvoiceStatus(value) {
+        const labels = {
+            CHUA_THANH_TOAN: "Chưa thanh toán",
+            THANH_TOAN_MOT_PHAN: "Thanh toán một phần",
+            DA_THANH_TOAN: "Đã thanh toán",
+            DA_HUY: "Đã hủy"
+        };
+
+        return labels[normalizeCode(value)] || formatCodeLabel(value);
+    }
+
+    function formatRoomTypeName(value) {
+        const name = formatDisplayText(value || "Phòng");
+        return /^phòng\b/i.test(name) ? name : `Phòng ${name}`;
+    }
+
+    function normalizeCode(value) {
+        return String(value ?? "")
+            .trim()
+            .replace(/[\s-]+/g, "_")
+            .toUpperCase();
+    }
+
+    function formatCodeLabel(value) {
+        const text = String(value ?? "").trim();
+        if (!text) return "Đang cập nhật";
+
+        return formatDisplayText(text.replace(/[_-]+/g, " "));
     }
 
     function formatSentenceText(value) {

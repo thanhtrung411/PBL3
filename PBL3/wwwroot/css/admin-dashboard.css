@@ -125,6 +125,63 @@ body {
     background-color: var(--bg-light);
 }
 
+.admin-page-header {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.admin-page-title,
+.admin-page-header h1,
+.admin-page-header h2,
+.admin-page-header h3 {
+    margin: 0;
+    color: #111827;
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0;
+}
+
+.admin-page-header p {
+    display: none;
+}
+
+.admin-page-action,
+.admin-page-header .booking-primary-btn,
+.admin-page-header .service-primary-btn,
+.admin-page-header .promo-primary-btn {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: #111827;
+    color: #ffffff;
+    font-weight: 750;
+    padding: 9px 16px;
+    box-shadow: none;
+    text-decoration: none;
+}
+
+.admin-page-action:hover,
+.admin-page-action:focus-visible,
+.admin-page-header .booking-primary-btn:hover,
+.admin-page-header .booking-primary-btn:focus-visible,
+.admin-page-header .service-primary-btn:hover,
+.admin-page-header .service-primary-btn:focus-visible,
+.admin-page-header .promo-primary-btn:hover,
+.admin-page-header .promo-primary-btn:focus-visible {
+    background: #000000;
+    color: #ffffff;
+    outline: none;
+}
+
 /* Custom Cards */
 .card-custom {
     background-color: #fff;

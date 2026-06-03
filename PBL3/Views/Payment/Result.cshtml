@@ -2,172 +2,270 @@
 
 @{
     ViewData["Title"] = Model.Success ? "Thanh toán thành công" : "Thanh toán chưa hoàn tất";
+    var statusText = Model.Success ? "Đã xác nhận thanh toán" : "Thanh toán chưa thành công";
 }
 
 <style>
     .payment-result {
-        --hotel-ink: #111111;
-        --hotel-gold: #d4af37;
-        --hotel-border: #e9ecef;
-        --hotel-muted: #667085;
-        --hotel-success: #198754;
-        --hotel-danger: #b42318;
-        overflow-x: hidden;
+        --payment-ink: #101828;
+        --payment-muted: #667085;
+        --payment-border: #eaecf0;
+        --payment-surface: #ffffff;
+        --payment-soft: #f9fafb;
+        --payment-success: #079455;
+        --payment-success-soft: #ecfdf3;
+        --payment-danger: #d92d20;
+        --payment-danger-soft: #fef3f2;
+        padding: clamp(28px, 7vw, 72px) 0;
     }
 
-    .payment-result .result-card {
-        border: 1px solid var(--hotel-border);
-        border-radius: 12px;
-        box-shadow: 0 14px 36px rgba(16, 24, 40, 0.08);
+    .payment-result .result-panel {
+        width: min(720px, 100%);
+        margin: 0 auto;
+        border: 1px solid var(--payment-border);
+        border-radius: 8px;
+        background: var(--payment-surface);
         overflow: hidden;
     }
 
+    .payment-result .result-head {
+        padding: clamp(24px, 5vw, 40px);
+        border-bottom: 1px solid var(--payment-border);
+        text-align: center;
+    }
+
     .payment-result .result-icon {
-        width: 82px;
-        height: 82px;
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 18px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        font-size: 2.8rem;
+        font-size: 1.45rem;
     }
 
     .payment-result .result-icon.is-success {
-        background: #eaf7ef;
-        color: var(--hotel-success);
+        background: var(--payment-success-soft);
+        color: var(--payment-success);
     }
 
     .payment-result .result-icon.is-error {
-        background: #fff4f2;
-        color: var(--hotel-danger);
+        background: var(--payment-danger-soft);
+        color: var(--payment-danger);
     }
 
-    .payment-result .summary-row {
-        display: flex;
-        justify-content: space-between;
+    .payment-result h1 {
+        margin: 0;
+        color: var(--payment-ink);
+        font-size: clamp(1.65rem, 4vw, 2.25rem);
+        font-weight: 800;
+        letter-spacing: 0;
+    }
+
+    .payment-result .result-message {
+        max-width: 520px;
+        margin: 12px auto 0;
+        color: var(--payment-muted);
+        font-size: 1.02rem;
+        line-height: 1.6;
+    }
+
+    .payment-result .status-line {
+        margin-top: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        border-radius: 999px;
+        padding: 6px 13px;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .payment-result .status-line.is-success {
+        background: var(--payment-success-soft);
+        color: var(--payment-success);
+    }
+
+    .payment-result .status-line.is-error {
+        background: var(--payment-danger-soft);
+        color: var(--payment-danger);
+    }
+
+    .payment-result .result-body {
+        padding: clamp(22px, 4vw, 32px) clamp(20px, 5vw, 40px) clamp(24px, 5vw, 40px);
+    }
+
+    .payment-result .details {
+        margin: 0;
+    }
+
+    .payment-result .detail-row {
+        display: grid;
+        grid-template-columns: minmax(130px, 1fr) minmax(0, 1.35fr);
         gap: 18px;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--hotel-border);
+        padding: 14px 0;
+        border-bottom: 1px solid var(--payment-border);
     }
 
-    .payment-result .summary-row span:first-child {
-        color: var(--hotel-muted);
+    .payment-result .detail-row:first-child {
+        padding-top: 0;
     }
 
-    .payment-result .summary-row span:last-child {
+    .payment-result .detail-label {
+        color: var(--payment-muted);
+        font-size: 0.96rem;
+    }
+
+    .payment-result .detail-value {
+        margin: 0;
+        color: var(--payment-ink);
         font-weight: 800;
         text-align: right;
         overflow-wrap: anywhere;
     }
 
-    .payment-result .status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 36px;
-        border-radius: 999px;
-        font-size: 0.9rem;
-        font-weight: 800;
-        padding: 7px 13px;
+    .payment-result .actions {
+        margin-top: 28px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
     }
 
-    .payment-result .status-pill.is-success {
-        background: #eaf7ef;
-        color: var(--hotel-success);
-    }
-
-    .payment-result .status-pill.is-error {
-        background: #fff4f2;
-        color: var(--hotel-danger);
-    }
-
-    .payment-result .btn-hotel,
-    .payment-result .btn-soft {
-        min-height: 48px;
+    .payment-result .action-button {
+        min-height: 46px;
+        border-radius: 8px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 9px;
         font-weight: 800;
-        white-space: normal;
+        padding: 0 18px;
     }
 
-    .payment-result .btn-hotel {
-        border-color: var(--hotel-ink);
-        background: var(--hotel-ink);
+    .payment-result .btn-primary-action {
+        border: 1px solid #111111;
+        background: #111111;
         color: #ffffff;
     }
 
-    .payment-result .btn-hotel:hover,
-    .payment-result .btn-hotel:focus-visible,
-    .payment-result .btn-soft:hover,
-    .payment-result .btn-soft:focus-visible {
-        border-color: var(--hotel-gold);
-        background: var(--hotel-gold);
-        color: var(--hotel-ink);
+    .payment-result .btn-primary-action:hover,
+    .payment-result .btn-primary-action:focus-visible {
+        border-color: #2f2f2f;
+        background: #2f2f2f;
+        color: #ffffff;
     }
 
-    .payment-result .btn-soft {
-        border: 2px solid var(--hotel-ink);
-        color: var(--hotel-ink);
+    .payment-result .btn-secondary-action {
+        border: 1px solid var(--payment-border);
+        background: var(--payment-surface);
+        color: var(--payment-ink);
+    }
+
+    .payment-result .btn-secondary-action:hover,
+    .payment-result .btn-secondary-action:focus-visible {
+        border-color: #cfd4dc;
+        background: var(--payment-soft);
+        color: var(--payment-ink);
     }
 
     @@media (max-width: 575.98px) {
-        .payment-result .summary-row {
-            display: block;
+        .payment-result .result-panel {
+            border-left: 0;
+            border-right: 0;
+            border-radius: 0;
         }
 
-        .payment-result .summary-row span:last-child {
-            display: block;
-            margin-top: 4px;
+        .payment-result .result-head {
             text-align: left;
         }
 
-        .payment-result .btn-hotel,
-        .payment-result .btn-soft {
+        .payment-result .result-icon {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .payment-result .result-message {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .payment-result .detail-row {
+            grid-template-columns: 1fr;
+            gap: 4px;
+            padding: 12px 0;
+        }
+
+        .payment-result .detail-value {
+            text-align: left;
+        }
+
+        .payment-result .actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .payment-result .action-button {
             width: 100%;
         }
     }
 </style>
 
-<div class="payment-result container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-7 col-md-9">
-            <section class="result-card card border-0 p-4 p-md-5 text-center" role="status" aria-live="polite">
-                <div class="result-icon @(Model.Success ? "is-success" : "is-error") mb-4 mx-auto">
-                    <i class="fa @(Model.Success ? "fa-circle-check" : "fa-circle-exclamation")" aria-hidden="true"></i>
+<div class="payment-result">
+    <section class="result-panel" role="status" aria-live="polite">
+        <header class="result-head">
+            <div class="result-icon @(Model.Success ? "is-success" : "is-error")">
+                <i class="fa @(Model.Success ? "fa-check" : "fa-xmark")" aria-hidden="true"></i>
+            </div>
+
+            <h1>@ViewData["Title"]</h1>
+            <p class="result-message">@Model.Message</p>
+
+            <div class="status-line @(Model.Success ? "is-success" : "is-error")">
+                <i class="fa @(Model.Success ? "fa-circle-check" : "fa-circle-exclamation")" aria-hidden="true"></i>
+                <span>@statusText</span>
+            </div>
+        </header>
+
+        <div class="result-body">
+            <dl class="details">
+                <div class="detail-row">
+                    <dt class="detail-label">Mã đặt phòng</dt>
+                    <dd class="detail-value">@Model.BookingCode</dd>
                 </div>
-
-                <h1 class="h2 fw-bold mb-3">@ViewData["Title"]</h1>
-                <p class="text-muted fs-5 mb-4">@Model.Message</p>
-
-                <div class="status-pill @(Model.Success ? "is-success" : "is-error") mb-4">
-                    <i class="fa @(Model.Success ? "fa-shield-check" : "fa-triangle-exclamation")" aria-hidden="true"></i>
-                    <span>@(Model.Success ? "Giao dịch đã được xác minh" : "Giao dịch chưa được ghi nhận thành công")</span>
+                <div class="detail-row">
+                    <dt class="detail-label">Số tiền</dt>
+                    <dd class="detail-value">@Model.Amount.ToString("N0")đ</dd>
                 </div>
-
-                <div class="text-start mb-4">
-                    <div class="summary-row"><span>Mã đặt phòng</span><span>@Model.BookingCode</span></div>
-                    <div class="summary-row"><span>Số tiền</span><span>@Model.Amount.ToString("N0")đ</span></div>
-                    <div class="summary-row"><span>Mã phản hồi</span><span>@Model.ResponseCode</span></div>
-                    <div class="summary-row"><span>Mã giao dịch VNPay</span><span>@(Model.TransactionNo ?? "Không có")</span></div>
-                    <div class="summary-row"><span>Ngân hàng</span><span>@(Model.BankCode ?? "Không có")</span></div>
+                <div class="detail-row">
+                    <dt class="detail-label">Mã giao dịch</dt>
+                    <dd class="detail-value">@(Model.TransactionNo ?? "Chưa có")</dd>
                 </div>
+                <div class="detail-row">
+                    <dt class="detail-label">Ngân hàng</dt>
+                    <dd class="detail-value">@(Model.BankCode ?? "Chưa có")</dd>
+                </div>
+            </dl>
 
-                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
-                    <a asp-controller="Booking" asp-action="Success" asp-route-id="@Model.BookingCode" class="btn btn-hotel btn-lg px-4">
-                        <i class="fa fa-receipt me-2" aria-hidden="true"></i>Xem đặt phòng
+            <div class="actions">
+                <a asp-controller="Booking" asp-action="Success" asp-route-id="@Model.BookingCode" class="btn action-button btn-primary-action">
+                    <i class="fa fa-receipt" aria-hidden="true"></i>
+                    <span>Xem đặt phòng</span>
+                </a>
+                @if (!Model.Success)
+                {
+                    <a asp-controller="Payment" asp-action="Start" asp-route-id="@Model.BookingCode" class="btn action-button btn-secondary-action">
+                        <i class="fa fa-rotate-right" aria-hidden="true"></i>
+                        <span>Thanh toán lại</span>
                     </a>
-                    @if (!Model.Success)
-                    {
-                        <a asp-controller="Payment" asp-action="Start" asp-route-id="@Model.BookingCode" class="btn btn-soft btn-lg px-4">
-                            <i class="fa fa-rotate-right me-2" aria-hidden="true"></i>Thanh toán lại
-                        </a>
-                    }
-                    <a asp-controller="Booking" asp-action="Lookup" class="btn btn-soft btn-lg px-4">
-                        <i class="fa fa-magnifying-glass me-2" aria-hidden="true"></i>Tra cứu
-                    </a>
-                </div>
-            </section>
+                }
+                <a asp-controller="Booking" asp-action="Lookup" class="btn action-button btn-secondary-action">
+                    <i class="fa fa-magnifying-glass" aria-hidden="true"></i>
+                    <span>Tra cứu</span>
+                </a>
+            </div>
         </div>
-    </div>
+    </section>
 </div>

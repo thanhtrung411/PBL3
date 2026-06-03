@@ -33,21 +33,23 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+        min-height: 44px;
         margin-bottom: 22px;
     }
 
     .booking-page-header h1 {
         margin: 0;
         color: #111827;
-        font-size: clamp(1.85rem, 3vw, 2.6rem);
-        font-weight: 850;
-        line-height: 1.08;
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1.2;
         letter-spacing: 0;
     }
 
     .booking-page-header p {
         margin: 8px 0 0;
         color: var(--booking-muted);
+        display: none;
         font-size: 1rem;
         font-weight: 560;
     }
@@ -60,16 +62,16 @@
         gap: 8px;
         border: 0;
         border-radius: var(--booking-radius);
-        background: var(--booking-blue);
+        background: #111827;
         color: #ffffff;
-        font-weight: 820;
-        padding: 10px 16px;
-        box-shadow: 0 14px 30px rgba(31, 111, 235, 0.18);
+        font-weight: 750;
+        padding: 9px 16px;
+        box-shadow: none;
     }
 
     .booking-primary-btn:hover,
     .booking-primary-btn:focus-visible {
-        background: #1659c7;
+        background: #000000;
         color: #ffffff;
         outline: none;
     }
@@ -568,7 +570,6 @@
     <header class="booking-page-header">
         <div>
             <h1>Quản lý đặt phòng</h1>
-            <p>Theo dõi đặt phòng, lịch đến, lịch ở và thanh toán của khách.</p>
         </div>
         <button type="button" class="booking-primary-btn" data-bs-toggle="modal" data-bs-target="#addBookingModal">
             <i class="bi bi-plus-lg"></i>

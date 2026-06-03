@@ -16,9 +16,11 @@ public class InvoicePromotionService : IInvoicePromotionService
 
     public async Task<MaGiamGium?> ApplyBestPromotionAsync(
         HoaDon invoice,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool serviceOnly = false)
     {
         var existingPromotionId = invoice.MaGiamGiaPhong?.Trim();
+        var existingDiscount = Math.Max(invoice.TienGiamGiaPhong, 0);
         var subtotal = Math.Max(invoice.TongTienPhong + invoice.TongTienDichVu, 0);
         invoice.MaGiamGiaPhong = null;
         invoice.TienGiamGiaPhong = 0;
@@ -29,29 +31,6 @@ public class InvoicePromotionService : IInvoicePromotionService
             return null;
         }
 
-        var usageCounts = await GetPromotionUsageCountsAsync(invoice.MaHoaDon, cancellationToken);
-
-        if (!string.IsNullOrWhiteSpace(existingPromotionId))
-        {
-            var existingPromotion = await _context.MaGiamGia
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.MaGiamGia == existingPromotionId, cancellationToken);
-            if (existingPromotion != null &&
-                subtotal >= existingPromotion.HoaDonToiThieu &&
-                HasAvailableUsage(existingPromotion, usageCounts))
-            {
-                var existingDiscount = CalculateDiscount(existingPromotion, subtotal);
-                if (existingDiscount > 0)
-                {
-                    invoice.MaGiamGiaPhong = existingPromotion.MaGiamGia;
-                    invoice.TienGiamGiaPhong = existingDiscount;
-                    invoice.TongThanhToan = Math.Max(subtotal - existingDiscount, 0);
-                    invoice.GhiChu = AppendPromotionNote(invoice.GhiChu, existingPromotion);
-                    return existingPromotion;
-                }
-            }
-        }
-
         var today = DateOnly.FromDateTime(DateTime.Today);
         var promotions = await _context.MaGiamGia
             .AsNoTracking()
@@ -60,18 +39,54 @@ public class InvoicePromotionService : IInvoicePromotionService
                         x.HoaDonToiThieu <= subtotal)
             .ToListAsync(cancellationToken);
 
+        var usageCounts = await GetPromotionUsageCountsAsync(invoice.MaHoaDon, cancellationToken);
         var best = promotions
             .Where(IsActive)
-            .Where(x => HasAvailableUsage(x, usageCounts))
             .Select(x => new
             {
                 Promotion = x,
-                Discount = CalculateDiscount(x, subtotal)
+                BaseAmount = GetPromotionBaseAmount(x, invoice, serviceOnly),
+                IsExisting = string.Equals(x.MaGiamGia.Trim(), existingPromotionId, StringComparison.OrdinalIgnoreCase)
+            })
+            .Where(x => x.BaseAmount >= x.Promotion.HoaDonToiThieu)
+            .Where(x => x.IsExisting || HasAvailableUsage(x.Promotion, usageCounts))
+            .Select(x => new
+            {
+                x.Promotion,
+                x.IsExisting,
+                Discount = CalculateDiscount(x.Promotion, x.BaseAmount)
             })
             .Where(x => x.Discount > 0)
             .OrderByDescending(x => x.Discount)
+            .ThenByDescending(x => x.IsExisting)
             .ThenBy(x => x.Promotion.DenNgay)
             .FirstOrDefault();
+
+        if (serviceOnly &&
+            !string.IsNullOrWhiteSpace(existingPromotionId) &&
+            existingDiscount > 0)
+        {
+            var existingPromotion = promotions.FirstOrDefault(x =>
+                string.Equals(x.MaGiamGia.Trim(), existingPromotionId, StringComparison.OrdinalIgnoreCase));
+            if (existingPromotion == null)
+            {
+                existingPromotion = await _context.MaGiamGia
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.MaGiamGia == existingPromotionId, cancellationToken);
+            }
+
+            var retainedDiscount = Math.Min(existingDiscount, subtotal);
+            if (existingPromotion != null &&
+                retainedDiscount > 0 &&
+                (best == null || retainedDiscount >= best.Discount))
+            {
+                invoice.MaGiamGiaPhong = existingPromotion.MaGiamGia;
+                invoice.TienGiamGiaPhong = retainedDiscount;
+                invoice.TongThanhToan = Math.Max(subtotal - retainedDiscount, 0);
+
+                return existingPromotion;
+            }
+        }
 
         if (best == null)
         {
@@ -155,6 +170,58 @@ public class InvoicePromotionService : IInvoicePromotionService
         }
 
         return Math.Min(Math.Max(discount, 0), subtotal);
+    }
+
+    private static decimal GetPromotionBaseAmount(
+        MaGiamGium promotion,
+        HoaDon invoice,
+        bool serviceOnly)
+    {
+        var scope = GetScopeKey(promotion.PhamViApDung);
+        var serviceAmount = Math.Max(invoice.TongTienDichVu, 0);
+        var roomAmount = Math.Max(invoice.TongTienPhong, 0);
+
+        if (serviceOnly)
+        {
+            return scope == DomainValues.MaGiamGiaPhamVi.ChiPhong
+                ? 0
+                : serviceAmount;
+        }
+
+        return scope switch
+        {
+            DomainValues.MaGiamGiaPhamVi.ChiPhong => roomAmount,
+            DomainValues.MaGiamGiaPhamVi.ChiDichVu => serviceAmount,
+            _ => roomAmount + serviceAmount
+        };
+    }
+
+    private static string GetScopeKey(string? scope)
+    {
+        var normalized = NormalizeScope(scope);
+
+        if (normalized.Contains("dichvu") || normalized.Contains("service"))
+        {
+            return DomainValues.MaGiamGiaPhamVi.ChiDichVu;
+        }
+
+        if (normalized.Contains("phong") || normalized.Contains("room"))
+        {
+            return DomainValues.MaGiamGiaPhamVi.ChiPhong;
+        }
+
+        return DomainValues.MaGiamGiaPhamVi.TatCa;
+    }
+
+    private static string NormalizeScope(string? scope)
+    {
+        if (string.IsNullOrWhiteSpace(scope))
+        {
+            return string.Empty;
+        }
+
+        var normalized = RemoveVietnameseMarks(scope).ToLowerInvariant();
+        return new string(normalized.Where(char.IsLetterOrDigit).ToArray());
     }
 
     private static string? AppendPromotionNote(string? note, MaGiamGium promotion)

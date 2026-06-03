@@ -9,6 +9,7 @@ namespace PBL3.Models;
 [Table("BangGiaPhong")]
 [Index("MaLoaiPhong", Name = "IX_BangGiaPhong_MaLoaiPhong")]
 [Index("TuNgay", "DenNgay", Name = "IX_BangGiaPhong_TuNgay_DenNgay")]
+[Index("MaLoaiPhong", "TrangThai", "TuNgay", "DenNgay", "UuTien", "LoaiGia", "ThuApDung", Name = "IX_BangGiaPhong_CurrentPriceLookup")]
 public partial class BangGiaPhong
 {
     [Key]

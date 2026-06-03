@@ -1,12 +1,10 @@
 @using System.Security.Claims
 
 @{
-    // 1. Lấy thông tin từ User Identity
     var fullName = User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? User.Identity?.Name ?? "Khách";
     var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "Nhân viên";
     var isAdmin = string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase);
 
-    // 2. Tự động lấy 2 chữ cái để làm Avatar (VD: Đỗ Trần Hoài Nhi -> HN)
     var initials = "NV";
     if (!string.IsNullOrWhiteSpace(fullName) && fullName != "Khách")
     {
@@ -40,22 +38,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <h2>Hotel Manager</h2>
             <p>Khách sạn Venus</p>
         </div>
-        
-        <nav class="d-flex flex-column gap-1 flex-grow-1">
+
+        <nav class="d-flex flex-column gap-1 flex-grow-1" id="adminSidebarNav">
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" href="/Admin">
                 <i class="bi bi-grid-1x2"></i> Tổng quan
             </a>
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Room" ? "active" : "")" asp-area="" asp-controller="Room" asp-action="Index">
-                <i class="bi bi-door-closed"></i> Quản lý phòng
+                <i class="bi bi-door-closed"></i> Phòng
             </a>
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "LoaiPhongs" ? "active" : "")" asp-area="" asp-controller="LoaiPhongs" asp-action="Index">
-                <i class="bi bi-layers"></i> Loai phong
+                <i class="bi bi-layers"></i> Loại phòng
             </a>
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BookingManagement" ? "active" : "")" asp-area="" asp-controller="BookingManagement" asp-action="Index">
                 <i class="bi bi-calendar-check"></i> Đặt phòng
@@ -64,19 +61,19 @@
                 <i class="bi bi-people"></i> Khách hàng
             </a>
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Staff" ? "active" : "")" asp-area="" asp-controller="Staff" asp-action="Index">
-                <i class="bi bi-person-badge"></i> Quản lý nhân viên
+                <i class="bi bi-person-badge"></i> Nhân viên
+            </a>
+            <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Service" ? "active" : "")" asp-area="" asp-controller="Service" asp-action="Index">
+                <i class="bi bi-bell"></i> Dịch vụ
+            </a>
+            <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Invoice" ? "active" : "")" asp-area="" asp-controller="Invoice" asp-action="Index">
+                <i class="bi bi-receipt"></i> Hóa đơn
+            </a>
+            <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Promotion" ? "active" : "")" asp-area="" asp-controller="Promotion" asp-action="Index">
+                <i class="bi bi-tag"></i> Khuyến mãi
             </a>
             <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Report" ? "active" : "")" asp-area="" asp-controller="Report" asp-action="Index">
                 <i class="bi bi-bar-chart"></i> Báo cáo
-            </a>
-            <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Service" ? "active" : "")" asp-area="" asp-controller="Service" asp-action="Index">
-                <i class="bi bi-bell"></i> Quản lí dịch vụ
-            </a>
-            <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Invoice" ? "active" : "")" asp-area="" asp-controller="Invoice" asp-action="Index">
-                <i class="bi bi-receipt"></i> Hoá đơn
-            </a>
-            <a class="nav-item-sidebar @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Promotion" ? "active" : "")" asp-area="" asp-controller="Promotion" asp-action="Index">
-                <i class="bi bi-tag"></i> Quản lí khuyến mãi
             </a>
         </nav>
 
@@ -117,7 +114,6 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-wrapper">
         @RenderBody()
     </main>
@@ -125,6 +121,29 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        (() => {
+            const nav = document.getElementById("adminSidebarNav");
+            const storageKey = "adminSidebarScrollTop";
+            if (!nav) return;
+
+            const savedScrollTop = Number(sessionStorage.getItem(storageKey) || "0");
+            if (savedScrollTop > 0) {
+                nav.scrollTop = savedScrollTop;
+            }
+
+            nav.addEventListener("scroll", () => {
+                sessionStorage.setItem(storageKey, String(nav.scrollTop));
+            }, { passive: true });
+
+            nav.addEventListener("click", event => {
+                const link = event.target.closest("a.nav-item-sidebar");
+                if (link) {
+                    sessionStorage.setItem(storageKey, String(nav.scrollTop));
+                }
+            });
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

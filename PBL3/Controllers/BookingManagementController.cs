@@ -20,6 +20,7 @@ namespace PBL3.Controllers
             var today = DateOnly.FromDateTime(DateTime.Today);
             var bookings = await _context.DatPhongs
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(x => x.MaKhNavigation)
                 .Include(x => x.HoaDon)
                     .ThenInclude(x => x!.ChiTietHoaDons)

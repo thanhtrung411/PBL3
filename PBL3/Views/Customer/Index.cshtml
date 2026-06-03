@@ -126,6 +126,27 @@
         white-space: nowrap;
     }
 
+    .customer-spend-column {
+        min-width: 130px;
+        width: 130px;
+        white-space: nowrap;
+    }
+
+    .customer-spend-value {
+        display: inline-block;
+        min-width: 110px;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .table-custom th:nth-child(5),
+    #customerList td:nth-child(5) {
+        min-width: 130px;
+        width: 130px;
+        white-space: nowrap;
+        word-break: keep-all;
+    }
+
     .booking-history-empty {
         padding: 18px;
         color: #6b7280;
@@ -155,6 +176,12 @@
         }
     }
 </style>
+
+<div class="admin-page-header">
+    <div>
+        <h3 class="admin-page-title">Quản lý khách hàng</h3>
+    </div>
+</div>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="d-flex gap-2 flex-grow-1 me-3">

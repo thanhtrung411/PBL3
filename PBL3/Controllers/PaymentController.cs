@@ -105,6 +105,28 @@ public class PaymentController : Controller
                 });
         }
 
+        if (result.IsCheckoutPayment)
+        {
+            var status = result.Success
+                ? "success"
+                : string.Equals(result.ResponseCode, "24", StringComparison.OrdinalIgnoreCase)
+                    ? "cancelled"
+                    : "failed";
+
+            return RedirectToAction(
+                "Index",
+                "Receptionist",
+                new
+                {
+                    checkoutPaymentStatus = status,
+                    bookingCode = result.BookingCode,
+                    amount = result.Amount,
+                    transactionNo = result.TransactionNo,
+                    bankCode = result.BankCode,
+                    message = result.Message
+                });
+        }
+
         return View("Result", result);
     }
 

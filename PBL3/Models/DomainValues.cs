@@ -53,6 +53,13 @@ public static class DomainValues
         public const string TienMat = "TIENMAT";
     }
 
+    public static class MaGiamGiaPhamVi
+    {
+        public const string TatCa = "TAT_CA";
+        public const string ChiPhong = "CHI_PHONG";
+        public const string ChiDichVu = "CHI_DICHVU";
+    }
+
     public static class NhanVienTrangThai
     {
         public const string DangLam = "Đang làm";

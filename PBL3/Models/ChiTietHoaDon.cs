@@ -12,6 +12,8 @@ namespace PBL3.Models;
 [Index("MaLoaiPhong", Name = "IX_CTHD_MaLoaiPhong")]
 [Index("MaPhong", Name = "IX_CTHD_MaPhong")]
 [Index("NgayApDung", Name = "IX_CTHD_NgayApDung")]
+[Index("LoaiMuc", "TrangThai", "MaLoaiPhong", "MaHoaDon", Name = "IX_CTHD_LoaiMuc_TrangThai_MaLoaiPhong_MaHoaDon")]
+[Index("LoaiMuc", "TrangThai", "MaPhong", "MaHoaDon", Name = "IX_CTHD_LoaiMuc_TrangThai_MaPhong_MaHoaDon")]
 public partial class ChiTietHoaDon
 {
     [Key]

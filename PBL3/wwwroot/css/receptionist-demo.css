@@ -918,13 +918,13 @@ h2 {
 
 .room-map-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 116px);
+    grid-template-columns: repeat(auto-fill, 120px);
     gap: 8px;
     justify-content: start;
 }
 
 .room-map-tile {
-    width: 116px;
+    width: 120px;
     min-height: 88px;
     display: grid;
     gap: 7px;
@@ -1266,6 +1266,16 @@ h2 {
     align-items: start;
 }
 
+.service-usage-form-only {
+    grid-template-columns: 1fr;
+}
+
+.service-entry-form {
+    position: static;
+    width: min(100%, 980px);
+    margin: 0 auto;
+}
+
 .service-section-title {
     display: flex;
     align-items: center;
@@ -1482,9 +1492,65 @@ h2 {
 
 .checkout-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(420px, 0.95fr);
+    grid-template-columns: 1fr;
     gap: 18px;
     align-items: start;
+    width: min(100%, 1180px);
+    margin: 0 auto;
+}
+
+.checkout-list-panel {
+    display: grid;
+    gap: 12px;
+}
+
+.checkout-list-panel[hidden] {
+    display: none !important;
+}
+
+.checkout-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 0.2fr) minmax(180px, 0.26fr);
+    gap: 10px;
+    align-items: end;
+}
+
+.checkout-search-field {
+    position: relative;
+}
+
+.checkout-search-field i {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    color: var(--reception-muted);
+    font-size: 0.92rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.checkout-search-field .form-control {
+    padding-left: 36px;
+}
+
+.checkout-control {
+    display: grid;
+    gap: 5px;
+}
+
+.checkout-control label {
+    color: var(--reception-muted);
+    font-size: 0.74rem;
+    font-weight: 820;
+}
+
+.checkout-toolbar .form-control,
+.checkout-toolbar .form-select {
+    min-height: 38px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    padding-top: 7px;
+    padding-bottom: 7px;
 }
 
 .walkin-flow {
@@ -1498,11 +1564,17 @@ h2 {
 
 .walkin-form {
     position: static;
-    max-width: 760px;
-    width: 100%;
+    width: min(100%, 1180px);
+    max-width: 1180px;
     margin: 0 auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     padding: 16px;
+}
+
+.walkin-form > div:first-child,
+.walkin-form .walkin-span-2 {
+    grid-column: 1 / -1;
 }
 
 .walkin-form h3,
@@ -1947,6 +2019,11 @@ h2 {
     color: var(--reception-ink);
 }
 
+.walkin-invoice-discount,
+.walkin-invoice-discount strong {
+    color: #047857;
+}
+
 .walkin-invoice-total {
     border-radius: 10px;
     background: var(--reception-blue-soft);
@@ -1985,8 +2062,7 @@ h2 {
 }
 
 .checkout-detail-panel {
-    position: sticky;
-    top: 24px;
+    position: static;
     display: grid;
     gap: 14px;
     border: 1px solid #dfe8f2;
@@ -1995,22 +2071,161 @@ h2 {
     padding: 18px;
 }
 
+.checkout-detail-panel[hidden] {
+    display: none !important;
+}
+
+.checkout-result-panel {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    border: 1px solid #dfe8f2;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.07);
+}
+
+.checkout-result-panel[hidden] {
+    display: none !important;
+}
+
+.checkout-result-icon {
+    width: 52px;
+    height: 52px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #eef6ff;
+    color: var(--reception-blue);
+    font-size: 1.35rem;
+}
+
+.checkout-result-panel.is-success .checkout-result-icon {
+    background: #e9f8ef;
+    color: var(--reception-green);
+}
+
+.checkout-result-panel.is-error .checkout-result-icon {
+    background: #fff3f0;
+    color: #d92d20;
+}
+
+.checkout-result-panel h3 {
+    margin: 0;
+    color: var(--reception-ink);
+    font-size: 1.1rem;
+    font-weight: 860;
+}
+
+.checkout-result-panel p {
+    max-width: 540px;
+    margin: 0;
+    color: var(--reception-muted);
+    font-size: 0.92rem;
+    font-weight: 720;
+    line-height: 1.55;
+}
+
+.checkout-result-details {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.checkout-result-details div {
+    display: grid;
+    gap: 4px;
+    border: 1px solid #e5edf6;
+    border-radius: 8px;
+    background: #fbfdff;
+    padding: 11px 12px;
+    text-align: left;
+}
+
+.checkout-result-details span {
+    color: var(--reception-muted);
+    font-size: 0.76rem;
+    font-weight: 820;
+}
+
+.checkout-result-details strong {
+    color: var(--reception-ink);
+    font-size: 0.92rem;
+    font-weight: 860;
+    overflow-wrap: anywhere;
+}
+
+.checkout-result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.checkout-result-actions .btn {
+    min-height: 38px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    font-weight: 800;
+    padding: 7px 12px;
+}
+
 .checkout-detail-panel h3 {
     margin: 0;
     color: var(--reception-ink);
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     font-weight: 850;
+}
+
+.checkout-payment-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.checkout-payment-head .btn {
+    min-height: 36px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    font-weight: 780;
+    padding: 7px 11px;
+}
+
+.checkout-payment-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.checkout-invoice-side,
+.checkout-money-side {
+    display: grid;
+    gap: 12px;
+    border: 1px solid #e5edf6;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 14px;
 }
 
 .checkout-stay-card {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(128px, auto);
-    gap: 12px;
+    gap: 10px;
     border: 1px solid #e1e9f2;
     border-left: 4px solid var(--reception-green);
     border-radius: 10px;
     background: #ffffff;
-    padding: 15px;
+    padding: 13px 14px;
     cursor: pointer;
     box-shadow: 0 10px 24px rgba(20, 32, 51, 0.05);
     transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
@@ -2018,6 +2233,27 @@ h2 {
 
 .checkout-stay-card.due {
     border-left-color: var(--reception-gold);
+}
+
+.checkout-stay-card.today-checkout {
+    border-left-color: var(--reception-blue);
+    background: #f7fbff;
+}
+
+.checkout-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.checkout-today-badge {
+    border-radius: 999px;
+    background: #e8f1ff;
+    color: var(--reception-blue);
+    font-size: 0.78rem;
+    font-weight: 900;
+    padding: 5px 9px;
 }
 
 .checkout-stay-card:hover,
@@ -2037,13 +2273,13 @@ h2 {
 
 .checkout-stay-money span {
     color: var(--reception-muted);
-    font-size: 0.82rem;
+    font-size: 0.76rem;
     font-weight: 820;
 }
 
 .checkout-stay-money strong {
     color: var(--reception-green);
-    font-size: 1.02rem;
+    font-size: 0.96rem;
     font-weight: 900;
 }
 
@@ -2069,20 +2305,21 @@ h2 {
     border: 1px solid #e7eef6;
     border-radius: 9px;
     background: #ffffff;
-    padding: 14px;
+    padding: 12px;
 }
 
 .checkout-guest-box h4,
 .checkout-lines h4 {
     margin: 0;
     color: var(--reception-ink);
-    font-size: 1rem;
+    font-size: 0.92rem;
     font-weight: 850;
 }
 
 .checkout-guest-box p {
     margin: 4px 0 0;
     color: var(--reception-muted);
+    font-size: 0.84rem;
     font-weight: 750;
 }
 
@@ -2090,7 +2327,7 @@ h2 {
     display: grid;
     gap: 4px;
     color: var(--reception-muted);
-    font-size: 0.86rem;
+    font-size: 0.8rem;
     font-weight: 800;
     text-align: right;
 }
@@ -2118,9 +2355,9 @@ h2 {
     border-radius: 8px;
     background: #ffffff;
     color: var(--reception-muted);
-    font-size: 0.9rem;
+    font-size: 0.84rem;
     font-weight: 750;
-    padding: 9px 11px;
+    padding: 8px 10px;
 }
 
 .checkout-line strong,
@@ -2137,8 +2374,13 @@ h2 {
 .checkout-total-box {
     display: grid;
     gap: 8px;
-    border-top: 1px solid #e7eef6;
-    padding-top: 12px;
+}
+
+.checkout-total-box h4 {
+    margin: 0;
+    color: var(--reception-ink);
+    font-size: 0.94rem;
+    font-weight: 850;
 }
 
 .checkout-money-row.strong {
@@ -2148,19 +2390,32 @@ h2 {
 
 .checkout-money-row.strong strong {
     color: var(--reception-blue);
-    font-size: 1.02rem;
+    font-size: 0.98rem;
 }
 
 .checkout-payment-form {
     display: grid;
-    gap: 12px;
+    gap: 10px;
     border-top: 1px solid #e7eef6;
     padding-top: 12px;
 }
 
 .checkout-payment-form label {
     color: var(--reception-muted);
+    font-size: 0.78rem;
     font-weight: 820;
+}
+
+.checkout-payment-form .form-control,
+.checkout-payment-form .form-select {
+    min-height: 38px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    padding: 7px 10px;
+}
+
+.checkout-payment-form textarea.form-control {
+    min-height: 76px;
 }
 
 .checkout-receipt-options {
@@ -2178,8 +2433,9 @@ h2 {
     background: #ffffff;
     color: var(--reception-ink);
     cursor: pointer;
+    font-size: 0.84rem;
     font-weight: 760;
-    padding: 11px 12px;
+    padding: 9px 10px;
 }
 
 .checkout-receipt-option input {
@@ -2583,7 +2839,8 @@ h2 {
 }
 
 .success-panel {
-    max-width: 680px;
+    width: min(100%, 960px);
+    max-width: 960px;
     margin: 28px auto 0;
     border: 1px solid #cce8d6;
     border-radius: 10px;
@@ -2604,7 +2861,8 @@ h2 {
 }
 
 .walkin-done-panel {
-    max-width: 760px;
+    width: min(100%, 1180px);
+    max-width: 1180px;
     padding: 30px;
 }
 
@@ -2774,6 +3032,8 @@ h2 {
 
     .walkin-payment-overview,
     .walkin-cash-box,
+    .checkout-toolbar,
+    .checkout-payment-grid,
     .walkin-invoice-guest {
         grid-template-columns: 1fr;
     }
@@ -2792,6 +3052,19 @@ h2 {
 
     .workflow-strip {
         grid-template-columns: 1fr;
+    }
+
+    .walkin-form {
+        grid-template-columns: 1fr;
+    }
+
+    .checkout-result-details {
+        grid-template-columns: 1fr;
+    }
+
+    .walkin-form > div:first-child,
+    .walkin-form .walkin-span-2 {
+        grid-column: auto;
     }
 
     .workflow-step {

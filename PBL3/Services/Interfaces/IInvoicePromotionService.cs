@@ -6,5 +6,6 @@ public interface IInvoicePromotionService
 {
     Task<MaGiamGium?> ApplyBestPromotionAsync(
         HoaDon invoice,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        bool serviceOnly = false);
 }

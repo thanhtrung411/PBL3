@@ -8,6 +8,8 @@ namespace PBL3.Models;
 
 [Table("HoaDon")]
 [Index("MaDatPhong", Name = "UQ_HoaDon_MaDatPhong", IsUnique = true)]
+[Index("TrangThai", "PhuongThucThanhToan", "MaDatPhong", Name = "IX_HoaDon_TrangThai_PhuongThuc_MaDatPhong")]
+[Index("MaGiamGiaPhong", "TrangThai", Name = "IX_HoaDon_MaGiamGiaPhong_TrangThai")]
 public partial class HoaDon
 {
     [Key]

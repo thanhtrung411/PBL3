@@ -17,20 +17,22 @@
         align-items: center;
         justify-content: space-between;
         gap: 16px;
+        min-height: 44px;
         margin-bottom: 22px;
     }
 
     .service-header h1 {
         margin: 0;
         color: #111827;
-        font-size: clamp(1.85rem, 3vw, 2.6rem);
-        font-weight: 850;
+        font-size: 1.45rem;
+        font-weight: 800;
         letter-spacing: 0;
-        line-height: 1.08;
+        line-height: 1.2;
     }
 
     .service-header p {
         margin: 8px 0 0;
+        display: none;
         color: #66758a;
         font-weight: 560;
     }
@@ -43,16 +45,16 @@
         gap: 8px;
         border: 0;
         border-radius: 8px;
-        background: #1f6feb;
+        background: #111827;
         color: #ffffff;
-        font-weight: 820;
-        padding: 10px 16px;
-        box-shadow: 0 14px 30px rgba(31, 111, 235, 0.18);
+        font-weight: 750;
+        padding: 9px 16px;
+        box-shadow: none;
     }
 
     .service-primary-btn:hover,
     .service-primary-btn:focus-visible {
-        background: #1659c7;
+        background: #000000;
         color: #ffffff;
         outline: none;
     }
@@ -521,7 +523,6 @@
     <header class="service-header">
         <div>
             <h1>Quản lý dịch vụ</h1>
-            <p>Theo dõi dịch vụ, đơn giá, trạng thái và lượt sử dụng trong tháng.</p>
         </div>
         <button type="button" class="service-primary-btn" data-bs-toggle="modal" data-bs-target="#addServiceModal">
             <i class="bi bi-plus-lg"></i>

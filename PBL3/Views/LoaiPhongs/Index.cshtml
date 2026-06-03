@@ -16,18 +16,20 @@
         align-items: center;
         justify-content: space-between;
         gap: 18px;
-        margin-bottom: 24px;
+        min-height: 44px;
+        margin-bottom: 22px;
     }
 
     .room-type-header h1 {
         margin: 0;
-        font-size: 2rem;
-        font-weight: 850;
+        font-size: 1.45rem;
+        font-weight: 800;
         letter-spacing: 0;
     }
 
     .room-type-header p {
         margin: 6px 0 0;
+        display: none;
         color: #64748b;
         font-size: 1rem;
     }
@@ -1169,9 +1171,8 @@
     <div class="room-type-header">
         <div>
             <h1>Quản lý loại phòng</h1>
-            <p>Danh sách hạng phòng hiển thị theo dạng thẻ như trang chọn phòng.</p>
         </div>
-        <button type="button" class="btn btn-dark px-4 py-2" data-open-create-room-type>
+        <button type="button" class="btn btn-dark admin-page-action" data-open-create-room-type>
             <i class="bi bi-plus-lg"></i>
             Thêm loại phòng mới
         </button>

@@ -13,6 +13,7 @@ namespace PBL3.Services;
 public class VnPayService : IVnPayService
 {
     private const string WalkInVnPayMarker = "WALKIN_VNPAY_PENDING";
+    private const string CheckoutVnPayMarker = "CHECKOUT_VNPAY_PENDING";
 
     private readonly ApplicationDbContext _context;
     private readonly VnPayOptions _options;
@@ -140,6 +141,7 @@ public class VnPayService : IVnPayService
             BookingCode = data.GetValueOrDefault("vnp_TxnRef", "").Trim(),
             OrderInfo = orderInfo,
             IsWalkInPayment = IsWalkInOrderInfo(orderInfo),
+            IsCheckoutPayment = IsCheckoutOrderInfo(orderInfo),
             ResponseCode = responseCode,
             TransactionStatus = transactionStatus,
             TransactionNo = data.GetValueOrDefault("vnp_TransactionNo"),
@@ -175,6 +177,8 @@ public class VnPayService : IVnPayService
 
         var isWalkInVnPay = result.IsWalkInPayment || IsWalkInVnPayInvoice(invoice);
         result.IsWalkInPayment = isWalkInVnPay;
+        var isCheckoutVnPay = result.IsCheckoutPayment || IsCheckoutVnPayInvoice(invoice);
+        result.IsCheckoutPayment = isCheckoutVnPay;
 
         if ((invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
              invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy) &&
@@ -208,7 +212,10 @@ public class VnPayService : IVnPayService
 
         if (result.Success)
         {
-            if (invoice.TongThanhToan > 0 && result.Amount != invoice.TongThanhToan)
+            var expectedAmount = isCheckoutVnPay
+                ? Math.Max(invoice.TongThanhToan - invoice.SoTienDaThanhToan, 0)
+                : invoice.TongThanhToan;
+            if (expectedAmount > 0 && result.Amount != expectedAmount)
             {
                 result.Success = false;
                 result.Message = "Số tiền thanh toán không khớp với hóa đơn.";
@@ -225,7 +232,9 @@ public class VnPayService : IVnPayService
             invoice.SoTienDaThanhToan = invoice.TongThanhToan;
             invoice.TienDatCoc = invoice.TongThanhToan;
             invoice.NgayThanhToanCuoi = result.PayDateUtc ?? DateTime.UtcNow;
-            invoice.PhuongThucThanhToan = DomainValues.PhuongThucThanhToan.Qr;
+            invoice.PhuongThucThanhToan = isCheckoutVnPay
+                ? "VNPAY"
+                : DomainValues.PhuongThucThanhToan.Qr;
             invoice.TrangThai = DomainValues.HoaDonTrangThai.DaThanhToan;
             invoice.GhiChu = AppendNote(invoice.GhiChu, $"VNPay: {result.TransactionNo}; Bank: {result.BankCode}");
             if (isWalkInVnPay)
@@ -239,6 +248,11 @@ public class VnPayService : IVnPayService
                 {
                     await MarkInvoiceRoomsAsync(invoice, DomainValues.PhongTrangThai.DangSuDung);
                 }
+            }
+            else if (isCheckoutVnPay)
+            {
+                invoice.MaDatPhongNavigation.TrangThai = DomainValues.DatPhongTrangThai.TraPhong;
+                await MarkInvoiceRoomsAsync(invoice, DomainValues.PhongTrangThai.Trong);
             }
 
             await _context.SaveChangesAsync();
@@ -287,11 +301,23 @@ public class VnPayService : IVnPayService
         return invoice.GhiChu?.Contains(WalkInVnPayMarker, StringComparison.OrdinalIgnoreCase) == true;
     }
 
+    private static bool IsCheckoutVnPayInvoice(HoaDon invoice)
+    {
+        return invoice.GhiChu?.Contains(CheckoutVnPayMarker, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
     private static bool IsWalkInOrderInfo(string? orderInfo)
     {
         return !string.IsNullOrWhiteSpace(orderInfo) &&
                (orderInfo.Contains(WalkInVnPayMarker, StringComparison.OrdinalIgnoreCase) ||
                 orderInfo.Contains("check-in vang lai", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsCheckoutOrderInfo(string? orderInfo)
+    {
+        return !string.IsNullOrWhiteSpace(orderInfo) &&
+               (orderInfo.Contains(CheckoutVnPayMarker, StringComparison.OrdinalIgnoreCase) ||
+                orderInfo.Contains("check-out", StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task SendPaymentSuccessEmailAsync(PaymentCallbackResult result)

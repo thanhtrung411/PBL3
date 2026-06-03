@@ -9,10 +9,9 @@
     string Money(decimal value) => $"{value.ToString("N0", vi)} đ";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="admin-page-header">
     <div>
-        <h3 class="mb-1 fw-bold">Báo cáo & Thống kê</h3>
-        <p class="text-muted mb-0">Phân tích doanh thu và hiệu suất hoạt động từ dữ liệu hệ thống</p>
+        <h3 class="admin-page-title">Báo cáo & Thống kê</h3>
     </div>
 </div>
 
@@ -24,8 +23,8 @@
         </div>
         <form class="d-flex gap-2 align-items-center flex-wrap" method="get" asp-controller="Report" asp-action="Index">
             <input class="form-control bg-light" style="width: 170px;" type="month" name="month" value="@Model.SelectedMonthValue" />
-            <button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel"></i> Xem</button>
-            <a class="btn btn-primary" asp-controller="Report" asp-action="Export" asp-route-month="@Model.SelectedMonthValue">
+            <button class="btn btn-dark" type="submit"><i class="bi bi-funnel"></i> Xem</button>
+            <a class="btn btn-dark" asp-controller="Report" asp-action="Export" asp-route-month="@Model.SelectedMonthValue">
                 <i class="bi bi-download"></i> Xuất file
             </a>
         </form>

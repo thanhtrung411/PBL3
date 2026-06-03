@@ -29,6 +29,32 @@ public class ReceptionistWalkInAvailabilityResult
     public List<ReceptionistRoomGroupDto> Groups { get; set; } = new();
 }
 
+public class ReceptionistWalkInPromotionPreviewRequest
+{
+    public DateOnly CheckInDate { get; set; }
+
+    public DateOnly CheckOutDate { get; set; }
+
+    public List<string> RoomIds { get; set; } = new();
+}
+
+public class ReceptionistWalkInPromotionPreviewResult
+{
+    public bool Success { get; set; }
+
+    public string Message { get; set; } = string.Empty;
+
+    public decimal RoomTotal { get; set; }
+
+    public decimal DiscountAmount { get; set; }
+
+    public decimal GrandTotal { get; set; }
+
+    public string? PromotionCode { get; set; }
+
+    public string? PromotionName { get; set; }
+}
+
 public class ReceptionistWalkInCheckInRequest
 {
     public string CustomerName { get; set; } = string.Empty;
@@ -196,6 +222,10 @@ public class ReceptionistCheckoutResult
 
     public decimal RemainingAmount { get; set; }
 
+    public bool RequiresOnlinePayment { get; set; }
+
+    public string PaymentUrl { get; set; } = string.Empty;
+
     public bool EmailSent { get; set; }
 
     public string EmailMessage { get; set; } = string.Empty;
@@ -252,6 +282,10 @@ public class ReceptionistActiveStayDto
     public decimal ServiceTotal { get; set; }
 
     public decimal DiscountAmount { get; set; }
+
+    public string? PromotionCode { get; set; }
+
+    public string? PromotionName { get; set; }
 
     public decimal PaidAmount { get; set; }
 

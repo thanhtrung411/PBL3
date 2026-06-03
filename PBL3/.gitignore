@@ -21,4 +21,5 @@ wwwroot/images/link-anh/*
 
 # Local database scripts/dumps
 *.sql
+!Scripts/AddPerformanceIndexes.sql
 *.bak

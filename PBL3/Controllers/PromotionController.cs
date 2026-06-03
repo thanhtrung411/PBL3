@@ -141,9 +141,7 @@ namespace PBL3.Controllers
                     ? FormatCurrency(promotion.GiamToiDa.Value)
                     : "Không giới hạn",
                 MinimumInvoiceLabel = FormatCurrency(promotion.HoaDonToiThieu),
-                ScopeLabel = string.IsNullOrWhiteSpace(promotion.PhamViApDung)
-                    ? "Tất cả"
-                    : promotion.PhamViApDung.Trim(),
+                ScopeLabel = FormatPromotionScope(promotion.PhamViApDung),
                 DateRangeLabel = $"{FormatDate(promotion.TuNgay)} - {FormatDate(promotion.DenNgay)}",
                 StartDateValue = promotion.TuNgay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 EndDateValue = promotion.DenNgay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
@@ -193,7 +191,7 @@ namespace PBL3.Controllers
             model.CodeGiamGia = (model.CodeGiamGia?.Trim() ?? string.Empty).ToUpperInvariant();
             model.TenMaGiamGia = model.TenMaGiamGia?.Trim() ?? string.Empty;
             model.LoaiGiamGia = model.LoaiGiamGia?.Trim() ?? DomainValues.MaGiamGiaLoai.PhanTram;
-            model.PhamViApDung = string.IsNullOrWhiteSpace(model.PhamViApDung) ? "Tất cả" : model.PhamViApDung.Trim();
+            model.PhamViApDung = NormalizePromotionScope(model.PhamViApDung);
             model.TrangThai = string.IsNullOrWhiteSpace(model.TrangThai) ? "Hoạt động" : model.TrangThai.Trim();
             model.MoTa = model.MoTa?.Trim();
             model.GhiChu = model.GhiChu?.Trim();
@@ -233,6 +231,48 @@ namespace PBL3.Controllers
 
             message = string.Empty;
             return true;
+        }
+
+        private static string NormalizePromotionScope(string? scope)
+        {
+            var normalized = RemoveVietnameseMarks(scope ?? string.Empty).ToUpperInvariant();
+            normalized = Regex.Replace(normalized, @"[^A-Z0-9]", string.Empty);
+
+            if (normalized.Contains("DICHVU") || normalized.Contains("SERVICE"))
+            {
+                return DomainValues.MaGiamGiaPhamVi.ChiDichVu;
+            }
+
+            if (normalized.Contains("PHONG") || normalized.Contains("ROOM"))
+            {
+                return DomainValues.MaGiamGiaPhamVi.ChiPhong;
+            }
+
+            return DomainValues.MaGiamGiaPhamVi.TatCa;
+        }
+
+        private static string FormatPromotionScope(string? scope)
+        {
+            return NormalizePromotionScope(scope) switch
+            {
+                DomainValues.MaGiamGiaPhamVi.ChiPhong => "Chỉ phòng",
+                DomainValues.MaGiamGiaPhamVi.ChiDichVu => "Chỉ dịch vụ",
+                _ => "Tất cả"
+            };
+        }
+
+        private static string RemoveVietnameseMarks(string value)
+        {
+            var normalized = value.Normalize(System.Text.NormalizationForm.FormD);
+            var chars = normalized
+                .Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) !=
+                            System.Globalization.UnicodeCategory.NonSpacingMark)
+                .ToArray();
+            return new string(chars).Normalize(System.Text.NormalizationForm.FormC)
+                .Replace('đ', 'd')
+                .Replace('Đ', 'D')
+                .Replace("Ä‘", "d")
+                .Replace("Ä", "D");
         }
 
         private async Task<string> GeneratePromotionIdAsync()

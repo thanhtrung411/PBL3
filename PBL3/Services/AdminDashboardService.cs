@@ -84,6 +84,7 @@ public sealed class AdminDashboardService : IAdminDashboardService
 
         var recentBookingEntities = await _context.DatPhongs
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(x => x.HoaDon)
                 .ThenInclude(x => x!.ChiTietHoaDons)
                     .ThenInclude(x => x.MaPhongNavigation)

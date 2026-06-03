@@ -44,6 +44,7 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
         var expiredBookings = await _context.DatPhongs
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
+            .AsSplitQuery()
             .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.GiuCho &&
                         x.NgayDat <= cutoff &&
                         x.HoaDon != null &&
@@ -100,6 +101,7 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
         var expiredBookings = await _context.DatPhongs
             .Include(x => x.HoaDon)
             .ThenInclude(x => x!.ChiTietHoaDons)
+            .AsSplitQuery()
             .Where(x => NoShowCandidateStatuses.Contains(x.TrangThai) &&
                         x.NgayNhanPhong < today &&
                         x.HoaDon != null &&

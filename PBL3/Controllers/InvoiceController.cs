@@ -20,6 +20,7 @@ namespace PBL3.Controllers
             var today = DateOnly.FromDateTime(DateTime.Today);
             var invoices = await _context.HoaDons
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(x => x.MaDatPhongNavigation)
                     .ThenInclude(x => x.MaKhNavigation)
                 .Include(x => x.MaDatPhongNavigation)

@@ -82,8 +82,79 @@ public class ReceptionistController : Controller
         [FromBody] ReceptionistCheckoutRequest request,
         CancellationToken cancellationToken)
     {
+        request ??= new ReceptionistCheckoutRequest();
+        if (IsVnPayPayment(request.PaymentMethod))
+        {
+            var bookingCode = (request.BookingCode ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(bookingCode))
+            {
+                return Ok(new ReceptionistCheckoutResult
+                {
+                    Success = false,
+                    Message = "Thiếu mã đặt phòng."
+                });
+            }
+
+            var checkoutList = await _receptionistCheckInService.GetCheckoutListAsync(cancellationToken);
+            var stay = checkoutList.ActiveStays.FirstOrDefault(x =>
+                string.Equals(x.BookingCode, bookingCode, StringComparison.OrdinalIgnoreCase));
+            if (stay == null)
+            {
+                return Ok(new ReceptionistCheckoutResult
+                {
+                    Success = false,
+                    BookingCode = bookingCode,
+                    Message = "Không tìm thấy khách đang lưu trú để thanh toán VNPay."
+                });
+            }
+
+            if (stay.RemainingAmount <= 0)
+            {
+                return Ok(new ReceptionistCheckoutResult
+                {
+                    Success = false,
+                    BookingCode = stay.BookingCode,
+                    Message = "Hóa đơn đã thu đủ, không cần thanh toán VNPay."
+                });
+            }
+
+            var paymentStart = _vnPayService.CreatePaymentUrl(new VnPayPaymentRequest
+            {
+                BookingCode = stay.BookingCode,
+                Amount = stay.RemainingAmount,
+                OrderInfo = $"CHECKOUT_VNPAY_PENDING Thanh toan check-out {stay.BookingCode}",
+                IpAddress = GetClientIpAddress(),
+                ReturnUrl = ResolveCurrentHostVnPayReturnUrl()
+            });
+
+            if (!paymentStart.Success || string.IsNullOrWhiteSpace(paymentStart.PaymentUrl))
+            {
+                return Ok(new ReceptionistCheckoutResult
+                {
+                    Success = false,
+                    BookingCode = stay.BookingCode,
+                    PaidAmount = stay.PaidAmount,
+                    GrandTotal = stay.GrandTotal,
+                    RemainingAmount = stay.RemainingAmount,
+                    Message = paymentStart.ErrorMessage ?? "Không tạo được thanh toán VNPay."
+                });
+            }
+
+            return Ok(new ReceptionistCheckoutResult
+            {
+                Success = true,
+                BookingCode = stay.BookingCode,
+                PaidAmount = stay.PaidAmount,
+                GrandTotal = stay.GrandTotal,
+                RemainingAmount = stay.RemainingAmount,
+                RequiresOnlinePayment = true,
+                PaymentUrl = paymentStart.PaymentUrl,
+                Message = "Đang chuyển sang VNPay để thanh toán."
+            });
+        }
+
         var result = await _receptionistCheckInService.CheckoutAsync(
-            request ?? new ReceptionistCheckoutRequest(),
+            request,
             cancellationToken);
         return Ok(result);
     }
@@ -164,6 +235,17 @@ public class ReceptionistController : Controller
         return Ok(result);
     }
 
+    [HttpPost]
+    public async Task<IActionResult> WalkInPromotionPreview(
+        [FromBody] ReceptionistWalkInPromotionPreviewRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _receptionistCheckInService.PreviewWalkInPromotionAsync(
+            request ?? new ReceptionistWalkInPromotionPreviewRequest(),
+            cancellationToken);
+        return Ok(result);
+    }
+
     private string GetClientIpAddress()
     {
         var forwarded = Request.Headers["X-Forwarded-For"].FirstOrDefault();
@@ -178,5 +260,10 @@ public class ReceptionistController : Controller
     private string ResolveCurrentHostVnPayReturnUrl()
     {
         return Url.Action("VnPayReturn", "Payment", null, Request.Scheme, Request.Host.Value) ?? "/Payment/VnPayReturn";
+    }
+
+    private static bool IsVnPayPayment(string? paymentMethod)
+    {
+        return string.Equals(paymentMethod?.Trim(), "VNPAY", StringComparison.OrdinalIgnoreCase);
     }
 }

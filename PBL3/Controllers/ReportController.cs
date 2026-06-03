@@ -120,6 +120,7 @@ namespace PBL3.Controllers
 
             var occupancyBookings = await _context.DatPhongs
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(x => x.HoaDon)
                 .ThenInclude(x => x!.ChiTietHoaDons)
                 .Where(x => x.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
