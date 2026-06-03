@@ -63,6 +63,10 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.SoLuong).HasDefaultValue(1, "DF_CTHD_SoLuong");
             entity.Property(e => e.TrangThai).HasDefaultValue("HIEU_LUC", "DF_CTHD_TrangThai");
 
+            entity.HasIndex(e => e.TrangThai);
+            entity.HasIndex(e => e.LoaiMuc);
+            entity.HasIndex(e => e.MaPhong);
+
             entity.HasOne(d => d.MaDvNavigation).WithMany(p => p.ChiTietHoaDons).HasConstraintName("FK_CTHD_DichVu");
 
             entity.HasOne(d => d.MaGiamGiaNavigation).WithMany(p => p.ChiTietHoaDons).HasConstraintName("FK_CTHD_MaGiamGia");
@@ -83,6 +87,10 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.MaNv).IsFixedLength();
             entity.Property(e => e.NgayDat).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.TrangThai).HasDefaultValue("GIU_CHO");
+
+            entity.HasIndex(e => e.TrangThai);
+            entity.HasIndex(e => e.NgayNhanPhong);
+            entity.HasIndex(e => e.NgayTraPhong);
 
             entity.HasOne(d => d.MaKhNavigation).WithMany(p => p.DatPhongs)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -106,6 +114,8 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.MaDatPhong).IsFixedLength();
             entity.Property(e => e.MaGiamGiaPhong).IsFixedLength();
             entity.Property(e => e.TrangThai).HasDefaultValue("CHUA_THANH_TOAN");
+
+            entity.HasIndex(e => e.TrangThai);
 
             entity.HasOne(d => d.MaDatPhongNavigation).WithOne(p => p.HoaDon)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -150,6 +160,8 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.MaPhong).IsFixedLength();
             entity.Property(e => e.MaLoaiPhong).IsFixedLength();
             entity.Property(e => e.TrangThai).HasDefaultValue("Trống");
+
+            entity.HasIndex(e => e.TrangThai);
 
             entity.HasOne(d => d.MaLoaiPhongNavigation).WithMany(p => p.Phongs)
                 .OnDelete(DeleteBehavior.ClientSetNull)

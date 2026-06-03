@@ -70,13 +70,8 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var bookings = await _context.DatPhongs
+        var bookingData = await _context.DatPhongs
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.MaKhNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
-            .ThenInclude(x => x.MaLoaiPhongNavigation)
             .Where(x => x.NgayNhanPhong == today &&
                         x.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
                         x.TrangThai != DomainValues.DatPhongTrangThai.TraPhong &&
@@ -84,11 +79,130 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .OrderBy(x => x.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong)
             .ThenBy(x => x.TenKhSnapshot)
             .ThenBy(x => x.MaDatPhong)
+            .Select(x => new
+            {
+                BookingCode = x.MaDatPhong,
+                CustomerName = x.TenKhSnapshot,
+                SdtSnapshot = x.SdtSnapshot,
+                CccdSnapshot = x.CccdSnapshot,
+                CustomerPhone = x.MaKhNavigation.SoDienThoai,
+                CustomerEmail = x.MaKhNavigation.Email,
+                CustomerCccd = x.MaKhNavigation.Cccd,
+                BookingDate = x.NgayDat,
+                CheckInDate = x.NgayNhanPhong,
+                CheckOutDate = x.NgayTraPhong,
+                BookingStatus = x.TrangThai,
+                InvoiceStatus = x.HoaDon != null ? x.HoaDon.TrangThai : "NO_INVOICE",
+                TotalAmount = x.HoaDon != null ? x.HoaDon.TongThanhToan : 0,
+                PaidAmount = x.HoaDon != null ? x.HoaDon.SoTienDaThanhToan : 0,
+                HasInvoice = x.HoaDon != null,
+                RoomLines = x.HoaDon != null 
+                    ? x.HoaDon.ChiTietHoaDons
+                        .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong && 
+                                     ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                        .Select(ct => new
+                        {
+                            RoomTypeId = ct.MaLoaiPhong ?? string.Empty,
+                            RoomTypeName = ct.MaLoaiPhongNavigation != null ? ct.MaLoaiPhongNavigation.TenLoaiPhong : (ct.MaLoaiPhong ?? "Phòng"),
+                            Guests = ct.SoNguoi,
+                            RoomId = ct.MaPhongNavigation != null ? ct.MaPhongNavigation.MaPhong : null,
+                            RoomNumber = ct.MaPhongNavigation != null ? ct.MaPhongNavigation.SoPhong : null
+                        })
+                        .ToList()
+                    : null
+            })
             .ToListAsync(cancellationToken);
 
-        var bookingDtos = bookings
-            .Select(BuildBookingDto)
-            .ToList();
+        var bookingDtos = bookingData.Select(data => 
+        {
+            var canCheckIn = true;
+            var checkInMessage = "Có thể check-in.";
+            
+            if (data.BookingStatus == DomainValues.DatPhongTrangThai.DaHuy)
+            {
+                canCheckIn = false;
+                checkInMessage = "Đặt phòng đã bị hủy.";
+            }
+            else if (data.BookingStatus == DomainValues.DatPhongTrangThai.QuaHanNhanPhong)
+            {
+                canCheckIn = false;
+                checkInMessage = "Đặt phòng đã quá hạn nhận phòng.";
+            }
+            else if (data.BookingStatus == DomainValues.DatPhongTrangThai.DaNhanPhong)
+            {
+                canCheckIn = false;
+                checkInMessage = "Đặt phòng này đã check-in rồi.";
+            }
+            else if (!data.HasInvoice)
+            {
+                canCheckIn = false;
+                checkInMessage = "Đặt phòng chưa có hóa đơn.";
+            }
+            else if (data.InvoiceStatus != DomainValues.HoaDonTrangThai.DaThanhToan ||
+                     data.PaidAmount < data.TotalAmount)
+            {
+                canCheckIn = false;
+                checkInMessage = "Hóa đơn chưa được thanh toán đủ.";
+            }
+
+            var requirements = new List<ReceptionistRoomTypeRequirementDto>();
+            var assignedRooms = new List<ReceptionistAssignedRoomDto>();
+
+            if (data.RoomLines != null)
+            {
+                requirements = data.RoomLines
+                    .Where(x => !string.IsNullOrWhiteSpace(x.RoomTypeId))
+                    .GroupBy(x => new { x.RoomTypeId, x.RoomTypeName })
+                    .Select(group => new ReceptionistRoomTypeRequirementDto
+                    {
+                        RoomTypeId = group.Key.RoomTypeId,
+                        RoomTypeName = group.Key.RoomTypeName,
+                        RequiredRooms = group.Count(),
+                        Guests = group.Sum(x => x.Guests)
+                    })
+                    .OrderBy(x => x.RoomTypeName)
+                    .ToList();
+
+                assignedRooms = data.RoomLines
+                    .Where(x => x.RoomId != null)
+                    .OrderBy(x => x.RoomNumber)
+                    .Select(x => new ReceptionistAssignedRoomDto
+                    {
+                        RoomId = x.RoomId,
+                        RoomNumber = x.RoomNumber,
+                        RoomTypeId = x.RoomTypeId,
+                        RoomTypeName = x.RoomTypeName
+                    })
+                    .ToList();
+            }
+
+            if (canCheckIn && requirements.Count == 0)
+            {
+                canCheckIn = false;
+                checkInMessage = "Đặt phòng chưa có dòng phòng hợp lệ.";
+            }
+
+            return new ReceptionistBookingDto
+            {
+                BookingCode = data.BookingCode,
+                CustomerName = data.CustomerName,
+                PhoneNumber = data.SdtSnapshot ?? data.CustomerPhone,
+                Email = data.CustomerEmail,
+                IdentityNumber = data.CccdSnapshot ?? data.CustomerCccd,
+                BookingDate = data.BookingDate.ToString("dd/MM/yyyy"),
+                CheckInDate = data.CheckInDate.ToString("dd/MM/yyyy"),
+                CheckOutDate = data.CheckOutDate.ToString("dd/MM/yyyy"),
+                Nights = Math.Max(data.CheckOutDate.DayNumber - data.CheckInDate.DayNumber, 1),
+                BookingStatus = data.BookingStatus,
+                InvoiceStatus = data.InvoiceStatus,
+                TotalAmount = data.TotalAmount,
+                PaidAmount = data.PaidAmount,
+                CanCheckIn = canCheckIn,
+                CheckInMessage = checkInMessage,
+                Requirements = requirements,
+                AssignedRooms = assignedRooms
+            };
+        }).ToList();
 
         return new ReceptionistTodayArrivalsResult
         {
@@ -104,17 +218,24 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     public async Task<ReceptionistRoomMapResult> GetRoomMapAsync(
         CancellationToken cancellationToken = default)
     {
-        var rooms = await _context.Phongs
+        var roomsData = await _context.Phongs
             .AsNoTracking()
-            .Include(x => x.MaLoaiPhongNavigation)
             .OrderBy(x => x.Tang)
             .ThenBy(x => x.SoPhong)
+            .Select(x => new
+            {
+                RoomId = x.MaPhong,
+                RoomNumber = x.SoPhong,
+                RoomTypeId = x.MaLoaiPhong,
+                RoomTypeName = x.MaLoaiPhongNavigation.TenLoaiPhong,
+                Floor = x.Tang,
+                Status = x.TrangThai,
+                Capacity = x.MaLoaiPhongNavigation.SoNguoiToiDa
+            })
             .ToListAsync(cancellationToken);
 
         var activeAssignments = await _context.ChiTietHoaDons
             .AsNoTracking()
-            .Include(x => x.MaHoaDonNavigation)
-            .ThenInclude(x => x.MaDatPhongNavigation)
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                         x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
                         x.MaPhong != null &&
@@ -132,16 +253,35 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             .GroupBy(x => x.RoomId, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
 
-        var roomDtos = rooms
+        var roomDtos = roomsData
             .Select(room =>
             {
-                assignmentByRoom.TryGetValue(room.MaPhong, out var assignment);
-                return BuildRoomMapDto(
-                    room,
-                    assignment != null,
-                    assignment?.BookingCode,
-                    assignment?.GuestName,
-                    assignment?.CheckOutDate);
+                assignmentByRoom.TryGetValue(room.RoomId, out var assignment);
+                var hasActiveAssignment = assignment != null;
+                var isMaintenance = IsMaintenanceStatus(room.Status);
+                var isBusy = IsBusyStatus(room.Status) || hasActiveAssignment;
+                var mappedStatus = isMaintenance ? "maintenance" : isBusy ? "occupied" : "available";
+
+                return new ReceptionistRoomDto
+                {
+                    RoomId = room.RoomId,
+                    RoomNumber = room.RoomNumber,
+                    RoomTypeId = room.RoomTypeId,
+                    RoomTypeName = room.RoomTypeName,
+                    Floor = room.Floor,
+                    Status = mappedStatus,
+                    StatusLabel = mappedStatus switch
+                    {
+                        "maintenance" => "Bảo trì",
+                        "occupied" => "Đang sử dụng",
+                        _ => "Trống"
+                    },
+                    IsSelectable = mappedStatus == "available",
+                    Capacity = room.Capacity,
+                    BookingCode = assignment?.BookingCode,
+                    CurrentGuestName = assignment?.GuestName,
+                    CheckOutDate = assignment?.CheckOutDate.ToString("dd/MM/yyyy")
+                };
             })
             .ToList();
 
@@ -228,25 +368,61 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     public async Task<ReceptionistServiceUsageResult> GetServiceUsageAsync(
         CancellationToken cancellationToken = default)
     {
-        var activeBookings = await _context.DatPhongs
+        var activeBookingsData = await _context.DatPhongs
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.MaKhNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.MaGiamGiaPhongNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
-            .ThenInclude(x => x.MaDvNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
-            .ThenInclude(x => x.MaLoaiPhongNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
-            .ThenInclude(x => x.MaPhongNavigation)
             .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong &&
                         x.HoaDon != null)
             .OrderBy(x => x.TenKhSnapshot)
             .ThenBy(x => x.MaDatPhong)
+            .Select(x => new
+            {
+                BookingCode = x.MaDatPhong,
+                CustomerName = x.TenKhSnapshot,
+                SdtSnapshot = x.SdtSnapshot,
+                CustomerPhone = x.MaKhNavigation.SoDienThoai,
+                CustomerEmail = x.MaKhNavigation.Email,
+                CheckInDate = x.NgayNhanPhong,
+                CheckOutDate = x.NgayTraPhong,
+                InvoiceStatus = x.HoaDon!.TrangThai,
+                RoomTotal = x.HoaDon.TongTienPhong,
+                ServiceTotal = x.HoaDon.TongTienDichVu,
+                DiscountAmount = x.HoaDon.TienGiamGiaPhong,
+                PromotionCode = x.HoaDon.MaGiamGiaPhongNavigation != null ? x.HoaDon.MaGiamGiaPhongNavigation.CodeGiamGia : x.HoaDon.MaGiamGiaPhong,
+                PromotionName = x.HoaDon.MaGiamGiaPhongNavigation != null ? x.HoaDon.MaGiamGiaPhongNavigation.TenMaGiamGia : null,
+                PaidAmount = x.HoaDon.SoTienDaThanhToan,
+                GrandTotal = x.HoaDon.TongThanhToan,
+                RoomLines = x.HoaDon.ChiTietHoaDons
+                    .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                 ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                    .Select(ct => new
+                    {
+                        LineId = ct.MaCthd,
+                        RoomTypeId = ct.MaLoaiPhong ?? string.Empty,
+                        RoomTypeName = ct.MaLoaiPhongNavigation != null ? ct.MaLoaiPhongNavigation.TenLoaiPhong : (ct.MaLoaiPhong ?? ct.NoiDung),
+                        RoomNumber = ct.MaPhongNavigation != null ? ct.MaPhongNavigation.SoPhong : null,
+                        Guests = ct.SoNguoi,
+                        Quantity = ct.SoLuong,
+                        UnitPrice = ct.DonGia,
+                        Total = ct.ThanhTien
+                    })
+                    .ToList(),
+                ServiceLines = x.HoaDon.ChiTietHoaDons
+                    .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.DichVu &&
+                                 ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                    .Select(ct => new
+                    {
+                        LineId = ct.MaCthd,
+                        ServiceId = ct.MaDv ?? string.Empty,
+                        ServiceName = ct.MaDvNavigation != null ? ct.MaDvNavigation.TenDv : ct.NoiDung,
+                        Unit = ct.MaDvNavigation != null ? ct.MaDvNavigation.DonViTinh : string.Empty,
+                        Quantity = ct.SoLuong,
+                        UnitPrice = ct.DonGia,
+                        Total = ct.ThanhTien,
+                        AppliedDate = ct.NgayApDung,
+                        Note = ct.GhiChu
+                    })
+                    .ToList()
+            })
             .ToListAsync(cancellationToken);
 
         var services = await _context.DichVus
@@ -263,9 +439,49 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             })
             .ToListAsync(cancellationToken);
 
-        var stays = activeBookings
-            .Select(BuildActiveStayDto)
-            .ToList();
+        var stays = activeBookingsData.Select(data => new ReceptionistActiveStayDto
+        {
+            BookingCode = data.BookingCode,
+            CustomerName = data.CustomerName,
+            PhoneNumber = data.SdtSnapshot ?? data.CustomerPhone,
+            Email = data.CustomerEmail,
+            CheckInDate = data.CheckInDate.ToString("dd/MM/yyyy"),
+            CheckOutDate = data.CheckOutDate.ToString("dd/MM/yyyy"),
+            Nights = Math.Max(data.CheckOutDate.DayNumber - data.CheckInDate.DayNumber, 1),
+            InvoiceStatus = data.InvoiceStatus,
+            RoomTotal = data.RoomTotal,
+            ServiceTotal = data.ServiceTotal,
+            DiscountAmount = data.DiscountAmount,
+            PromotionCode = data.PromotionCode?.Trim(),
+            PromotionName = data.PromotionName?.Trim(),
+            PaidAmount = data.PaidAmount,
+            GrandTotal = data.GrandTotal,
+            RemainingAmount = Math.Max(data.GrandTotal - data.PaidAmount, 0),
+            RoomNumbers = data.RoomLines.Where(x => x.RoomNumber != null).Select(x => x.RoomNumber!).OrderBy(x => x).ToList(),
+            RoomLines = data.RoomLines.Select(x => new ReceptionistRoomChargeLineDto
+            {
+                LineId = x.LineId,
+                RoomTypeId = x.RoomTypeId,
+                RoomTypeName = x.RoomTypeName,
+                RoomNumber = x.RoomNumber,
+                Guests = x.Guests,
+                Quantity = x.Quantity,
+                UnitPrice = x.UnitPrice,
+                Total = x.Total
+            }).OrderBy(x => x.LineId).ToList(),
+            ServiceLines = data.ServiceLines.Select(x => new ReceptionistServiceLineDto
+            {
+                LineId = x.LineId,
+                ServiceId = x.ServiceId,
+                ServiceName = x.ServiceName,
+                Unit = x.Unit,
+                Quantity = x.Quantity,
+                UnitPrice = x.UnitPrice,
+                Total = x.Total,
+                AppliedDate = x.AppliedDate?.ToString("dd/MM/yyyy") ?? string.Empty,
+                Note = x.Note
+            }).OrderByDescending(x => string.IsNullOrWhiteSpace(x.AppliedDate) ? "0000" : x.AppliedDate).ThenByDescending(x => x.LineId).ToList()
+        }).ToList();
 
         return new ReceptionistServiceUsageResult
         {
@@ -391,31 +607,107 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     public async Task<ReceptionistCheckoutListResult> GetCheckoutListAsync(
         CancellationToken cancellationToken = default)
     {
-        var activeBookings = await _context.DatPhongs
+        var activeBookingsData = await _context.DatPhongs
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.MaKhNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.MaGiamGiaPhongNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
-            .ThenInclude(x => x.MaDvNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
-            .ThenInclude(x => x.MaLoaiPhongNavigation)
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
-            .ThenInclude(x => x.MaPhongNavigation)
             .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong &&
                         x.HoaDon != null)
             .OrderBy(x => x.NgayTraPhong)
             .ThenBy(x => x.TenKhSnapshot)
             .ThenBy(x => x.MaDatPhong)
+            .Select(x => new
+            {
+                BookingCode = x.MaDatPhong,
+                CustomerName = x.TenKhSnapshot,
+                SdtSnapshot = x.SdtSnapshot,
+                CustomerPhone = x.MaKhNavigation.SoDienThoai,
+                CustomerEmail = x.MaKhNavigation.Email,
+                CheckInDate = x.NgayNhanPhong,
+                CheckOutDate = x.NgayTraPhong,
+                InvoiceStatus = x.HoaDon!.TrangThai,
+                RoomTotal = x.HoaDon.TongTienPhong,
+                ServiceTotal = x.HoaDon.TongTienDichVu,
+                DiscountAmount = x.HoaDon.TienGiamGiaPhong,
+                PromotionCode = x.HoaDon.MaGiamGiaPhongNavigation != null ? x.HoaDon.MaGiamGiaPhongNavigation.CodeGiamGia : x.HoaDon.MaGiamGiaPhong,
+                PromotionName = x.HoaDon.MaGiamGiaPhongNavigation != null ? x.HoaDon.MaGiamGiaPhongNavigation.TenMaGiamGia : null,
+                PaidAmount = x.HoaDon.SoTienDaThanhToan,
+                GrandTotal = x.HoaDon.TongThanhToan,
+                RoomLines = x.HoaDon.ChiTietHoaDons
+                    .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                 ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                    .Select(ct => new
+                    {
+                        LineId = ct.MaCthd,
+                        RoomTypeId = ct.MaLoaiPhong ?? string.Empty,
+                        RoomTypeName = ct.MaLoaiPhongNavigation != null ? ct.MaLoaiPhongNavigation.TenLoaiPhong : (ct.MaLoaiPhong ?? ct.NoiDung),
+                        RoomNumber = ct.MaPhongNavigation != null ? ct.MaPhongNavigation.SoPhong : null,
+                        Guests = ct.SoNguoi,
+                        Quantity = ct.SoLuong,
+                        UnitPrice = ct.DonGia,
+                        Total = ct.ThanhTien
+                    })
+                    .ToList(),
+                ServiceLines = x.HoaDon.ChiTietHoaDons
+                    .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.DichVu &&
+                                 ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                    .Select(ct => new
+                    {
+                        LineId = ct.MaCthd,
+                        ServiceId = ct.MaDv ?? string.Empty,
+                        ServiceName = ct.MaDvNavigation != null ? ct.MaDvNavigation.TenDv : ct.NoiDung,
+                        Unit = ct.MaDvNavigation != null ? ct.MaDvNavigation.DonViTinh : string.Empty,
+                        Quantity = ct.SoLuong,
+                        UnitPrice = ct.DonGia,
+                        Total = ct.ThanhTien,
+                        AppliedDate = ct.NgayApDung,
+                        Note = ct.GhiChu
+                    })
+                    .ToList()
+            })
             .ToListAsync(cancellationToken);
 
-        var stays = activeBookings
-            .Select(BuildActiveStayDto)
-            .ToList();
+        var stays = activeBookingsData.Select(data => new ReceptionistActiveStayDto
+        {
+            BookingCode = data.BookingCode,
+            CustomerName = data.CustomerName,
+            PhoneNumber = data.SdtSnapshot ?? data.CustomerPhone,
+            Email = data.CustomerEmail,
+            CheckInDate = data.CheckInDate.ToString("dd/MM/yyyy"),
+            CheckOutDate = data.CheckOutDate.ToString("dd/MM/yyyy"),
+            Nights = Math.Max(data.CheckOutDate.DayNumber - data.CheckInDate.DayNumber, 1),
+            InvoiceStatus = data.InvoiceStatus,
+            RoomTotal = data.RoomTotal,
+            ServiceTotal = data.ServiceTotal,
+            DiscountAmount = data.DiscountAmount,
+            PromotionCode = data.PromotionCode?.Trim(),
+            PromotionName = data.PromotionName?.Trim(),
+            PaidAmount = data.PaidAmount,
+            GrandTotal = data.GrandTotal,
+            RemainingAmount = Math.Max(data.GrandTotal - data.PaidAmount, 0),
+            RoomNumbers = data.RoomLines.Where(x => x.RoomNumber != null).Select(x => x.RoomNumber!).OrderBy(x => x).ToList(),
+            RoomLines = data.RoomLines.Select(x => new ReceptionistRoomChargeLineDto
+            {
+                LineId = x.LineId,
+                RoomTypeId = x.RoomTypeId,
+                RoomTypeName = x.RoomTypeName,
+                RoomNumber = x.RoomNumber,
+                Guests = x.Guests,
+                Quantity = x.Quantity,
+                UnitPrice = x.UnitPrice,
+                Total = x.Total
+            }).OrderBy(x => x.LineId).ToList(),
+            ServiceLines = data.ServiceLines.Select(x => new ReceptionistServiceLineDto
+            {
+                LineId = x.LineId,
+                ServiceId = x.ServiceId,
+                ServiceName = x.ServiceName,
+                Unit = x.Unit,
+                Quantity = x.Quantity,
+                UnitPrice = x.UnitPrice,
+                Total = x.Total,
+                AppliedDate = x.AppliedDate?.ToString("dd/MM/yyyy") ?? string.Empty,
+                Note = x.Note
+            }).OrderByDescending(x => string.IsNullOrWhiteSpace(x.AppliedDate) ? "0000" : x.AppliedDate).ThenByDescending(x => x.LineId).ToList()
+        }).ToList();
 
         return new ReceptionistCheckoutListResult
         {

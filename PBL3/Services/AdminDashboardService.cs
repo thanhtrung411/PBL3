@@ -82,18 +82,111 @@ public sealed class AdminDashboardService : IAdminDashboardService
             .Select(x => new RoomStatusCount { Status = x.Key, Count = x.Count() })
             .ToListAsync(cancellationToken);
 
-        var recentBookingEntities = await _context.DatPhongs
+        var recentBookingData = await _context.DatPhongs
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.HoaDon)
-                .ThenInclude(x => x!.ChiTietHoaDons)
-                    .ThenInclude(x => x.MaPhongNavigation)
-            .Include(x => x.HoaDon)
-                .ThenInclude(x => x!.ChiTietHoaDons)
-                    .ThenInclude(x => x.MaLoaiPhongNavigation)
             .OrderByDescending(x => x.NgayDat)
             .Take(5)
+            .Select(x => new
+            {
+                BookingCode = x.MaDatPhong,
+                CustomerName = x.TenKhSnapshot,
+                CustomerPhone = x.SdtSnapshot,
+                CheckInDate = x.NgayNhanPhong,
+                CheckOutDate = x.NgayTraPhong,
+                BookingStatus = x.TrangThai,
+                InvoiceStatus = x.HoaDon != null ? x.HoaDon.TrangThai : null,
+                RoomLines = x.HoaDon != null
+                    ? x.HoaDon.ChiTietHoaDons
+                        .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                     ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                        .Select(ct => new
+                        {
+                            RoomNumber = ct.MaPhongNavigation != null ? ct.MaPhongNavigation.SoPhong : null,
+                            RoomTypeName = ct.MaLoaiPhongNavigation != null ? ct.MaLoaiPhongNavigation.TenLoaiPhong : null,
+                            Quantity = ct.SoLuong
+                        })
+                        .ToList()
+                    : null
+            })
             .ToListAsync(cancellationToken);
+
+        var recentBookings = recentBookingData.Select(data =>
+        {
+            var roomSummary = "Chưa gán phòng";
+            if (data.RoomLines != null)
+            {
+                var assignedRooms = data.RoomLines
+                    .Where(x => x.RoomNumber != null)
+                    .Select(x => x.RoomNumber!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x)
+                    .ToList();
+
+                if (assignedRooms.Count > 0)
+                {
+                    roomSummary = string.Join(", ", assignedRooms);
+                }
+                else
+                {
+                    var byType = data.RoomLines
+                        .Where(x => x.RoomTypeName != null)
+                        .GroupBy(x => x.RoomTypeName!)
+                        .Select(x => $"{x.Key} x {x.Sum(item => item.Quantity)}")
+                        .ToList();
+
+                    if (byType.Count > 0)
+                    {
+                        roomSummary = string.Join(", ", byType);
+                    }
+                }
+            }
+
+            var nights = Math.Max(1, data.CheckOutDate.DayNumber - data.CheckInDate.DayNumber);
+            
+            string statusLabel;
+            string statusClass;
+
+            if (data.BookingStatus == DomainValues.DatPhongTrangThai.DaHuy)
+            {
+                statusLabel = "Đã hủy"; statusClass = "badge-occupied";
+            }
+            else if (data.BookingStatus == DomainValues.DatPhongTrangThai.QuaHanNhanPhong)
+            {
+                statusLabel = "Quá hạn nhận phòng"; statusClass = "badge-occupied";
+            }
+            else if (data.BookingStatus == DomainValues.DatPhongTrangThai.TraPhong)
+            {
+                statusLabel = "Đã trả phòng"; statusClass = "badge-empty";
+            }
+            else if (data.BookingStatus == DomainValues.DatPhongTrangThai.DaNhanPhong)
+            {
+                statusLabel = "Đã nhận phòng"; statusClass = "badge-empty";
+            }
+            else if (data.InvoiceStatus == DomainValues.HoaDonTrangThai.DaThanhToan)
+            {
+                statusLabel = "Đã thanh toán"; statusClass = "badge-booked";
+            }
+            else if (ActiveRoomBookingStatuses.Contains(data.BookingStatus))
+            {
+                statusLabel = "Giữ chỗ"; statusClass = "badge-maintenance";
+            }
+            else
+            {
+                statusLabel = data.BookingStatus; statusClass = "badge-booked";
+            }
+
+            return new RecentBookingDashboardItem
+            {
+                BookingCode = data.BookingCode.Trim(),
+                CustomerName = data.CustomerName,
+                CustomerPhone = data.CustomerPhone,
+                RoomSummary = roomSummary,
+                CheckInDate = data.CheckInDate,
+                Nights = nights,
+                StatusLabel = statusLabel,
+                StatusClass = statusClass
+            };
+        }).ToList();
 
         return new AdminDashboardViewModel
         {
@@ -108,7 +201,7 @@ public sealed class AdminDashboardService : IAdminDashboardService
                 .Select(x => revenueByMonth.GetValueOrDefault(new DateTime(x.Year, x.Month, 1), 0m))
                 .ToList(),
             RoomStatuses = BuildRoomStatuses(roomStatusRows),
-            RecentBookings = recentBookingEntities.Select(BuildRecentBooking).ToList()
+            RecentBookings = recentBookings
         };
     }
 

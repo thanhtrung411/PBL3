@@ -554,32 +554,25 @@ public class PublicBookingService : IPublicBookingService
         var normalizedCode = bookingCode.Trim();
         var normalizedPhone = phoneNumber.Trim();
 
-        var booking = await _context.DatPhongs
+        var bookingDto = await _context.DatPhongs
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
-            .FirstOrDefaultAsync(x => x.MaDatPhong == normalizedCode && x.SdtSnapshot == normalizedPhone);
+            .Where(x => x.MaDatPhong == normalizedCode && x.SdtSnapshot == normalizedPhone)
+            .Select(x => new BookingLookupResultViewModel
+            {
+                BookingCode = x.MaDatPhong,
+                CustomerName = x.TenKhSnapshot,
+                PhoneNumber = x.SdtSnapshot ?? "",
+                CheckIn = x.NgayNhanPhong,
+                CheckOut = x.NgayTraPhong,
+                Status = x.TrangThai,
+                RoomSummary = x.HoaDon != null 
+                    ? x.HoaDon.ChiTietHoaDons.Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong).Select(ct => ct.NoiDung).FirstOrDefault() ?? "Thông tin phòng đang được cập nhật"
+                    : "Thông tin phòng đang được cập nhật",
+                TotalAmount = x.HoaDon != null ? x.HoaDon.TongThanhToan : 0
+            })
+            .FirstOrDefaultAsync();
 
-        if (booking == null)
-        {
-            return null;
-        }
-
-        var roomDetail = booking.HoaDon?.ChiTietHoaDons
-            .FirstOrDefault(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong);
-
-        return new BookingLookupResultViewModel
-        {
-            BookingCode = booking.MaDatPhong,
-            CustomerName = booking.TenKhSnapshot,
-            PhoneNumber = booking.SdtSnapshot ?? "",
-            CheckIn = booking.NgayNhanPhong,
-            CheckOut = booking.NgayTraPhong,
-            Status = booking.TrangThai,
-            RoomSummary = roomDetail?.NoiDung ?? "Thông tin phòng đang được cập nhật",
-            TotalAmount = booking.HoaDon?.TongThanhToan ?? 0
-        };
+        return bookingDto;
     }
 
     private async Task<string?> FindReusablePendingOnlineBookingAsync(
@@ -596,11 +589,8 @@ public class PublicBookingService : IPublicBookingService
             .GroupBy(x => NormalizeCode(x.RoomTypeId), StringComparer.OrdinalIgnoreCase)
             .ToDictionary(x => x.Key, x => x.Sum(line => line.Rooms), StringComparer.OrdinalIgnoreCase);
 
-        var candidates = await _context.DatPhongs
+        var candidatesData = await _context.DatPhongs
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
             .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.GiuCho &&
                         x.NgayDat >= cutoff &&
                         x.NgayNhanPhong == checkInDate &&
@@ -612,20 +602,27 @@ public class PublicBookingService : IPublicBookingService
                         x.HoaDon.PhuongThucThanhToan == DomainValues.PhuongThucThanhToan.Qr &&
                         x.HoaDon.TongTienPhong == roomTotal)
             .OrderByDescending(x => x.NgayDat)
+            .Select(x => new
+            {
+                BookingCode = x.MaDatPhong,
+                RoomLines = x.HoaDon!.ChiTietHoaDons
+                    .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                 ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
+                                 ct.MaLoaiPhong != null)
+                    .Select(ct => ct.MaLoaiPhong)
+                    .ToList()
+            })
             .ToListAsync();
 
-        foreach (var candidate in candidates)
+        foreach (var candidate in candidatesData)
         {
-            var candidateSelection = candidate.HoaDon!.ChiTietHoaDons
-                .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
-                            x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
-                            !string.IsNullOrWhiteSpace(x.MaLoaiPhong))
-                .GroupBy(x => NormalizeCode(x.MaLoaiPhong), StringComparer.OrdinalIgnoreCase)
+            var candidateSelection = candidate.RoomLines
+                .GroupBy(x => NormalizeCode(x!), StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(x => x.Key, x => x.Count(), StringComparer.OrdinalIgnoreCase);
 
             if (SelectionsMatch(expectedSelection, candidateSelection))
             {
-                return candidate.MaDatPhong.Trim();
+                return candidate.BookingCode.Trim();
             }
         }
 
@@ -680,9 +677,6 @@ public class PublicBookingService : IPublicBookingService
 
         var overlappingBookings = await _context.ChiTietHoaDons
             .AsNoTracking()
-            .Include(x => x.MaPhongNavigation)
-            .Include(x => x.MaHoaDonNavigation)
-            .ThenInclude(x => x.MaDatPhongNavigation)
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                         x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
                         x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.TraPhong &&
