@@ -335,8 +335,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
 
         var hasActiveAssignment = await _context.ChiTietHoaDons
             .AsNoTracking()
-            .Include(x => x.MaHoaDonNavigation)
-            .ThenInclude(x => x.MaDatPhongNavigation)
             .AnyAsync(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                            x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
                            x.MaPhong == room.MaPhong &&
@@ -884,10 +882,19 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         var blockedRoomIds = await GetBlockedRoomIdsAsync(booking, cancellationToken);
         var rooms = await _context.Phongs
             .AsNoTracking()
-            .Include(x => x.MaLoaiPhongNavigation)
             .Where(x => requiredTypeIds.Contains(x.MaLoaiPhong))
             .OrderBy(x => x.Tang)
             .ThenBy(x => x.SoPhong)
+            .Select(x => new
+            {
+                x.MaPhong,
+                x.SoPhong,
+                x.MaLoaiPhong,
+                RoomTypeName = x.MaLoaiPhongNavigation.TenLoaiPhong,
+                x.Tang,
+                x.TrangThai,
+                Capacity = x.MaLoaiPhongNavigation.SoNguoiToiDa
+            })
             .ToListAsync(cancellationToken);
         var groups = bookingDto.Requirements
             .Select(requirement => new ReceptionistRoomGroupDto
@@ -897,7 +904,30 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                 RequiredRooms = requirement.RequiredRooms,
                 Rooms = rooms
                     .Where(room => string.Equals(room.MaLoaiPhong, requirement.RoomTypeId, StringComparison.OrdinalIgnoreCase))
-                    .Select(room => BuildRoomDto(room, blockedRoomIds.Contains(room.MaPhong)))
+                    .Select(room =>
+                    {
+                        var hasOverlap = blockedRoomIds.Contains(room.MaPhong);
+                        var isMaintenance = IsMaintenanceStatus(room.TrangThai);
+                        var isBusy = IsBusyStatus(room.TrangThai) || hasOverlap;
+                        var status = isMaintenance ? "maintenance" : isBusy ? "occupied" : "available";
+                        return new ReceptionistRoomDto
+                        {
+                            RoomId = room.MaPhong,
+                            RoomNumber = room.SoPhong,
+                            RoomTypeId = room.MaLoaiPhong,
+                            RoomTypeName = room.RoomTypeName,
+                            Floor = room.Tang,
+                            Status = status,
+                            StatusLabel = status switch
+                            {
+                                "maintenance" => "Bảo trì",
+                                "occupied" => "Đang sử dụng",
+                                _ => "Trống"
+                            },
+                            IsSelectable = status == "available",
+                            Capacity = room.Capacity
+                        };
+                    })
                     .ToList()
             })
             .ToList();
@@ -1063,9 +1093,18 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
         var nights = Math.Max(request.CheckOutDate.DayNumber - checkInDate.DayNumber, 1);
         var rooms = await _context.Phongs
             .AsNoTracking()
-            .Include(x => x.MaLoaiPhongNavigation)
             .OrderBy(x => x.Tang)
             .ThenBy(x => x.SoPhong)
+            .Select(x => new
+            {
+                x.MaPhong,
+                x.SoPhong,
+                x.MaLoaiPhong,
+                RoomTypeName = x.MaLoaiPhongNavigation.TenLoaiPhong,
+                x.Tang,
+                x.TrangThai,
+                Capacity = x.MaLoaiPhongNavigation.SoNguoiToiDa
+            })
             .ToListAsync(cancellationToken);
         var blockedRoomIds = await GetBlockedRoomIdsForRangeAsync(
             checkInDate,
@@ -1109,10 +1148,10 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             CheckOutDate = request.CheckOutDate.ToString("dd/MM/yyyy"),
             Nights = nights,
             Groups = rooms
-                .GroupBy(x => new { x.MaLoaiPhong, x.MaLoaiPhongNavigation.TenLoaiPhong })
-                .OrderBy(x => x.Min(room => room.MaLoaiPhongNavigation.SoNguoiToiDa))
+                .GroupBy(x => new { x.MaLoaiPhong, x.RoomTypeName })
+                .OrderBy(x => x.Min(room => room.Capacity))
                 .ThenBy(x => roomTypePrices.TryGetValue(x.Key.MaLoaiPhong, out var price) ? price : 0)
-                .ThenBy(x => x.Key.TenLoaiPhong)
+                .ThenBy(x => x.Key.RoomTypeName)
                 .Select(group =>
                 {
                     var selectableCount = group.Count(room => selectableRooms.Any(selectable =>
@@ -1124,19 +1163,37 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                     return new ReceptionistRoomGroupDto
                     {
                         RoomTypeId = group.Key.MaLoaiPhong,
-                        RoomTypeName = group.Key.TenLoaiPhong,
+                        RoomTypeName = group.Key.RoomTypeName,
                         RequiredRooms = 0,
                         MaxSelectableRooms = Math.Max(selectableCount - reservedForType, 0),
                         ReservedForBookingCount = reservedForType,
                         PricePerNight = roomTypePrices.TryGetValue(group.Key.MaLoaiPhong, out var groupPrice) ? groupPrice : 0,
-                        Capacity = group.First().MaLoaiPhongNavigation.SoNguoiToiDa,
+                        Capacity = group.First().Capacity,
                         Rooms = group.OrderBy(room => room.Tang).ThenBy(room => room.SoPhong).Select(room =>
                         {
                             var hasOverlappingAssignment = blockedRoomIds.Contains(room.MaPhong) ||
                                 (checkInDate <= today && IsBusyStatus(room.TrangThai));
-                            var dto = BuildRoomDto(room, hasOverlappingAssignment);
-                            dto.PricePerNight = roomTypePrices.TryGetValue(room.MaLoaiPhong, out var price) ? price : 0;
-                            return dto;
+                            var isMaintenance = IsMaintenanceStatus(room.TrangThai);
+                            var isBusy = IsBusyStatus(room.TrangThai) || hasOverlappingAssignment;
+                            var status = isMaintenance ? "maintenance" : isBusy ? "occupied" : "available";
+                            return new ReceptionistRoomDto
+                            {
+                                RoomId = room.MaPhong,
+                                RoomNumber = room.SoPhong,
+                                RoomTypeId = room.MaLoaiPhong,
+                                RoomTypeName = room.RoomTypeName,
+                                Floor = room.Tang,
+                                Status = status,
+                                StatusLabel = status switch
+                                {
+                                    "maintenance" => "Bảo trì",
+                                    "occupied" => "Đang sử dụng",
+                                    _ => "Trống"
+                                },
+                                IsSelectable = status == "available",
+                                Capacity = room.Capacity,
+                                PricePerNight = roomTypePrices.TryGetValue(room.MaLoaiPhong, out var price) ? price : 0
+                            };
                         }).ToList()
                     };
                 })
@@ -1172,8 +1229,17 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
 
         var selectedRooms = await _context.Phongs
             .AsNoTracking()
-            .Include(x => x.MaLoaiPhongNavigation)
             .Where(x => roomIds.Contains(x.MaPhong))
+            .Select(x => new
+            {
+                x.MaPhong,
+                x.MaLoaiPhong,
+                x.SoPhong,
+                x.Tang,
+                x.TrangThai,
+                RoomTypeName = x.MaLoaiPhongNavigation.TenLoaiPhong,
+                Capacity = x.MaLoaiPhongNavigation.SoNguoiToiDa
+            })
             .ToListAsync(cancellationToken);
         if (selectedRooms.Count != roomIds.Count)
         {
@@ -1583,8 +1649,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     {
         var blockedRoomIds = await _context.ChiTietHoaDons
             .AsNoTracking()
-            .Include(x => x.MaHoaDonNavigation)
-            .ThenInclude(x => x.MaDatPhongNavigation)
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                         x.MaPhong != null &&
                         x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
@@ -1607,15 +1671,29 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     {
         var bookings = await _context.DatPhongs
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(x => x.HoaDon)
-            .ThenInclude(x => x!.ChiTietHoaDons)
             .Where(x => x.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
                         x.TrangThai != DomainValues.DatPhongTrangThai.TraPhong &&
                         x.TrangThai != DomainValues.DatPhongTrangThai.QuaHanNhanPhong &&
                         x.NgayNhanPhong < checkOutDate &&
                         x.NgayTraPhong > checkInDate &&
                         (excludedBookingCode == null || x.MaDatPhong != excludedBookingCode))
+            .Select(x => new
+            {
+                x.MaDatPhong,
+                x.NgayNhanPhong,
+                x.NgayTraPhong,
+                RoomLines = x.HoaDon != null
+                    ? x.HoaDon.ChiTietHoaDons
+                        .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                     ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                        .Select(ct => new
+                        {
+                            ct.MaPhong,
+                            ct.MaLoaiPhong
+                        })
+                        .ToList()
+                    : null
+            })
             .ToListAsync(cancellationToken);
 
         var demand = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -1624,7 +1702,8 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             var demandForDate = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var booking in bookings.Where(x => x.NgayNhanPhong <= date && x.NgayTraPhong > date))
             {
-                foreach (var line in GetActiveRoomLines(booking)
+                if (booking.RoomLines == null) continue;
+                foreach (var line in booking.RoomLines
                              .Where(x => string.IsNullOrWhiteSpace(x.MaPhong) &&
                                          !string.IsNullOrWhiteSpace(x.MaLoaiPhong)))
                 {
@@ -1784,8 +1863,6 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
     {
         var blockedRoomIds = await _context.ChiTietHoaDons
             .AsNoTracking()
-            .Include(x => x.MaHoaDonNavigation)
-            .ThenInclude(x => x.MaDatPhongNavigation)
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                         x.MaPhong != null &&
                         x.MaHoaDonNavigation.MaDatPhong != booking.MaDatPhong &&

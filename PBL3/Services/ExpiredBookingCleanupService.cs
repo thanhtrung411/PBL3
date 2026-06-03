@@ -151,8 +151,6 @@ public class ExpiredBookingCleanupService : IExpiredBookingCleanupService
     {
         var blockedRoomIds = await _context.ChiTietHoaDons
             .AsNoTracking()
-            .Include(x => x.MaHoaDonNavigation)
-            .ThenInclude(x => x.MaDatPhongNavigation)
             .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                         x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
                         x.MaPhong != null &&

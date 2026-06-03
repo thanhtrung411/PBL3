@@ -40,21 +40,23 @@ namespace PBL3.Services
 
         public async Task<bool> KiemTraPhongTrongAsync(string maPhong, DateOnly ngayNhan, DateOnly ngayTra, string? maDatPhongNgoaiLe = null)
         {
-            var overlappingCTHDs = await _context.ChiTietHoaDons
+            var overlappingDates = await _context.ChiTietHoaDons
                 .AsNoTracking()
-                .Include(c => c.MaHoaDonNavigation)
-                .ThenInclude(h => h.MaDatPhongNavigation)
                 .Where(c => c.MaPhong == maPhong && 
                             c.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
                             c.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.TraPhong &&
                             c.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai != DomainValues.DatPhongTrangThai.QuaHanNhanPhong &&
                             c.MaHoaDonNavigation.MaDatPhongNavigation.MaDatPhong != maDatPhongNgoaiLe)
+                .Select(c => new
+                {
+                    c.MaHoaDonNavigation.MaDatPhongNavigation.NgayNhanPhong,
+                    c.MaHoaDonNavigation.MaDatPhongNavigation.NgayTraPhong
+                })
                 .ToListAsync();
 
-            foreach (var cthd in overlappingCTHDs)
+            foreach (var dates in overlappingDates)
             {
-                var datPhong = cthd.MaHoaDonNavigation.MaDatPhongNavigation;
-                if (ngayNhan < datPhong.NgayTraPhong && ngayTra > datPhong.NgayNhanPhong)
+                if (ngayNhan < dates.NgayTraPhong && ngayTra > dates.NgayNhanPhong)
                 {
                     return false; // Trùng phòng
                 }
