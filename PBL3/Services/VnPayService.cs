@@ -70,7 +70,7 @@ public class VnPayService : IVnPayService
             ["vnp_OrderInfo"] = string.IsNullOrWhiteSpace(request.OrderInfo) ? $"Thanh toan dat phong {request.BookingCode}" : request.OrderInfo,
             ["vnp_OrderType"] = string.IsNullOrWhiteSpace(_options.OrderType) ? "other" : _options.OrderType.Trim(),
             ["vnp_ReturnUrl"] = request.ReturnUrl,
-            ["vnp_TxnRef"] = request.BookingCode.Trim()
+            ["vnp_TxnRef"] = $"{request.BookingCode.Trim()}_{now.Ticks}"
         };
 
         if (_options.ExpireMinutes > 0)
@@ -138,7 +138,7 @@ public class VnPayService : IVnPayService
             Success = success,
             IpnResponseCode = isValid ? "00" : "97",
             IpnMessage = isValid ? "Confirm success" : "Invalid signature",
-            BookingCode = data.GetValueOrDefault("vnp_TxnRef", "").Trim(),
+            BookingCode = ExtractBookingCode(data.GetValueOrDefault("vnp_TxnRef", "").Trim()),
             OrderInfo = orderInfo,
             IsWalkInPayment = IsWalkInOrderInfo(orderInfo),
             IsCheckoutPayment = IsCheckoutOrderInfo(orderInfo),
@@ -175,10 +175,11 @@ public class VnPayService : IVnPayService
             return result;
         }
 
-        var isWalkInVnPay = result.IsWalkInPayment || IsWalkInVnPayInvoice(invoice);
-        result.IsWalkInPayment = isWalkInVnPay;
         var isCheckoutVnPay = result.IsCheckoutPayment || IsCheckoutVnPayInvoice(invoice);
         result.IsCheckoutPayment = isCheckoutVnPay;
+
+        var isWalkInVnPay = !isCheckoutVnPay && (result.IsWalkInPayment || IsWalkInVnPayInvoice(invoice));
+        result.IsWalkInPayment = isWalkInVnPay;
 
         if ((invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
              invoice.MaDatPhongNavigation.TrangThai == DomainValues.DatPhongTrangThai.DaHuy) &&
@@ -254,9 +255,22 @@ public class VnPayService : IVnPayService
                 invoice.MaDatPhongNavigation.TrangThai = DomainValues.DatPhongTrangThai.TraPhong;
                 await MarkInvoiceRoomsAsync(invoice, DomainValues.PhongTrangThai.Trong);
             }
-
             await _context.SaveChangesAsync();
-            await SendPaymentSuccessEmailAsync(result);
+            
+            if (isCheckoutVnPay)
+            {
+                var receiptEmail = query.TryGetValue("receiptEmail", out var emailValues) ? emailValues.ToString() : null;
+                var sendEmail = query.TryGetValue("sendEmail", out var sendValues) && string.Equals(sendValues.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+                
+                if (sendEmail || !query.ContainsKey("sendEmail"))
+                {
+                    await _bookingEmailService.SendCheckoutReceiptEmailAsync(result.BookingCode, receiptEmail);
+                }
+            }
+            else
+            {
+                await SendPaymentSuccessEmailAsync(result);
+            }
         }
 
         result.IpnResponseCode = "00";
@@ -523,6 +537,12 @@ public class VnPayService : IVnPayService
 
         var combined = $"{current}; {next}";
         return combined.Length <= 255 ? combined : combined[..255];
+    }
+
+    private static string ExtractBookingCode(string txnRef)
+    {
+        var underscoreIndex = txnRef.LastIndexOf('_');
+        return underscoreIndex > 0 ? txnRef[..underscoreIndex] : txnRef;
     }
 
     private sealed class VnPayCompare : IComparer<string>

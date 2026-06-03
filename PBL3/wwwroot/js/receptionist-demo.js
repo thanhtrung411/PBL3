@@ -370,19 +370,39 @@
         const message = query.get("message") || "";
         if (checkoutStatus) {
             setStep("checkout");
-            renderCheckoutPaymentResult({
-                status: checkoutStatus,
-                bookingCode,
-                amount: Number(query.get("amount") || 0),
-                transactionNo: query.get("transactionNo") || "",
-                bankCode: query.get("bankCode") || "",
-                message
-            });
-            showAlert(
-                message || (checkoutStatus === "success"
-                    ? "Thanh toán VNPay check-out thành công."
-                    : "Thanh toán VNPay check-out chưa hoàn tất."),
-                checkoutStatus === "success" ? "success" : checkoutStatus === "cancelled" ? "warning" : "danger");
+            if (checkoutStatus === "success") {
+                renderCheckoutPaymentResult({
+                    status: checkoutStatus,
+                    bookingCode,
+                    amount: Number(query.get("amount") || 0),
+                    transactionNo: query.get("transactionNo") || "",
+                    bankCode: query.get("bankCode") || "",
+                    message
+                });
+                showAlert(message || "Thanh toán VNPay check-out thành công.", "success");
+                
+                if (query.get("printInvoice") === "true") {
+                    const savedStayStr = sessionStorage.getItem("vnpay_checkout_stay_" + bookingCode);
+                    if (savedStayStr) {
+                        try {
+                            const stay = JSON.parse(savedStayStr);
+                            const paidAmount = Number(query.get("amount") || 0) + (stay.paidAmount || 0);
+                            printCheckoutInvoice(stay, { 
+                                receiptEmail: query.get("receiptEmail"), 
+                                paymentMethod: "VNPay", 
+                                result: { paidAmount: paidAmount, remainingAmount: 0 } 
+                            });
+                        } catch (e) {
+                            console.error("Failed to parse saved stay", e);
+                        }
+                    }
+                }
+                sessionStorage.removeItem("vnpay_checkout_stay_" + bookingCode);
+            } else {
+                state.selectedCheckoutCode = bookingCode;
+                await loadCheckoutList();
+                showAlert(message || "Thanh toán VNPay đã bị hủy hoặc không thành công. Vui lòng chọn lại phương thức thanh toán.", checkoutStatus === "cancelled" ? "warning" : "danger");
+            }
             query.delete("checkoutPaymentStatus");
             query.delete("bookingCode");
             query.delete("amount");
@@ -2328,7 +2348,7 @@
 
         setButtonBusy(elements.confirmCheckoutBtn, true, isVnPay ? "Đang tạo VNPay..." : "Đang check-out...");
         let printWindow = null;
-        if (printInvoice && selectedStay) {
+        if (printInvoice && selectedStay && !isVnPay) {
             printWindow = window.open("", "_blank", "width=820,height=900");
             if (printWindow) {
                 printWindow.document.write("<!doctype html><title>Đang tạo hóa đơn</title><body style=\"font-family:Arial,sans-serif;padding:28px\">Đang tạo hóa đơn...</body>");
@@ -2359,6 +2379,9 @@
             }
 
             if (result.requiresOnlinePayment && result.paymentUrl) {
+                if (selectedStay) {
+                    sessionStorage.setItem("vnpay_checkout_stay_" + bookingCode, JSON.stringify(selectedStay));
+                }
                 showAlert(result.message || "Đang chuyển sang VNPay.", "info");
                 window.location.assign(result.paymentUrl);
                 return;

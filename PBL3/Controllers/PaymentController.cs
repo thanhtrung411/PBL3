@@ -123,7 +123,10 @@ public class PaymentController : Controller
                     amount = result.Amount,
                     transactionNo = result.TransactionNo,
                     bankCode = result.BankCode,
-                    message = result.Message
+                    message = result.Message,
+                    printInvoice = Request.Query["printInvoice"].ToString(),
+                    sendEmail = Request.Query["sendEmail"].ToString(),
+                    receiptEmail = Request.Query["receiptEmail"].ToString()
                 });
         }
 

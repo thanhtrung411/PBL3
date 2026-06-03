@@ -118,13 +118,29 @@ public class ReceptionistController : Controller
                 });
             }
 
+            var returnUrl = ResolveCurrentHostVnPayReturnUrl();
+            if (request.PrintInvoice || request.SendReceiptEmail)
+            {
+                var queryParams = new Dictionary<string, string?>();
+                if (request.PrintInvoice) queryParams["printInvoice"] = "true";
+                if (request.SendReceiptEmail)
+                {
+                    queryParams["sendEmail"] = "true";
+                    if (!string.IsNullOrWhiteSpace(request.ReceiptEmail))
+                    {
+                        queryParams["receiptEmail"] = request.ReceiptEmail.Trim();
+                    }
+                }
+                returnUrl = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(returnUrl, queryParams);
+            }
+
             var paymentStart = _vnPayService.CreatePaymentUrl(new VnPayPaymentRequest
             {
                 BookingCode = stay.BookingCode,
                 Amount = stay.RemainingAmount,
                 OrderInfo = $"CHECKOUT_VNPAY_PENDING Thanh toan check-out {stay.BookingCode}",
                 IpAddress = GetClientIpAddress(),
-                ReturnUrl = ResolveCurrentHostVnPayReturnUrl()
+                ReturnUrl = returnUrl
             });
 
             if (!paymentStart.Success || string.IsNullOrWhiteSpace(paymentStart.PaymentUrl))
