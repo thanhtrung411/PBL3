@@ -18,24 +18,143 @@ namespace PBL3.Controllers
         public async Task<IActionResult> Index()
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
-            var invoices = await _context.HoaDons
+            var invoicesData = await _context.HoaDons
                 .AsNoTracking()
-                .AsSplitQuery()
-                .Include(x => x.MaDatPhongNavigation)
-                    .ThenInclude(x => x.MaKhNavigation)
-                .Include(x => x.MaDatPhongNavigation)
-                    .ThenInclude(x => x.MaNvNavigation)
-                .Include(x => x.ChiTietHoaDons)
-                    .ThenInclude(x => x.MaPhongNavigation)
-                .Include(x => x.ChiTietHoaDons)
-                    .ThenInclude(x => x.MaLoaiPhongNavigation)
-                .Include(x => x.ChiTietHoaDons)
-                    .ThenInclude(x => x.MaDvNavigation)
                 .OrderByDescending(x => x.NgayThanhToanCuoi ?? x.MaDatPhongNavigation.NgayDat)
                 .Take(300)
+                .Select(x => new
+                {
+                    x.MaHoaDon,
+                    x.MaDatPhong,
+                    x.TongTienPhong,
+                    x.TongTienDichVu,
+                    x.TienGiamGiaPhong,
+                    x.TongThanhToan,
+                    x.SoTienDaThanhToan,
+                    x.TrangThai,
+                    x.PhuongThucThanhToan,
+                    x.NgayThanhToanCuoi,
+                    BookingTenKhSnapshot = x.MaDatPhongNavigation.TenKhSnapshot,
+                    BookingSdtSnapshot = x.MaDatPhongNavigation.SdtSnapshot,
+                    BookingNgayDat = x.MaDatPhongNavigation.NgayDat,
+                    BookingNgayNhanPhong = x.MaDatPhongNavigation.NgayNhanPhong,
+                    BookingNgayTraPhong = x.MaDatPhongNavigation.NgayTraPhong,
+                    BookingMaNv = x.MaDatPhongNavigation.MaNv,
+                    CustomerName = x.MaDatPhongNavigation.MaKhNavigation != null
+                        ? x.MaDatPhongNavigation.MaKhNavigation.HoTen : null,
+                    CustomerPhone = x.MaDatPhongNavigation.MaKhNavigation != null
+                        ? x.MaDatPhongNavigation.MaKhNavigation.SoDienThoai : null,
+                    EmployeeName = x.MaDatPhongNavigation.MaNvNavigation != null
+                        ? x.MaDatPhongNavigation.MaNvNavigation.HoTen : null,
+                    EmployeePosition = x.MaDatPhongNavigation.MaNvNavigation != null
+                        ? x.MaDatPhongNavigation.MaNvNavigation.ChucVu : null,
+                    LineItems = x.ChiTietHoaDons
+                        .Where(ct => ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                        .OrderBy(ct => ct.NgayApDung)
+                        .ThenBy(ct => ct.LoaiMuc)
+                        .Select(ct => new
+                        {
+                            ct.LoaiMuc,
+                            ct.NoiDung,
+                            ct.SoLuong,
+                            ct.DonGia,
+                            ct.ThanhTien,
+                            ct.NgayApDung,
+                            RoomNumber = ct.MaPhongNavigation != null ? ct.MaPhongNavigation.SoPhong : null,
+                            RoomTypeName = ct.MaLoaiPhongNavigation != null ? ct.MaLoaiPhongNavigation.TenLoaiPhong : null,
+                            ServiceName = ct.MaDvNavigation != null ? ct.MaDvNavigation.TenDv : null
+                        })
+                        .ToList(),
+                    RoomSummaryData = x.ChiTietHoaDons
+                        .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                     ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                        .Select(ct => new
+                        {
+                            RoomNumber = ct.MaPhongNavigation != null ? ct.MaPhongNavigation.SoPhong : null,
+                            RoomTypeName = ct.MaLoaiPhongNavigation != null ? ct.MaLoaiPhongNavigation.TenLoaiPhong : null,
+                            ct.SoLuong
+                        })
+                        .ToList()
+                })
                 .ToListAsync();
 
-            var items = invoices.Select(invoice => BuildInvoiceItem(invoice, today)).ToList();
+            var items = invoicesData.Select(invoice =>
+            {
+                var remaining = Math.Max(invoice.TongThanhToan - invoice.SoTienDaThanhToan, 0);
+                var isOverdue = IsInvoiceOverdue(invoice.TrangThai, invoice.SoTienDaThanhToan,
+                    invoice.TongThanhToan, invoice.BookingNgayTraPhong, today);
+                var (statusLabel, statusClass) = GetInvoiceStatus(invoice.TrangThai, isOverdue,
+                    invoice.SoTienDaThanhToan, invoice.TongThanhToan);
+                var displayDate = invoice.NgayThanhToanCuoi ?? invoice.BookingNgayDat;
+
+                // Room summary
+                var assignedRooms = invoice.RoomSummaryData
+                    .Where(r => r.RoomNumber != null)
+                    .Select(r => r.RoomNumber!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(r => r)
+                    .ToList();
+                string roomSummary;
+                if (assignedRooms.Count > 0)
+                {
+                    roomSummary = string.Join(", ", assignedRooms);
+                }
+                else
+                {
+                    var byRoomType = invoice.RoomSummaryData
+                        .Where(r => r.RoomTypeName != null)
+                        .GroupBy(r => r.RoomTypeName!)
+                        .Select(g => $"{g.Key} x{g.Sum(item => Math.Max(1, item.SoLuong))}")
+                        .ToList();
+                    roomSummary = byRoomType.Count > 0 ? string.Join(", ", byRoomType) : "Chưa có phòng";
+                }
+
+                return new AdminInvoiceManagementItemViewModel
+                {
+                    InvoiceCode = invoice.MaHoaDon.Trim(),
+                    BookingCode = invoice.MaDatPhong.Trim(),
+                    CustomerName = !string.IsNullOrWhiteSpace(invoice.BookingTenKhSnapshot)
+                        ? invoice.BookingTenKhSnapshot.Trim()
+                        : invoice.CustomerName?.Trim() ?? "Khách hàng",
+                    CustomerPhone = invoice.BookingSdtSnapshot ?? invoice.CustomerPhone,
+                    EmployeeId = invoice.BookingMaNv.Trim(),
+                    EmployeeName = invoice.EmployeeName?.Trim() ?? "Chưa có nhân viên",
+                    EmployeePosition = invoice.EmployeePosition?.Trim() ?? string.Empty,
+                    RoomSummary = roomSummary,
+                    CreatedDateLabel = displayDate.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN")),
+                    CheckInLabel = invoice.BookingNgayNhanPhong.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN")),
+                    CheckOutLabel = invoice.BookingNgayTraPhong.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN")),
+                    SortDateValue = displayDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    RoomAmountLabel = FormatCurrency(invoice.TongTienPhong),
+                    ServiceAmountLabel = FormatCurrency(invoice.TongTienDichVu),
+                    DiscountAmountLabel = FormatCurrency(invoice.TienGiamGiaPhong),
+                    TotalAmountLabel = FormatCurrency(invoice.TongThanhToan),
+                    PaidAmountLabel = FormatCurrency(invoice.SoTienDaThanhToan),
+                    RemainingAmountLabel = FormatCurrency(remaining),
+                    PaymentMethod = string.IsNullOrWhiteSpace(invoice.PhuongThucThanhToan)
+                        ? "Chưa có"
+                        : invoice.PhuongThucThanhToan.Trim(),
+                    PaidDateLabel = invoice.NgayThanhToanCuoi.HasValue
+                        ? invoice.NgayThanhToanCuoi.Value.ToString("dd/MM/yyyy HH:mm", CultureInfo.GetCultureInfo("vi-VN"))
+                        : "Chưa thanh toán",
+                    StatusLabel = statusLabel,
+                    StatusClass = statusClass,
+                    IsOverdue = isOverdue,
+                    LineItems = invoice.LineItems.Select(item => new AdminInvoiceDetailLineItemViewModel
+                    {
+                        TypeLabel = item.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong ? "Phòng" : "Dịch vụ",
+                        Description = !string.IsNullOrWhiteSpace(item.NoiDung)
+                            ? item.NoiDung.Trim()
+                            : item.ServiceName?.Trim() ?? item.RoomTypeName?.Trim() ?? "Chi tiết",
+                        RoomCode = item.RoomNumber?.Trim() ?? item.RoomTypeName?.Trim() ?? "Không áp dụng",
+                        DateLabel = item.NgayApDung?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN")) ?? "-",
+                        Quantity = item.SoLuong,
+                        UnitPriceLabel = FormatCurrency(item.DonGia),
+                        AmountLabel = FormatCurrency(item.ThanhTien)
+                    }).ToList()
+                };
+            }).ToList();
+
             var viewModel = new AdminInvoiceManagementViewModel
             {
                 Invoices = items,
@@ -49,127 +168,35 @@ namespace PBL3.Controllers
                     })
                     .OrderBy(x => x.EmployeeName)
                     .ToList(),
-                TotalPaid = invoices.Sum(x => x.SoTienDaThanhToan),
-                TotalRemaining = invoices.Sum(x => Math.Max(x.TongThanhToan - x.SoTienDaThanhToan, 0)),
-                OverdueRemaining = invoices
-                    .Where(x => IsInvoiceOverdue(x, today))
+                TotalPaid = invoicesData.Sum(x => x.SoTienDaThanhToan),
+                TotalRemaining = invoicesData.Sum(x => Math.Max(x.TongThanhToan - x.SoTienDaThanhToan, 0)),
+                OverdueRemaining = invoicesData
+                    .Where(x => IsInvoiceOverdue(x.TrangThai, x.SoTienDaThanhToan, x.TongThanhToan, x.BookingNgayTraPhong, today))
                     .Sum(x => Math.Max(x.TongThanhToan - x.SoTienDaThanhToan, 0)),
-                TotalAmount = invoices.Sum(x => x.TongThanhToan)
+                TotalAmount = invoicesData.Sum(x => x.TongThanhToan)
             };
 
             return View(viewModel);
         }
 
-        private static AdminInvoiceManagementItemViewModel BuildInvoiceItem(HoaDon invoice, DateOnly today)
+        private static bool IsInvoiceOverdue(
+            string trangThai, decimal soTienDaThanhToan, decimal tongThanhToan,
+            DateOnly ngayTraPhong, DateOnly today)
         {
-            var booking = invoice.MaDatPhongNavigation;
-            var customer = booking.MaKhNavigation;
-            var employee = booking.MaNvNavigation;
-            var remaining = Math.Max(invoice.TongThanhToan - invoice.SoTienDaThanhToan, 0);
-            var isOverdue = IsInvoiceOverdue(invoice, today);
-            var (statusLabel, statusClass) = GetInvoiceStatus(invoice, isOverdue);
-            var displayDate = invoice.NgayThanhToanCuoi ?? booking.NgayDat;
-
-            return new AdminInvoiceManagementItemViewModel
-            {
-                InvoiceCode = invoice.MaHoaDon.Trim(),
-                BookingCode = invoice.MaDatPhong.Trim(),
-                CustomerName = !string.IsNullOrWhiteSpace(booking.TenKhSnapshot)
-                    ? booking.TenKhSnapshot.Trim()
-                    : customer?.HoTen.Trim() ?? "Khách hàng",
-                CustomerPhone = booking.SdtSnapshot ?? customer?.SoDienThoai,
-                EmployeeId = booking.MaNv.Trim(),
-                EmployeeName = employee?.HoTen.Trim() ?? "Chưa có nhân viên",
-                EmployeePosition = employee?.ChucVu?.Trim() ?? string.Empty,
-                RoomSummary = BuildRoomSummary(invoice),
-                CreatedDateLabel = displayDate.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN")),
-                CheckInLabel = booking.NgayNhanPhong.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN")),
-                CheckOutLabel = booking.NgayTraPhong.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN")),
-                SortDateValue = displayDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-                RoomAmountLabel = FormatCurrency(invoice.TongTienPhong),
-                ServiceAmountLabel = FormatCurrency(invoice.TongTienDichVu),
-                DiscountAmountLabel = FormatCurrency(invoice.TienGiamGiaPhong),
-                TotalAmountLabel = FormatCurrency(invoice.TongThanhToan),
-                PaidAmountLabel = FormatCurrency(invoice.SoTienDaThanhToan),
-                RemainingAmountLabel = FormatCurrency(remaining),
-                PaymentMethod = string.IsNullOrWhiteSpace(invoice.PhuongThucThanhToan)
-                    ? "Chưa có"
-                    : invoice.PhuongThucThanhToan.Trim(),
-                PaidDateLabel = invoice.NgayThanhToanCuoi.HasValue
-                    ? invoice.NgayThanhToanCuoi.Value.ToString("dd/MM/yyyy HH:mm", CultureInfo.GetCultureInfo("vi-VN"))
-                    : "Chưa thanh toán",
-                StatusLabel = statusLabel,
-                StatusClass = statusClass,
-                IsOverdue = isOverdue,
-                LineItems = invoice.ChiTietHoaDons
-                    .Where(x => x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
-                    .OrderBy(x => x.NgayApDung)
-                    .ThenBy(x => x.LoaiMuc)
-                    .Select(BuildInvoiceLineItem)
-                    .ToList()
-            };
-        }
-
-        private static AdminInvoiceDetailLineItemViewModel BuildInvoiceLineItem(ChiTietHoaDon item)
-        {
-            return new AdminInvoiceDetailLineItemViewModel
-            {
-                TypeLabel = item.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong ? "Phòng" : "Dịch vụ",
-                Description = !string.IsNullOrWhiteSpace(item.NoiDung)
-                    ? item.NoiDung.Trim()
-                    : item.MaDvNavigation?.TenDv.Trim() ?? item.MaLoaiPhongNavigation?.TenLoaiPhong.Trim() ?? "Chi tiết",
-                RoomCode = item.MaPhongNavigation?.SoPhong.Trim() ??
-                           item.MaLoaiPhongNavigation?.TenLoaiPhong.Trim() ??
-                           "Không áp dụng",
-                DateLabel = item.NgayApDung?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN")) ?? "-",
-                Quantity = item.SoLuong,
-                UnitPriceLabel = FormatCurrency(item.DonGia),
-                AmountLabel = FormatCurrency(item.ThanhTien)
-            };
-        }
-
-        private static string BuildRoomSummary(HoaDon invoice)
-        {
-            var roomLines = invoice.ChiTietHoaDons
-                .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
-                            x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
-                .ToList();
-            var assignedRooms = roomLines
-                .Where(x => x.MaPhongNavigation != null)
-                .Select(x => x.MaPhongNavigation!.SoPhong.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(x => x)
-                .ToList();
-
-            if (assignedRooms.Count > 0)
-            {
-                return string.Join(", ", assignedRooms);
-            }
-
-            var byRoomType = roomLines
-                .Where(x => x.MaLoaiPhongNavigation != null)
-                .GroupBy(x => x.MaLoaiPhongNavigation!.TenLoaiPhong)
-                .Select(x => $"{x.Key} x{x.Sum(item => Math.Max(1, item.SoLuong))}")
-                .ToList();
-
-            return byRoomType.Count > 0 ? string.Join(", ", byRoomType) : "Chưa có phòng";
-        }
-
-        private static bool IsInvoiceOverdue(HoaDon invoice, DateOnly today)
-        {
-            if (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaThanhToan ||
-                invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy ||
-                invoice.SoTienDaThanhToan >= invoice.TongThanhToan)
+            if (trangThai == DomainValues.HoaDonTrangThai.DaThanhToan ||
+                trangThai == DomainValues.HoaDonTrangThai.DaHuy ||
+                soTienDaThanhToan >= tongThanhToan)
             {
                 return false;
             }
 
-            return invoice.MaDatPhongNavigation.NgayTraPhong < today;
+            return ngayTraPhong < today;
         }
 
-        private static (string Label, string ClassName) GetInvoiceStatus(HoaDon invoice, bool isOverdue)
+        private static (string Label, string ClassName) GetInvoiceStatus(
+            string trangThai, bool isOverdue, decimal soTienDaThanhToan, decimal tongThanhToan)
         {
-            if (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaHuy)
+            if (trangThai == DomainValues.HoaDonTrangThai.DaHuy)
             {
                 return ("Đã hủy", "cancelled");
             }
@@ -179,14 +206,14 @@ namespace PBL3.Controllers
                 return ("Quá hạn", "overdue");
             }
 
-            if (invoice.TrangThai == DomainValues.HoaDonTrangThai.DaThanhToan ||
-                invoice.SoTienDaThanhToan >= invoice.TongThanhToan && invoice.TongThanhToan > 0)
+            if (trangThai == DomainValues.HoaDonTrangThai.DaThanhToan ||
+                soTienDaThanhToan >= tongThanhToan && tongThanhToan > 0)
             {
                 return ("Đã thanh toán", "paid");
             }
 
-            if (invoice.TrangThai == DomainValues.HoaDonTrangThai.ThanhToanMotPhan ||
-                invoice.SoTienDaThanhToan > 0)
+            if (trangThai == DomainValues.HoaDonTrangThai.ThanhToanMotPhan ||
+                soTienDaThanhToan > 0)
             {
                 return ("Thanh toán một phần", "partial");
             }

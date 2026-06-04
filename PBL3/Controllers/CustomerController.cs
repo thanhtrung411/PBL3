@@ -27,7 +27,6 @@ namespace PBL3.Controllers
 
             var bookingStats = await _context.DatPhongs
                 .AsNoTracking()
-                .Include(x => x.HoaDon)
                 .Where(x => x.TrangThai != DomainValues.DatPhongTrangThai.DaHuy)
                 .GroupBy(x => x.MaKh)
                 .Select(x => new
@@ -43,22 +42,72 @@ namespace PBL3.Controllers
                 .ToListAsync();
             var statsByCustomer = bookingStats.ToDictionary(x => x.CustomerId.Trim(), StringComparer.OrdinalIgnoreCase);
 
-            var bookingHistory = await _context.DatPhongs
+            var bookingHistoryData = await _context.DatPhongs
                 .AsNoTracking()
-                .AsSplitQuery()
-                .Include(x => x.HoaDon)
-                    .ThenInclude(x => x!.ChiTietHoaDons)
-                        .ThenInclude(x => x.MaPhongNavigation)
-                .Include(x => x.HoaDon)
-                    .ThenInclude(x => x!.ChiTietHoaDons)
-                        .ThenInclude(x => x.MaLoaiPhongNavigation)
                 .OrderByDescending(x => x.NgayDat)
+                .Select(x => new
+                {
+                    x.MaKh,
+                    BookingCode = x.MaDatPhong,
+                    x.NgayDat,
+                    x.NgayNhanPhong,
+                    x.NgayTraPhong,
+                    x.TrangThai,
+                    TongThanhToan = x.HoaDon != null ? x.HoaDon.TongThanhToan : 0,
+                    RoomNumbers = x.HoaDon != null
+                        ? x.HoaDon.ChiTietHoaDons
+                            .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                         ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
+                                         ct.MaPhongNavigation != null)
+                            .Select(ct => ct.MaPhongNavigation!.SoPhong)
+                            .ToList()
+                        : null,
+                    RoomTypeNames = x.HoaDon != null
+                        ? x.HoaDon.ChiTietHoaDons
+                            .Where(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                         ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
+                                         ct.MaLoaiPhongNavigation != null)
+                            .Select(ct => ct.MaLoaiPhongNavigation!.TenLoaiPhong)
+                            .ToList()
+                        : null
+                })
                 .ToListAsync();
-            var historyByCustomer = bookingHistory
+            var historyByCustomer = bookingHistoryData
                 .GroupBy(x => x.MaKh.Trim(), StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(
                     x => x.Key,
-                    x => x.Select(BuildCustomerBookingHistoryItem).ToList(),
+                    x => x.Select(b =>
+                    {
+                        var roomCodes = b.RoomNumbers?
+                            .Where(r => !string.IsNullOrWhiteSpace(r))
+                            .Select(r => r.Trim())
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .OrderBy(r => r)
+                            .ToList() ?? new List<string>();
+                        var roomLabel = roomCodes.Count > 0
+                            ? string.Join(", ", roomCodes)
+                            : string.Join(", ", b.RoomTypeNames?
+                                .Where(r => !string.IsNullOrWhiteSpace(r))
+                                .Select(r => r.Trim())
+                                .Distinct(StringComparer.OrdinalIgnoreCase)
+                                .OrderBy(r => r)
+                                .DefaultIfEmpty("Chưa gán phòng") ?? new[] { "Chưa gán phòng" });
+                        var bookingDate = b.NgayDat.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN"));
+                        var checkIn = b.NgayNhanPhong.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN"));
+                        var checkOut = b.NgayTraPhong.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN"));
+                        var status = GetBookingStatusLabel(b.TrangThai);
+                        return new AdminCustomerBookingHistoryItemViewModel
+                        {
+                            BookingCode = b.BookingCode.Trim(),
+                            BookingDateLabel = bookingDate,
+                            CheckInLabel = checkIn,
+                            CheckOutLabel = checkOut,
+                            RoomCodes = roomLabel,
+                            TotalLabel = FormatCurrency(b.TongThanhToan),
+                            StatusLabel = status,
+                            SearchText = $"{b.BookingCode} {bookingDate} {checkIn} {checkOut} {roomLabel} {status}".ToLowerInvariant()
+                        };
+                    }).ToList(),
                     StringComparer.OrdinalIgnoreCase);
 
             var viewModel = new AdminCustomerManagementViewModel
@@ -195,57 +244,6 @@ namespace PBL3.Controllers
                 "Bạc" => 2,
                 _ => 1
             };
-        }
-
-        private static AdminCustomerBookingHistoryItemViewModel BuildCustomerBookingHistoryItem(DatPhong booking)
-        {
-            var roomCodes = GetRoomCodes(booking).ToList();
-            var roomLabel = roomCodes.Count > 0 ? string.Join(", ", roomCodes) : "Chưa gán phòng";
-            var total = booking.HoaDon?.TongThanhToan ?? 0;
-            var bookingDate = booking.NgayDat.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN"));
-            var checkIn = booking.NgayNhanPhong.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN"));
-            var checkOut = booking.NgayTraPhong.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("vi-VN"));
-            var status = GetBookingStatusLabel(booking.TrangThai);
-
-            return new AdminCustomerBookingHistoryItemViewModel
-            {
-                BookingCode = booking.MaDatPhong.Trim(),
-                BookingDateLabel = bookingDate,
-                CheckInLabel = checkIn,
-                CheckOutLabel = checkOut,
-                RoomCodes = roomLabel,
-                TotalLabel = FormatCurrency(total),
-                StatusLabel = status,
-                SearchText = $"{booking.MaDatPhong} {bookingDate} {checkIn} {checkOut} {roomLabel} {status}".ToLowerInvariant()
-            };
-        }
-
-        private static IEnumerable<string> GetRoomCodes(DatPhong booking)
-        {
-            var roomLines = booking.HoaDon?.ChiTietHoaDons
-                .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
-                            x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc) ??
-                Enumerable.Empty<ChiTietHoaDon>();
-
-            var roomCodes = roomLines
-                .Where(x => x.MaPhongNavigation != null)
-                .Select(x => x.MaPhongNavigation!.SoPhong.Trim())
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(x => x)
-                .ToList();
-
-            if (roomCodes.Count > 0)
-            {
-                return roomCodes;
-            }
-
-            return roomLines
-                .Select(x => x.MaLoaiPhongNavigation?.TenLoaiPhong?.Trim())
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => x!)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(x => x);
         }
 
         private static string GetBookingStatusLabel(string? status)

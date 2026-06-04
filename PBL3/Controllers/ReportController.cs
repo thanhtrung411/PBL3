@@ -96,8 +96,6 @@ namespace PBL3.Controllers
 
             var roomTypeRevenueRows = await _context.ChiTietHoaDons
                 .AsNoTracking()
-                .Include(x => x.MaHoaDonNavigation)
-                .Include(x => x.MaLoaiPhongNavigation)
                 .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
                             x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
                             x.MaHoaDonNavigation.TrangThai != DomainValues.HoaDonTrangThai.DaHuy &&
@@ -118,17 +116,30 @@ namespace PBL3.Controllers
                 .OrderByDescending(x => x.Sum(item => item.Amount))
                 .ToList();
 
-            var occupancyBookings = await _context.DatPhongs
+            var occupancyBookingsData = await _context.DatPhongs
                 .AsNoTracking()
-                .AsSplitQuery()
-                .Include(x => x.HoaDon)
-                .ThenInclude(x => x!.ChiTietHoaDons)
                 .Where(x => x.TrangThai != DomainValues.DatPhongTrangThai.DaHuy &&
                             x.TrangThai != DomainValues.DatPhongTrangThai.QuaHanNhanPhong &&
                             x.HoaDon != null &&
                             x.NgayNhanPhong < revenueTrendEnd &&
                             x.NgayTraPhong > revenueTrendStart)
+                .Select(x => new
+                {
+                    x.NgayNhanPhong,
+                    x.NgayTraPhong,
+                    RoomCount = x.HoaDon!.ChiTietHoaDons
+                        .Count(ct => ct.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                                     ct.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc)
+                })
                 .ToListAsync(cancellationToken);
+            var occupancyBookings = occupancyBookingsData
+                .Select(x => new OccupancyBookingData
+                {
+                    NgayNhanPhong = x.NgayNhanPhong,
+                    NgayTraPhong = x.NgayTraPhong,
+                    RoomCount = x.RoomCount
+                })
+                .ToList();
 
             var occupancyByMonth = monthBuckets
                 .ToDictionary(
@@ -229,7 +240,7 @@ namespace PBL3.Controllers
         }
 
         private static double CalculateOccupancyRate(
-            IReadOnlyCollection<DatPhong> bookings,
+            IReadOnlyCollection<OccupancyBookingData> bookings,
             DateOnly periodStart,
             DateOnly periodEnd,
             int totalRooms)
@@ -240,24 +251,28 @@ namespace PBL3.Controllers
                 return 0;
             }
 
-            var occupiedRoomNights = bookings.Sum(booking =>
+            var occupiedRoomNights = 0;
+            foreach (var booking in bookings)
             {
                 var overlapStart = booking.NgayNhanPhong > periodStart ? booking.NgayNhanPhong : periodStart;
                 var overlapEnd = booking.NgayTraPhong < periodEnd ? booking.NgayTraPhong : periodEnd;
                 var nights = Math.Max(overlapEnd.DayNumber - overlapStart.DayNumber, 0);
                 if (nights <= 0)
                 {
-                    return 0;
+                    continue;
                 }
 
-                var roomCount = booking.HoaDon?.ChiTietHoaDons
-                    .Count(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
-                                x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc) ?? 0;
-
-                return nights * Math.Max(roomCount, 1);
-            });
+                occupiedRoomNights += nights * Math.Max(booking.RoomCount, 1);
+            }
 
             return Math.Round(Math.Min(100d, occupiedRoomNights * 100d / (totalRooms * totalDays)), 1);
+        }
+
+        private sealed class OccupancyBookingData
+        {
+            public DateOnly NgayNhanPhong { get; init; }
+            public DateOnly NgayTraPhong { get; init; }
+            public int RoomCount { get; init; }
         }
 
         private static string FormatDate(DateOnly date)
