@@ -11,6 +11,8 @@
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(x => x)
         .ToList();
+    var allRoomTypes = ViewBag.RoomTypeOptions as IEnumerable<PBL3.Controllers.RoomTypeOptionDto>
+        ?? Enumerable.Empty<PBL3.Controllers.RoomTypeOptionDto>();
 
     string StatusLabel(string status) => status switch
     {
@@ -452,6 +454,64 @@
             padding-top: 12px;
         }
 
+        .room-map-room-type-box {
+            display: grid;
+            gap: 10px;
+            border-top: 1px solid #edf2f7;
+            padding-top: 12px;
+        }
+
+        .room-map-room-type-box h4 {
+            margin: 0;
+            color: #142033;
+            font-size: 0.98rem;
+            font-weight: 900;
+        }
+
+        .room-map-room-type-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .room-map-room-type-form label {
+            display: grid;
+            gap: 6px;
+            color: #66758a;
+            font-size: 0.82rem;
+            font-weight: 780;
+        }
+
+        .room-map-room-type-form select {
+            min-height: 40px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 760;
+        }
+
+        .room-map-room-type-form button {
+            min-height: 40px;
+            border: 0;
+            border-radius: 8px;
+            background: #111827;
+            color: #ffffff;
+            font-weight: 830;
+            padding: 9px 14px;
+        }
+
+        .room-map-room-type-form button:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .room-map-room-type-note {
+            margin: 0;
+            color: #66758a;
+            font-size: 0.8rem;
+            font-weight: 720;
+        }
+
         .room-map-service-title,
         .room-map-service-line {
             display: flex;
@@ -530,6 +590,12 @@
             padding: 34px 16px;
             text-align: center;
         }
+
+        @@media (max-width: 640px) {
+            .room-map-room-type-form {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 }
 
@@ -592,6 +658,7 @@
                                      data-room-map-room
                                      data-room-map-room-id="@room.RoomId"
                                      data-room-number="@room.RoomNumber"
+                                     data-room-type-id="@room.RoomTypeId.Trim()"
                                      data-room-type="@room.RoomTypeName"
                                      data-room-floor="@room.Floor"
                                      data-room-status="@room.Status"
@@ -651,6 +718,7 @@
             const detailModal = document.getElementById("roomMapDetailModal");
             const detailBody = document.getElementById("roomMapDetailBody");
             const detailClose = document.getElementById("roomMapDetailClose");
+            const roomTypeOptions = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(allRoomTypes));
             let statusFilter = "all";
             let selectedRoomElement = null;
             let serviceUsageCache = null;
@@ -729,6 +797,7 @@
                 return {
                     roomId: room.dataset.roomMapRoomId || "",
                     roomNumber: room.dataset.roomNumber || "",
+                    roomTypeId: room.dataset.roomTypeId || "",
                     roomTypeName: room.dataset.roomType || "",
                     floor: room.dataset.roomFloor || "",
                     status: room.dataset.roomStatus || "",
@@ -771,6 +840,33 @@
                     : `Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}`;
                 const canSetMaintenance = room.status === "available";
                 const canCancelMaintenance = room.status === "maintenance";
+                const canChangeRoomType = room.status !== "occupied";
+                const roomTypeOptionsHtml = roomTypeOptions.map(function (option) {
+                    const selected = option.RoomTypeId === room.roomTypeId ? "selected" : "";
+                    return `<option value="${escapeHtml(option.RoomTypeId)}" ${selected}>${escapeHtml(formatDisplayText(option.RoomTypeName))}</option>`;
+                }).join("");
+                const roomTypeActionHtml = `
+                    <div class="room-map-room-type-box">
+                        <h4>Đổi loại phòng</h4>
+                        <form class="room-map-room-type-form"
+                              data-room-type-form
+                              data-room-id="${escapeHtml(room.roomId)}"
+                              data-current-room-type="${escapeHtml(room.roomTypeId)}">
+                            <label>
+                                Loại phòng mới
+                                <select class="form-select" data-room-type-select ${canChangeRoomType ? "" : "disabled"}>
+                                    ${roomTypeOptionsHtml}
+                                </select>
+                            </label>
+                            <button type="submit" ${canChangeRoomType ? "" : "disabled"}>
+                                <i class="bi bi-arrow-repeat"></i>
+                                Cập nhật
+                            </button>
+                        </form>
+                        <p class="room-map-room-type-note">${canChangeRoomType
+                            ? "Chỉ đổi được khi phòng không thuộc đặt phòng đang hoạt động."
+                            : "Phòng đang sử dụng nên chưa thể đổi loại phòng."}</p>
+                    </div>`;
                 const maintenanceActionHtml = canSetMaintenance || canCancelMaintenance
                     ? `
                         <div class="room-map-maintenance-actions">
@@ -847,6 +943,7 @@
                         </div>
                         ${serviceHtml}
                     </div>
+                    ${roomTypeActionHtml}
                     ${maintenanceActionHtml}
                 `;
                 detailModal.hidden = false;
@@ -892,6 +989,52 @@
                     alert(error.message || "Không thể cập nhật phòng.");
                     button.disabled = false;
                     button.innerHTML = originalHtml;
+                }
+            }
+
+            async function changeRoomType(form) {
+                const roomId = form.dataset.roomId || "";
+                const currentRoomType = form.dataset.currentRoomType || "";
+                const select = form.querySelector("[data-room-type-select]");
+                const roomTypeId = select?.value || "";
+                const button = form.querySelector("button[type='submit']");
+                const selectedLabel = select?.selectedOptions?.[0]?.textContent?.trim() || "";
+                if (!roomId || !roomTypeId) return;
+                if (roomTypeId === currentRoomType) {
+                    alert("Loại phòng không thay đổi.");
+                    return;
+                }
+                if (!confirm(`Đổi phòng này sang loại ${selectedLabel}?`)) return;
+
+                if (button) {
+                    button.disabled = true;
+                    button.dataset.originalHtml = button.innerHTML;
+                    button.innerHTML = "Đang cập nhật...";
+                }
+                try {
+                    const response = await fetch("@Url.Action("ChangeType", "Room")", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ roomId, roomTypeId })
+                    });
+                    if (!response.ok) throw new Error("Không thể đổi loại phòng.");
+                    const result = await response.json();
+                    if (!result.success) {
+                        alert(result.message || "Không thể đổi loại phòng.");
+                        if (button) {
+                            button.disabled = false;
+                            button.innerHTML = button.dataset.originalHtml || "Cập nhật";
+                        }
+                        return;
+                    }
+
+                    location.reload();
+                } catch (error) {
+                    alert(error.message || "Không thể đổi loại phòng.");
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = button.dataset.originalHtml || "Cập nhật";
+                    }
                 }
             }
 
@@ -969,6 +1112,12 @@
                 const button = event.target.closest("[data-room-maintenance-toggle]");
                 if (!button) return;
                 toggleRoomMaintenance(button);
+            });
+            detailBody?.addEventListener("submit", function (event) {
+                const form = event.target.closest("[data-room-type-form]");
+                if (!form) return;
+                event.preventDefault();
+                changeRoomType(form);
             });
 
             rooms.forEach(function (room) {

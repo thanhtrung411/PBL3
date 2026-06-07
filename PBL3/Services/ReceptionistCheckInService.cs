@@ -164,12 +164,13 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
                     .ToList();
 
                 assignedRooms = data.RoomLines
-                    .Where(x => x.RoomId != null)
+                    .Where(x => !string.IsNullOrWhiteSpace(x.RoomId) &&
+                                !string.IsNullOrWhiteSpace(x.RoomNumber))
                     .OrderBy(x => x.RoomNumber)
                     .Select(x => new ReceptionistAssignedRoomDto
                     {
-                        RoomId = x.RoomId,
-                        RoomNumber = x.RoomNumber,
+                        RoomId = x.RoomId!,
+                        RoomNumber = x.RoomNumber!,
                         RoomTypeId = x.RoomTypeId,
                         RoomTypeName = x.RoomTypeName
                     })
