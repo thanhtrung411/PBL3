@@ -24,6 +24,9 @@
         scannerRunning: false
     };
 
+    let tomBookingSelect = null;
+    let tomOptionSelect = null;
+
     const elements = {
         alertArea: document.getElementById("alertArea"),
         workflowStrip: document.querySelector(".workflow-strip"),
@@ -1805,33 +1808,82 @@
 
     function renderServiceSelects(activeStays, services, preferredBookingCode) {
         if (elements.serviceBookingSelect) {
-            if (elements.serviceBookingOptions) {
-                elements.serviceBookingOptions.innerHTML = activeStays.map(function (stay) {
-                    const value = formatServiceStayOptionValue(stay);
-                    return `<option value="${escapeHtml(value)}" data-booking-code="${escapeHtml(stay.bookingCode)}"></option>`;
-                }).join("");
+            const bookingOptions = activeStays.map(function (stay) {
+                return {
+                    value: stay.bookingCode,
+                    text: formatServiceStayOptionValue(stay),
+                    data: stay
+                };
+            });
+
+            if (!tomBookingSelect) {
+                tomBookingSelect = new TomSelect(elements.serviceBookingSelect, {
+                    valueField: 'value',
+                    labelField: 'text',
+                    searchField: ['text', 'value'],
+                    options: bookingOptions,
+                    placeholder: "Tìm theo tên khách, phòng hoặc mã đặt phòng...",
+                    maxOptions: null,
+                    onChange: function() {
+                        renderServiceSelection();
+                    }
+                });
+            } else {
+                tomBookingSelect.clearOptions();
+                tomBookingSelect.addOption(bookingOptions);
+                tomBookingSelect.refreshOptions(false);
             }
 
             const fallbackCode = activeStays[0]?.bookingCode || "";
-            const selectedCode = activeStays.some(function (stay) {
-                return stay.bookingCode === preferredBookingCode;
-            }) ? preferredBookingCode : fallbackCode;
-            const selectedStay = activeStays.find(function (stay) {
-                return stay.bookingCode === selectedCode;
-            });
-            elements.serviceBookingSelect.value = selectedStay ? formatServiceStayOptionValue(selectedStay) : "";
-            elements.serviceBookingSelect.disabled = activeStays.length === 0;
+            const selectedCode = activeStays.some(function(stay) { return stay.bookingCode === preferredBookingCode; }) 
+                ? preferredBookingCode : fallbackCode;
+            
+            if (selectedCode) {
+                tomBookingSelect.setValue(selectedCode, true);
+            } else {
+                tomBookingSelect.clear(true);
+            }
+            if (activeStays.length === 0) tomBookingSelect.disable();
+            else tomBookingSelect.enable();
         }
 
         if (elements.serviceOptionSelect) {
-            if (elements.serviceOptionOptions) {
-                elements.serviceOptionOptions.innerHTML = services.map(function (service) {
-                    const value = formatServiceOptionValue(service);
-                    return `<option value="${escapeHtml(value)}" data-service-id="${escapeHtml(service.serviceId)}" data-price="${service.unitPrice}" data-unit="${escapeHtml(formatSentenceText(service.unit))}" data-name="${escapeHtml(formatDisplayText(service.serviceName))}" data-category="${escapeHtml(formatDisplayText(service.category || ""))}"></option>`;
-                }).join("");
+            const serviceOptions = services.map(function (service) {
+                return {
+                    value: service.serviceId,
+                    text: formatServiceOptionValue(service),
+                    category: service.category || "",
+                    name: service.serviceName,
+                    price: service.unitPrice,
+                    unit: service.unit
+                };
+            });
+
+            if (!tomOptionSelect) {
+                tomOptionSelect = new TomSelect(elements.serviceOptionSelect, {
+                    valueField: 'value',
+                    labelField: 'text',
+                    searchField: ['text', 'category', 'name'],
+                    options: serviceOptions,
+                    placeholder: "Tìm theo tên dịch vụ hoặc loại dịch vụ...",
+                    maxOptions: null,
+                    onChange: function() {
+                        updateServiceEstimate();
+                    }
+                });
+            } else {
+                tomOptionSelect.clearOptions();
+                tomOptionSelect.addOption(serviceOptions);
+                tomOptionSelect.refreshOptions(false);
             }
-            elements.serviceOptionSelect.value = services[0] ? formatServiceOptionValue(services[0]) : "";
-            elements.serviceOptionSelect.disabled = services.length === 0;
+
+            if (services.length > 0) {
+                tomOptionSelect.setValue(services[0].serviceId, true);
+                tomOptionSelect.enable();
+            } else {
+                tomOptionSelect.clear(true);
+                tomOptionSelect.disable();
+            }
         }
 
         if (elements.serviceQuantityInput) {
@@ -1872,45 +1924,18 @@
     }
 
     function resolveServiceBookingCode() {
-        const value = elements.serviceBookingSelect?.value.trim() || "";
-        if (!value) return "";
-
-        const exactOption = findDatalistOption(elements.serviceBookingOptions, value);
-        if (exactOption?.dataset.bookingCode) {
-            return exactOption.dataset.bookingCode;
-        }
-
-        const activeStays = state.serviceUsage?.activeStays || [];
-        const normalizedValue = normalizeSearchText(value);
-        const matchedStay = activeStays.find(function (stay) {
-            return normalizeSearchText(formatServiceStayOptionValue(stay)).includes(normalizedValue) ||
-                normalizeSearchText(stay.bookingCode).includes(normalizedValue) ||
-                (stay.roomNumbers || []).some(function (roomNumber) {
-                    return normalizeSearchText(roomNumber).includes(normalizedValue);
-                });
-        });
-
-        return matchedStay?.bookingCode || "";
+        return tomBookingSelect ? tomBookingSelect.getValue() : "";
     }
 
     function resolveServiceOptionId() {
-        const option = getSelectedServiceOptionElement();
-        return option?.dataset.serviceId || "";
+        return tomOptionSelect ? tomOptionSelect.getValue() : "";
     }
 
     function getSelectedServiceOptionElement() {
-        const value = elements.serviceOptionSelect?.value.trim() || "";
+        if (!tomOptionSelect) return null;
+        const value = tomOptionSelect.getValue();
         if (!value) return null;
-
-        const exactOption = findDatalistOption(elements.serviceOptionOptions, value);
-        if (exactOption) return exactOption;
-
-        const normalizedValue = normalizeSearchText(value);
-        return Array.from(elements.serviceOptionOptions?.options || []).find(function (option) {
-            return normalizeSearchText(option.value).includes(normalizedValue) ||
-                normalizeSearchText(option.dataset.name).includes(normalizedValue) ||
-                normalizeSearchText(option.dataset.category).includes(normalizedValue);
-        }) || null;
+        return tomOptionSelect.options[value];
     }
 
     function findDatalistOption(datalist, value) {
@@ -1953,13 +1978,13 @@
         if (!elements.serviceLineEstimate) return;
 
         const option = getSelectedServiceOptionElement();
-        const price = Number(option?.dataset.price || 0);
+        const price = Number(option?.price || 0);
         const quantity = Math.max(Number(elements.serviceQuantityInput?.value || 0), 0);
         elements.serviceLineEstimate.textContent = formatMoney(price * quantity);
         if (elements.serviceSelectedServiceInfo) {
-            const serviceName = option?.dataset.name || "Chưa chọn dịch vụ";
-            const unit = option?.dataset.unit || "";
-            const category = option?.dataset.category || "Dịch vụ";
+            const serviceName = option?.name || "Chưa chọn dịch vụ";
+            const unit = option?.unit || "";
+            const category = option?.category || "Dịch vụ";
             elements.serviceSelectedServiceInfo.innerHTML = `
                 <span>${escapeHtml(category)}</span>
                 <strong>${escapeHtml(serviceName)}</strong>

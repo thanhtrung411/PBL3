@@ -29,6 +29,7 @@
     <title>Lễ tân - Venus Hotel</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="~/css/receptionist-demo.css" asp-append-version="true" />
 </head>
 <body>
@@ -362,18 +363,16 @@
                             </div>
                             <div id="serviceSelectedStayInfo" class="service-selected-box"></div>
                             <label for="serviceBookingSelect">Khách / phòng / booking</label>
-                            <input id="serviceBookingSelect" class="form-control form-control-lg" list="serviceBookingOptions" autocomplete="off" placeholder="Tìm theo tên khách, phòng hoặc mã đặt phòng" />
-                            <datalist id="serviceBookingOptions"></datalist>
+                            <select id="serviceBookingSelect" class="form-select" placeholder="Tìm theo tên khách, phòng hoặc mã đặt phòng"></select>
 
                             <label for="serviceOptionSelect">Dịch vụ</label>
-                            <input id="serviceOptionSelect" class="form-control form-control-lg" list="serviceOptionOptions" autocomplete="off" placeholder="Tìm theo tên dịch vụ hoặc loại dịch vụ" />
-                            <datalist id="serviceOptionOptions"></datalist>
+                            <select id="serviceOptionSelect" class="form-select" placeholder="Tìm theo tên dịch vụ hoặc loại dịch vụ"></select>
                             <div id="serviceSelectedServiceInfo" class="service-selected-box service-selected-box-muted"></div>
 
                             <div class="service-form-row">
                                 <div>
                                     <label for="serviceQuantityInput">Số lượng</label>
-                                    <input id="serviceQuantityInput" class="form-control form-control-lg" type="number" min="1" step="1" value="1" />
+                                    <input id="serviceQuantityInput" class="form-control" type="number" min="1" step="1" value="1" />
                                 </div>
                                 <div>
                                     <label>Tạm tính</label>
@@ -690,6 +689,7 @@
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="~/js/receptionist-demo.js" asp-append-version="true"></script>
 </body>
 </html>
