@@ -1833,6 +1833,77 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
             : (byte)((int)date.DayOfWeek + 1);
     }
 
+    public async Task ProcessOverdueBookingsAsync(DateTime currentTime, CancellationToken cancellationToken = default)
+    {
+        var today = DateOnly.FromDateTime(currentTime);
+        var timeOfDay = currentTime.TimeOfDay;
+
+        var overdueBookings = await _context.DatPhongs
+            .Include(x => x.HoaDon)
+            .ThenInclude(x => x!.ChiTietHoaDons)
+            .Where(x => x.TrangThai == DomainValues.DatPhongTrangThai.DaNhanPhong &&
+                        (x.NgayTraPhong < today || (x.NgayTraPhong == today && timeOfDay >= new TimeSpan(18, 0, 0))))
+            .ToListAsync(cancellationToken);
+
+        var penaltyNote = $"Phụ thu trả phòng trễ (Thuê thêm ngày {today:dd/MM/yyyy})";
+
+        foreach (var booking in overdueBookings)
+        {
+            if (booking.HoaDon == null) continue;
+
+            bool alreadyCharged = booking.HoaDon.ChiTietHoaDons.Any(x => x.NoiDung == penaltyNote && x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc);
+            if (alreadyCharged) continue;
+
+            var activeRooms = booking.HoaDon.ChiTietHoaDons
+                .Where(x => x.LoaiMuc == DomainValues.ChiTietHoaDonLoaiMuc.Phong &&
+                            x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
+                            !string.IsNullOrWhiteSpace(x.MaPhong) &&
+                            !string.IsNullOrWhiteSpace(x.MaLoaiPhong))
+                .GroupBy(x => x.MaPhong)
+                .Select(g => g.First())
+                .ToList();
+
+            decimal totalPenalty = 0;
+            var newLines = new List<ChiTietHoaDon>();
+
+            foreach (var room in activeRooms)
+            {
+                var price = await GetCurrentRoomTypePriceAsync(room.MaLoaiPhong!, today, cancellationToken);
+                if (price <= 0) continue;
+
+                var lineCode = await CodeGenerator.GenerateFromSequenceAsync(_context, "dbo.Seq_ChiTietHoaDon", "CT", 8);
+                if (lineCode == null) continue;
+
+                newLines.Add(new ChiTietHoaDon
+                {
+                    MaCthd = lineCode,
+                    MaHoaDon = booking.HoaDon.MaHoaDon,
+                    LoaiMuc = DomainValues.ChiTietHoaDonLoaiMuc.Phong,
+                    MaPhong = room.MaPhong,
+                    MaLoaiPhong = room.MaLoaiPhong,
+                    NoiDung = penaltyNote,
+                    NgayApDung = today,
+                    SoNguoi = room.SoNguoi,
+                    SoLuong = 1,
+                    DonGia = price,
+                    ThanhTien = price,
+                    TrangThai = DomainValues.ChiTietHoaDonTrangThai.HieuLuc
+                });
+                totalPenalty += price;
+            }
+
+            if (newLines.Count > 0)
+            {
+                _context.ChiTietHoaDons.AddRange(newLines);
+                booking.HoaDon.TongTienPhong += totalPenalty;
+                booking.HoaDon.TongThanhToan += totalPenalty;
+                booking.NgayTraPhong = booking.NgayTraPhong.AddDays(1);
+            }
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     private static string? NormalizeOptional(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -2026,11 +2097,16 @@ public class ReceptionistCheckInService : IReceptionistCheckInService
 
     private static ReceptionistRoomChargeLineDto BuildRoomChargeLineDto(ChiTietHoaDon line)
     {
+        var isPenalty = line.NoiDung?.Contains("Phụ thu trả phòng trễ", StringComparison.OrdinalIgnoreCase) == true;
+        var roomTypeName = isPenalty 
+            ? line.NoiDung 
+            : (line.MaLoaiPhongNavigation?.TenLoaiPhong ?? line.MaLoaiPhong ?? line.NoiDung);
+
         return new ReceptionistRoomChargeLineDto
         {
             LineId = line.MaCthd,
             RoomTypeId = line.MaLoaiPhong ?? string.Empty,
-            RoomTypeName = line.MaLoaiPhongNavigation?.TenLoaiPhong ?? line.MaLoaiPhong ?? line.NoiDung,
+            RoomTypeName = roomTypeName,
             RoomNumber = line.MaPhongNavigation?.SoPhong,
             Guests = line.SoNguoi,
             Quantity = line.SoLuong,

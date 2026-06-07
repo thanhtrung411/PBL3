@@ -107,6 +107,7 @@ builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IBookingEmailService, BookingEmailService>();
 builder.Services.AddScoped<IExpiredBookingCleanupService, ExpiredBookingCleanupService>();
 builder.Services.AddHostedService<ExpiredBookingCleanupHostedService>();
+builder.Services.AddHostedService<OverdueCheckoutWorker>();
 
 var app = builder.Build();
 

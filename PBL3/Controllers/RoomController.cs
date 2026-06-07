@@ -98,28 +98,6 @@ namespace PBL3.Controllers
                 });
             }
 
-            var blockedStatuses = new[]
-            {
-                DomainValues.DatPhongTrangThai.DaHuy,
-                DomainValues.DatPhongTrangThai.TraPhong,
-                DomainValues.DatPhongTrangThai.QuaHanNhanPhong
-            };
-            var hasActiveBooking = await _context.ChiTietHoaDons
-                .AnyAsync(x =>
-                    x.MaPhong == room.MaPhong &&
-                    x.TrangThai == DomainValues.ChiTietHoaDonTrangThai.HieuLuc &&
-                    !blockedStatuses.Contains(x.MaHoaDonNavigation.MaDatPhongNavigation.TrangThai),
-                    cancellationToken);
-            if (hasActiveBooking)
-            {
-                return Ok(new RoomTypeChangeResult
-                {
-                    Success = false,
-                    RoomId = room.MaPhong,
-                    Message = "Phòng đang thuộc một đặt phòng đang hoạt động, chưa thể đổi loại phòng."
-                });
-            }
-
             room.MaLoaiPhong = nextRoomType.MaLoaiPhong;
             await _context.SaveChangesAsync(cancellationToken);
 

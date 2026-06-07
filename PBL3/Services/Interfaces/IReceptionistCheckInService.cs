@@ -31,4 +31,6 @@ public interface IReceptionistCheckInService
     Task<ReceptionistWalkInCheckInResult> WalkInCheckInAsync(ReceptionistWalkInCheckInRequest request, CancellationToken cancellationToken = default);
 
     Task CancelWalkInPendingPaymentAsync(string bookingCode, CancellationToken cancellationToken = default);
+
+    Task ProcessOverdueBookingsAsync(DateTime currentTime, CancellationToken cancellationToken = default);
 }

@@ -398,7 +398,7 @@
 
         .room-map-detail-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(150px, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
         }
 
@@ -512,6 +512,73 @@
             font-weight: 720;
         }
 
+        .room-map-type-card {
+            display: grid;
+            gap: 8px;
+        }
+
+        .room-map-type-current {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .room-map-type-current strong {
+            min-width: 0;
+        }
+
+        .room-map-type-edit-btn {
+            min-height: 30px;
+            border: 1px solid #d6e1ee;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #1f6feb;
+            font-size: 0.78rem;
+            font-weight: 850;
+            padding: 5px 10px;
+            white-space: nowrap;
+        }
+
+        .room-map-type-inline-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .room-map-type-inline-form[hidden] {
+            display: none !important;
+        }
+
+        .room-map-type-inline-form select {
+            min-height: 34px;
+            border-radius: 8px;
+            font-size: 0.86rem;
+            font-weight: 740;
+        }
+
+        .room-map-type-confirm-btn,
+        .room-map-type-cancel-btn {
+            min-height: 34px;
+            border: 0;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 840;
+            padding: 6px 10px;
+            white-space: nowrap;
+        }
+
+        .room-map-type-confirm-btn {
+            background: #111827;
+            color: #ffffff;
+        }
+
+        .room-map-type-cancel-btn {
+            background: #f4f7fb;
+            color: #66758a;
+        }
+
         .room-map-service-title,
         .room-map-service-line {
             display: flex;
@@ -592,7 +659,15 @@
         }
 
         @@media (max-width: 640px) {
+            .room-map-detail-grid {
+                grid-template-columns: 1fr;
+            }
+
             .room-map-room-type-form {
+                grid-template-columns: 1fr;
+            }
+
+            .room-map-type-inline-form {
                 grid-template-columns: 1fr;
             }
         }
@@ -840,33 +915,10 @@
                     : `Phòng ${escapeHtml(formatDisplayText(room.roomNumber))}`;
                 const canSetMaintenance = room.status === "available";
                 const canCancelMaintenance = room.status === "maintenance";
-                const canChangeRoomType = room.status !== "occupied";
                 const roomTypeOptionsHtml = roomTypeOptions.map(function (option) {
                     const selected = option.RoomTypeId === room.roomTypeId ? "selected" : "";
                     return `<option value="${escapeHtml(option.RoomTypeId)}" ${selected}>${escapeHtml(formatDisplayText(option.RoomTypeName))}</option>`;
                 }).join("");
-                const roomTypeActionHtml = `
-                    <div class="room-map-room-type-box">
-                        <h4>Đổi loại phòng</h4>
-                        <form class="room-map-room-type-form"
-                              data-room-type-form
-                              data-room-id="${escapeHtml(room.roomId)}"
-                              data-current-room-type="${escapeHtml(room.roomTypeId)}">
-                            <label>
-                                Loại phòng mới
-                                <select class="form-select" data-room-type-select ${canChangeRoomType ? "" : "disabled"}>
-                                    ${roomTypeOptionsHtml}
-                                </select>
-                            </label>
-                            <button type="submit" ${canChangeRoomType ? "" : "disabled"}>
-                                <i class="bi bi-arrow-repeat"></i>
-                                Cập nhật
-                            </button>
-                        </form>
-                        <p class="room-map-room-type-note">${canChangeRoomType
-                            ? "Chỉ đổi được khi phòng không thuộc đặt phòng đang hoạt động."
-                            : "Phòng đang sử dụng nên chưa thể đổi loại phòng."}</p>
-                    </div>`;
                 const maintenanceActionHtml = canSetMaintenance || canCancelMaintenance
                     ? `
                         <div class="room-map-maintenance-actions">
@@ -927,9 +979,25 @@
                         <span class="room-map-detail-status ${escapeHtml(room.status)}">${escapeHtml(formatSentenceText(room.statusLabel))}</span>
                     </div>
                     <div class="room-map-detail-grid">
-                        <div>
+                        <div class="room-map-type-card" data-room-type-card>
                             <span>Loại phòng</span>
-                            <strong>${escapeHtml(formatDisplayText(room.roomTypeName))}</strong>
+                            <div class="room-map-type-current">
+                                <strong>${escapeHtml(formatDisplayText(room.roomTypeName))}</strong>
+                                <button type="button" class="room-map-type-edit-btn" data-room-type-edit>
+                                    Đổi
+                                </button>
+                            </div>
+                            <form class="room-map-type-inline-form"
+                                  data-room-type-form
+                                  data-room-id="${escapeHtml(room.roomId)}"
+                                  data-current-room-type="${escapeHtml(room.roomTypeId)}"
+                                  hidden>
+                                <select class="form-select" data-room-type-select>
+                                    ${roomTypeOptionsHtml}
+                                </select>
+                                <button type="submit" class="room-map-type-confirm-btn">Xác nhận</button>
+                                <button type="button" class="room-map-type-cancel-btn" data-room-type-cancel>Hủy</button>
+                            </form>
                         </div>
                         <div>
                             <span>Tình trạng phòng</span>
@@ -943,7 +1011,6 @@
                         </div>
                         ${serviceHtml}
                     </div>
-                    ${roomTypeActionHtml}
                     ${maintenanceActionHtml}
                 `;
                 detailModal.hidden = false;
@@ -1038,6 +1105,22 @@
                 }
             }
 
+            function showRoomTypeEditor(button) {
+                const card = button.closest("[data-room-type-card]");
+                const form = card?.querySelector("[data-room-type-form]");
+                if (!form) return;
+                form.hidden = false;
+                button.hidden = true;
+            }
+
+            function hideRoomTypeEditor(button) {
+                const card = button.closest("[data-room-type-card]");
+                const form = card?.querySelector("[data-room-type-form]");
+                const editButton = card?.querySelector("[data-room-type-edit]");
+                if (form) form.hidden = true;
+                if (editButton) editButton.hidden = false;
+            }
+
             function closeRoomDetail() {
                 if (detailModal) detailModal.hidden = true;
                 if (detailBody) detailBody.innerHTML = "";
@@ -1109,6 +1192,16 @@
             typeFilter?.addEventListener("change", renderRoomMap);
 
             detailBody?.addEventListener("click", function (event) {
+                const editButton = event.target.closest("[data-room-type-edit]");
+                if (editButton) {
+                    showRoomTypeEditor(editButton);
+                    return;
+                }
+                const cancelButton = event.target.closest("[data-room-type-cancel]");
+                if (cancelButton) {
+                    hideRoomTypeEditor(cancelButton);
+                    return;
+                }
                 const button = event.target.closest("[data-room-maintenance-toggle]");
                 if (!button) return;
                 toggleRoomMaintenance(button);

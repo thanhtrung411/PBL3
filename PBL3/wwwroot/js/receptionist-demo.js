@@ -315,6 +315,38 @@
 
     handleReceptionPaymentReturn();
     handleInitialOpenTarget();
+    startRealtimeBadges();
+
+    function startRealtimeBadges() {
+        async function fetchCounts() {
+            try {
+                const todayRes = await fetchJson("/Receptionist/Today");
+                if (todayRes && todayRes.success) {
+                    const todayCount = (todayRes.bookings || []).length;
+                    const badge = document.getElementById("todayArrivalsBadge");
+                    if (badge) {
+                        badge.textContent = todayCount;
+                        badge.style.display = todayCount > 0 ? "block" : "none";
+                    }
+                }
+                
+                const checkoutRes = await fetchJson("/Receptionist/Checkout");
+                if (checkoutRes && checkoutRes.success) {
+                    const checkoutCount = (checkoutRes.activeStays || []).length;
+                    const badge = document.getElementById("checkoutBadge");
+                    if (badge) {
+                        badge.textContent = checkoutCount;
+                        badge.style.display = checkoutCount > 0 ? "block" : "none";
+                    }
+                }
+            } catch(e) {
+                console.error("Failed to fetch realtime badges", e);
+            }
+        }
+        
+        fetchCounts();
+        setInterval(fetchCounts, 15000);
+    }
 
     function handleInitialOpenTarget() {
         const query = new URLSearchParams(window.location.search);
@@ -1092,9 +1124,9 @@
             <article class="walkin-invoice-card">
                 <header class="walkin-invoice-header">
                     <div>
-                        <h3>Chi tiết thanh toán</h3>
+                        <h3 class="text-white m-0">Chi tiết thanh toán</h3>
                     </div>
-                    <span>${escapeHtml(paymentLabel)}</span>
+                    <span class="text-white">${escapeHtml(paymentLabel)}</span>
                 </header>
                 <div class="walkin-invoice-body">
                     <div class="walkin-invoice-guest">
