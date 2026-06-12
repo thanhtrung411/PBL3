@@ -60,12 +60,13 @@ dotnet restore
 dotnet build
 ```
 
-### Bước 3: Cập nhật Database
-Chạy lệnh sau để migrate và cập nhật cơ sở dữ liệu mới nhất:
-```powershell
-dotnet ef database update
-```
-*(Hệ thống có cơ chế tự động Warm-up DB và mã hóa mật khẩu ở lần chạy đầu tiên).*
+### Bước 3: Khởi tạo Database
+Dự án này sử dụng phương pháp **Database-First** nên không có sẵn EF Migrations. Để tạo cơ sở dữ liệu, bạn cần chạy script SQL đính kèm:
+1. Mở SQL Server Management Studio (SSMS) hoặc phần mềm quản lý tương đương.
+2. Mở và chạy file script `.sql` của dự án (Lưu ý: Bạn cần export Database của bạn ra một file `.sql` và đính kèm vào source code để người khác có thể chạy).
+3. Đảm bảo tên Database được cấu hình trong file `.env` khớp với tên Database vừa tạo.
+
+*(Hệ thống có cơ chế tự động Warm-up DB và mã hóa mật khẩu dạng plain-text ở lần chạy đầu tiên).*
 
 ### Bước 4: Chạy ứng dụng
 Khuyến nghị chạy ứng dụng qua giao thức HTTP (để tránh lỗi chứng chỉ SSL ở môi trường dev):
