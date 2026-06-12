@@ -1,151 +1,92 @@
-# PBL3 - Hotel Management
+# PBL3 - Hệ Thống Quản Lý Khách Sạn (Hotel Management System)
 
-Ứng dụng quản lý khách sạn xây dựng bằng ASP.NET Core MVC (.NET 10), Entity Framework Core và SQL Server.
+Dự án phát triển phần mềm quản lý khách sạn, được xây dựng trên nền tảng **ASP.NET Core MVC (.NET 10)**, sử dụng **Entity Framework Core** và cơ sở dữ liệu **SQL Server**. Hệ thống cung cấp các chức năng đặt phòng trực tuyến cho khách hàng và bộ công cụ quản trị toàn diện cho nhân viên/quản lý.
 
-## Trạng thái hiện tại
+## 🚀 Tính Năng Nổi Bật
 
-Dự án đang trong giai đoạn gộp UI và chuẩn hóa route. Một số phần là template giao diện, chưa phải nghiệp vụ hoàn chỉnh.
+### 1. Dành Cho Khách Hàng (Public Booking)
+- **Tìm kiếm và đặt phòng trực tuyến:** Khách hàng có thể dễ dàng tìm kiếm phòng trống theo ngày và loại phòng.
+- **Thanh toán trực tuyến:** Tích hợp cổng thanh toán **VNPay**.
+- **Thông báo Email:** Tự động gửi email xác nhận đặt phòng, thông báo hóa đơn đến khách hàng.
+- **Không yêu cầu tài khoản:** Khách hàng có thể đặt phòng nhanh chóng mà không bắt buộc phải đăng ký tài khoản.
 
-### Public booking template
+### 2. Dành Cho Quản Trị Viên & Nhân Viên (Admin Dashboard)
+- **Bảng điều khiển (Dashboard):** Thống kê trực quan doanh thu, số lượng phòng được đặt, tình trạng phòng hiện tại.
+- **Quản lý Đặt phòng & Nhận/Trả phòng (Lễ tân):** Cập nhật trạng thái đặt phòng, hỗ trợ check-in/check-out cho khách nhanh chóng.
+- **Quản lý Phòng & Loại phòng:** Thêm, sửa, xóa thông tin phòng, cập nhật bảng giá phòng linh hoạt theo thời điểm.
+- **Quản lý Hóa đơn & Dịch vụ:** Ghi nhận các dịch vụ phát sinh, áp dụng mã giảm giá (Promotion) và xuất hóa đơn chi tiết.
+- **Quản lý Nhân sự & Khách hàng:** Quản lý tài khoản nhân viên, phân quyền truy cập (Admin, Lễ tân,...), lưu trữ và quản lý thông tin khách hàng.
+- **Báo cáo Thống kê:** Báo cáo doanh thu chi tiết theo thời gian.
 
-Frontend đặt phòng online hiện đã được gom về `Booking`.
+### 3. Hệ Thống Xử Lý Ngầm (Background Services)
+- Tự động dọn dẹp các đặt phòng đã hết hạn nhưng chưa thanh toán (`ExpiredBookingCleanupHostedService`).
+- Kiểm tra và đánh dấu các trường hợp quá hạn trả phòng (`OverdueCheckoutWorker`).
 
-Route chuẩn:
+## 🛠 Công Nghệ Sử Dụng
 
-| Route | Mục đích |
-| --- | --- |
-| `/` | Trang đặt phòng online |
-| `/Booking` | Trang đặt phòng online |
-| `/Booking/Rooms` | Trang chọn phòng mẫu |
-| `/Booking/Checkout?roomId=1` | Trang checkout mẫu |
-| `/Booking/Success?id=BKTEST` | Trang đặt phòng thành công |
+- **Framework:** ASP.NET Core MVC (.NET 10)
+- **ORM:** Entity Framework Core 10
+- **Database:** SQL Server
+- **Authentication:** Cookie-based Authentication với cơ chế Password Hashing an toàn.
+- **Thanh toán:** Tích hợp VNPay API.
+- **Gửi Email:** SMTP Email Sender.
+- **Tiện ích khác:** Sinh mã QR với thư viện QRCoder.
 
-Các route cũ của `Guest` chỉ còn dùng để redirect:
+## 📂 Cấu Trúc Phân Hệ
 
-| Route cũ | Redirect sang |
-| --- | --- |
-| `/Guest/Index` | `/Booking` |
-| `/Guest/Rooms` | `/Booking/Rooms` |
-| `/Guest/Checkout?roomId=1` | `/Booking/Checkout?roomId=1` |
-| `/Guest/BookingSuccess?id=...` | `/Booking/Success/...` |
+Hệ thống được thiết kế chia thành các phân hệ rõ ràng:
+1. **Public/Guest Area (`/Booking`):** Giao diện dành cho khách hàng thao tác đặt phòng trực tuyến. Mọi luồng xử lý từ trang chủ đến lúc thanh toán đều tập trung ở đây. *(Các route `/Guest` cũ tự động redirect sang `/Booking`)*.
+2. **Admin Area (`/Admin`):** Khu vực nghiệp vụ dành cho nhân viên và quản lý. Yêu cầu đăng nhập.
+3. **Source CRUD (`/Source`):** Khu vực thao tác trực tiếp với Database (được sinh ra qua Scaffold) dành riêng cho quản trị viên cấp cao để quản trị dữ liệu thô.
 
-Lưu ý: flow `Booking` hiện là template/mẫu frontend. Nút tìm kiếm chuyển sang trang chọn phòng mẫu, checkout tạo mã đặt phòng giả lập. Chưa lưu đặt phòng online vào DB ở flow này.
+## ⚙️ Cài Đặt & Chạy Dự Án
 
-### Admin template
+### Yêu Cầu Hệ Thống
+- .NET 10 SDK
+- SQL Server (Local hoặc Remote)
 
-Khi bấm **Quản trị** trên navbar public, hệ thống đi vào dashboard/template quản trị.
+### Bước 1: Cấu hình Môi trường (.env)
+Dự án sử dụng file `.env` để quản lý chuỗi kết nối Database và các thiết lập bảo mật khác.
 
-Route chuẩn:
-
-| Route | Mục đích |
-| --- | --- |
-| `/Admin` | Dashboard quản trị template |
-
-Các màn hình admin template mới được merge ở root như:
-
-- `/Home/Index`
-- `/Room`
-- `/BookingManagement`
-- `/Customer`
-- `/Invoice`
-- `/Promotion`
-- `/Report`
-- `/Service`
-
-đang là template/dashboard mẫu, không coi là CRUD thật hoặc nghiệp vụ đã hoàn chỉnh.
-
-### Source CRUD
-
-Các màn hình CRUD scaffold/nối DB thật nằm trong Area Admin nhưng được publish dưới prefix `/Source`.
-
-| Route | Mục đích |
-| --- | --- |
-| `/Source` | Trang vào khu Source CRUD |
-| `/Source/LoaiPhongs` | CRUD loại phòng |
-| `/Source/Phongs` | CRUD phòng |
-| `/Source/BangGiaPhongs` | CRUD bảng giá |
-| `/Source/KhachHangs` | CRUD khách hàng |
-| `/Source/DatPhongs` | CRUD đặt phòng |
-| `/Source/HoaDons` | CRUD hóa đơn |
-| `/Source/ChiTietHoaDons` | CRUD chi tiết hóa đơn |
-| `/Source/DichVus` | CRUD dịch vụ |
-| `/Source/NhanViens` | CRUD nhân viên |
-| `/Source/TaiKhoans` | CRUD tài khoản |
-| `/Source/VaiTros` | CRUD vai trò |
-| `/Source/MaGiamGias` | CRUD mã giảm giá |
-
-Các route `/Admin` và `/Source` đều yêu cầu đăng nhập.
-
-## Auth
-
-Ứng dụng dùng cookie authentication.
-
-- Public booking không cần đăng nhập.
-- Admin dashboard template cần đăng nhập.
-- Source CRUD cần đăng nhập.
-- Login nằm ở `/Account/Login`.
-- Logout nằm ở `/Account/Logout`.
-
-Login hiện kiểm tra bảng `TaiKhoan` trong DB. Mật khẩu hiện so sánh plain text theo dữ liệu DB hiện tại; chưa có password hashing.
-
-## Cấu hình database
-
-Không lưu connection string thật trong `appsettings.json`.
-
-Dùng User Secrets khi chạy local:
-
-```powershell
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<connection-string>"
+Bạn cần tạo một file `.env` ngang hàng với file `PBL3.csproj` (có thể copy từ file `.env.example` sang `.env`) và cập nhật thông tin kết nối SQL Server của bạn:
+```env
+ConnectionStrings__DefaultConnection=Server=YOUR_SERVER_NAME;Database=PBL3;Trusted_Connection=True;Encrypt=False;TrustServerCertificate=True;
+# Bạn cũng có thể cấu hình thông số VNPay và SMTP (Email) tại file này.
 ```
 
-Với SQL Server remote hiện tại, máy local đang cần thêm:
-
-```text
-Encrypt=False;TrustServerCertificate=True;
-```
-
-Trên môi trường deploy, có thể dùng biến môi trường:
-
-```powershell
-$env:ConnectionStrings__DefaultConnection = "<connection-string>"
-```
-
-## Chạy dự án
-
-Khuyến nghị chạy HTTP, không dùng launch profile `https` nếu máy local bị treo ở bước HTTPS.
-
+### Bước 2: Build dự án
 ```powershell
 dotnet restore
-dotnet build --no-restore
-dotnet run --no-build --no-launch-profile --urls http://localhost:5199
+dotnet build
 ```
 
-Mở:
+### Bước 3: Cập nhật Database
+Chạy lệnh sau để migrate và cập nhật cơ sở dữ liệu mới nhất:
+```powershell
+dotnet ef database update
+```
+*(Hệ thống có cơ chế tự động Warm-up DB và mã hóa mật khẩu ở lần chạy đầu tiên).*
 
-```text
-http://localhost:5199
+### Bước 4: Chạy ứng dụng
+Khuyến nghị chạy ứng dụng qua giao thức HTTP (để tránh lỗi chứng chỉ SSL ở môi trường dev):
+```powershell
+dotnet run --no-launch-profile --urls http://localhost:5199
 ```
 
-hoặc:
+Truy cập hệ thống:
+- Giao diện khách hàng: `http://localhost:5199`
+- Giao diện quản trị: `http://localhost:5199/Admin`
 
-```text
-http://localhost:5199/Booking
-```
+## 🔐 Cơ Chế Đăng Nhập
+- Hệ thống sử dụng Cookie Authentication.
+- Đường dẫn đăng nhập: `/Account/Login`
+- Luồng bảo mật: Khi khởi chạy hệ thống, background task sẽ tự động dò tìm các mật khẩu dạng plain text trong Database và tiến hành băm (Hash) mật khẩu để bảo mật cho các lần đăng nhập tiếp theo.
 
-## Ranh giới cần giữ khi phát triển tiếp
+## 📝 Định Hướng Phát Triển Tiếp Theo
+- Hoàn thiện tách biệt logic nghiệp vụ khỏi các Controller thành các Service độc lập (như `OnlineBookingService`).
+- Dọn dẹp hoàn toàn Admin root template và Source CRUD để tối ưu trải nghiệm quản trị.
+- Sửa lỗi font chữ, encoding tiếng Việt còn tồn đọng trong một số view `.cshtml` và thông báo hệ thống.
+- Bổ sung Unit Test và Integration Test cho các tính năng trọng yếu.
 
-1. `BookingController` là nơi sở hữu frontend đặt phòng online.
-2. `GuestController` chỉ giữ redirect để tương thích link cũ, không thêm UI mới vào `Views/Guest`.
-3. `/Admin` là dashboard/template quản trị.
-4. `/Source` là khu CRUD scaffold/nối DB thật, code vẫn nằm trong `Areas/Admin`.
-5. Khi nối booking online với DB thật, nên tách service riêng như `OnlineBookingService`, không nhét thêm logic lớn vào controller.
-6. Cần sửa encoding tiếng Việt toàn dự án trước khi hoàn thiện nghiệp vụ, đặc biệt trong `.cshtml`, `DomainValues.cs` và các thông báo lỗi.
-
-## Việc cần làm tiếp
-
-- Dọn admin root template và Area Admin để không trùng khái niệm.
-- Chuẩn hóa tên route admin.
-- Sửa encoding tiếng Việt.
-- Tách nghiệp vụ đặt phòng online thật khỏi controller.
-- Bổ sung model/view model cho booking search, room selection và checkout.
-- Thêm test route cơ bản cho public booking, auth và admin CRUD.
+---
+*Dự án PBL3 - Đồ án cơ sở ngành*
